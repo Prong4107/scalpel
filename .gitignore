@@ -4,3 +4,4 @@ tmp/
 .venv/
 docker.sh
 Dockerfile
+TODO.md
