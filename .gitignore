@@ -1,0 +1,6 @@
+tmp/
+.class
+.vscode/
+.venv/
+docker.sh
+Dockerfile
