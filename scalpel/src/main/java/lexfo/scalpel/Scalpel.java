@@ -19,7 +19,7 @@
      public void initialize(MontoyaApi api)
      {
          // set extension name
-         api.extension().setName("Hello world extension");
+         api.extension().setName("Lexfo Scalpel extension");
  
          Logging logging = api.logging();
  
