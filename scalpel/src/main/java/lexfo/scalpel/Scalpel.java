@@ -8,32 +8,40 @@
 
 package lexfo.scalpel;
 
+import static burp.api.montoya.ui.editor.EditorOptions.READ_ONLY;
+
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.logging.Logging;
+import burp.api.montoya.ui.UserInterface;
+import burp.api.montoya.ui.editor.HttpRequestEditor;
+import burp.api.montoya.ui.editor.HttpResponseEditor;
+import java.awt.*;
+import java.awt.event.*;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.lang.System;
-import java.net.URI;
 import java.util.Enumeration;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import javax.swing.*;
 import jep.Interpreter;
+import jep.JepConfig;
 import jep.MainInterpreter;
-import jep.PyConfig;
+// import jep.PyConfig;
 import jep.SharedInterpreter;
 import org.apache.commons.io.FileUtils;
 
 //Burp will auto-detect and load any class that extends BurpExtension.
 public class Scalpel implements BurpExtension {
 
-  Logging logging;
+  private Logging logging;
 
   private String tmpJepDirectoryPath;
+
+  private MontoyaApi API;
 
   private static String generateTmpDirectoryPath() {
     return "/tmp/.scalpel_" + UUID.randomUUID().toString();
@@ -120,44 +128,128 @@ public class Scalpel implements BurpExtension {
       // Extract running JAR to tmp directory.
       extractFolder(getRunningJarPath(), tmpJepDirectoryPath);
 
-	  logging.logToOutput("Successfully extracted running .jar to " + tmpJepDirectoryPath);
+      logging.logToOutput(
+        "Successfully extracted running .jar to " + tmpJepDirectoryPath
+      );
     } catch (Exception e) {
       logging.logToError("initializeJepTmpDirectory() failed.");
       logging.logToError(e.toString());
     }
   }
 
-  @Override
-  public void initialize(MontoyaApi api) {
-    // set extension name
-    api.extension().setName("Lexfo Scalpel extension");
-
-    logging = api.logging();
-
-    initializeJepTmpDirectory();
-
-    logging.logToOutput("Start.");
-
-    // PyConfig config = new PyConfig();
-    // config.setPythonHome(tmpJepDirectoryPath);
-	
-	// MainInterpreter.setInitParams(config);
-
-    MainInterpreter.setJepLibraryPath(tmpJepDirectoryPath + "/lib/python3.10/site-packages/jep/libjep.so");
-
+  private String[] executeScriptAndCaptureOutput(String scriptContent) {
     try (Interpreter interp = new SharedInterpreter()) {
       // Running Python instructions on the fly.
       // https://github.com/t2y/jep-samples/blob/master/src/HelloWorld.java
-      logging.logToOutput("------- Running \"on the fly\" Python -------");
-	
-	  interp.set("montoyaAPI", api);
-      interp.exec("s = 'Hello World'");
-      interp.exec("logger = montoyaAPI.logging()");
-      interp.exec("logger.logToOutput(s)");
+
+      interp.set("montoyaAPI", API);
       interp.exec(
-        "logger.logToOutput(f'F strings are working: {s + \"_World\"}')"
+        """
+from io import StringIO
+import sys
+temp_out = StringIO()
+temp_err = StringIO()
+sys.stdout = temp_out
+sys.stderr = temp_err
+"""
       );
-      interp.exec("logger.logToOutput(s[1:-1])");
+      interp.exec(scriptContent);
+      interp.exec("captured_out = temp_out.getvalue()");
+      interp.exec("captured_err = temp_err.getvalue()");
+
+      String capturedOut = (String) interp.getValue("captured_out");
+      String capturedErr = (String) interp.getValue("captured_err");
+      logging.logToOutput(
+        String.format(
+          "Executed:\n%s\nOutput:\n%s\nErr:%s\n",
+          scriptContent,
+          capturedOut,
+          capturedErr,
+          null
+        )
+      );
+      return new String[] { capturedOut, capturedErr };
+    }
+  }
+
+  // https://miashs-www.u-ga.fr/prevert/Prog/Java/swing/JTextPane.html
+  private Component constructScalpelTab() {
+    // Split pane
+    JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+    JSplitPane scriptingPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+    JEditorPane editorPane = new JEditorPane();
+    JTextArea outputArea = new JTextArea();
+
+    var button = new JButton("Run script.");
+    button.addActionListener(
+      new ActionListener() {
+        public void actionPerformed(ActionEvent e) {
+          logging.logToOutput("Clicked button");
+          String scriptContent = editorPane.getText();
+          try {
+            String[] scriptOutput = executeScriptAndCaptureOutput(
+              scriptContent
+            );
+            outputArea.setText(
+              String.format(
+                "stdout:\n------------------\n%s\n------------------\n\nstderr:\n------------------\n%s",
+                scriptOutput[0],
+                scriptOutput[1]
+              )
+            );
+          } catch (Exception exception) {
+            logging.logToError("Script exec failed:");
+            logging.logToError(exception.toString());
+          }
+          logging.logToOutput("Handled action.");
+        }
+      }
+    );
+
+    editorPane.setText("""
+print('This goes in stdout')
+print('This goes in stderr', file=sys.stderr)
+"""
+    );
+    outputArea.setEditable(false);
+
+    scriptingPane.setLeftComponent(editorPane);
+    scriptingPane.setRightComponent(outputArea);
+    scriptingPane.setResizeWeight(0.5);
+
+    splitPane.setResizeWeight(1);
+    splitPane.setLeftComponent(scriptingPane);
+    splitPane.setRightComponent(button);
+
+    return splitPane;
+  }
+
+  @Override
+  public void initialize(MontoyaApi api) {
+    this.API = api;
+    // set extension name
+    API.extension().setName("Lexfo Scalpel extension");
+
+    logging = API.logging();
+
+    logging.logToOutput("Start.");
+
+    API.userInterface().registerSuiteTab("Scalpel", constructScalpelTab());
+
+    var initPython = true;
+
+    if (initPython) {
+      initializeJepTmpDirectory();
+
+      // PyConfig config = new PyConfig();
+      // config.setPythonHome(tmpJepDirectoryPath);
+      // MainInterpreter.setInitParams(config);
+
+      MainInterpreter.setJepLibraryPath(
+        tmpJepDirectoryPath + "/lib/python3.10/site-packages/jep/libjep.so"
+      );
+
+      logging.logToOutput("Initialized successfully.");
     }
   }
 }
