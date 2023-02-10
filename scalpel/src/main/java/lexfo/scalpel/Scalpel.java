@@ -99,7 +99,7 @@ print('This goes in stderr', file=sys.stderr)
 
     // Add request editor tab ?
     // https://github.com/PortSwigger/burp-extensions-montoya-api-examples/blob/main/customrequesteditortab/src/main/java/example/customrequesteditortab/CustomRequestEditorTab.java
-    // api.userInterface().registerHttpRequestEditorProvider(new MyHttpRequestEditorProvider(api));
+    API.userInterface().registerHttpRequestEditorProvider(new MyHttpRequestEditorProvider(API));
 
     // Change this to stop Python from being initialized (for JEP debugging purposes)
     Boolean initPython = true;
