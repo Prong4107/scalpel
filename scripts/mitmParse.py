@@ -17,7 +17,12 @@ from mitmproxy.net.http.http1.read import read_response_head
 lines = [bytes(x, "utf-8") for x in rawReq.splitlines()]
 var = read_response_head(lines)
 
-var.set_content
+var.set_text("lol")
 print(var)
 
 print(var.headers)
+print(var.content)
+
+print("---------------")
+
+print(str(var))
