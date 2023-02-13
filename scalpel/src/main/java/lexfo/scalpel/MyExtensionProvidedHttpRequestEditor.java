@@ -5,13 +5,11 @@ import static burp.api.montoya.core.ByteArray.byteArray;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.message.HttpRequestResponse;
-import burp.api.montoya.http.message.params.HttpParameter;
 // import burp.api.montoya.http.message.params.HttpParameter;
 import burp.api.montoya.http.message.params.ParsedHttpParameter;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.logging.Logging;
 import burp.api.montoya.ui.Selection;
-import burp.api.montoya.ui.editor.EditorOptions;
 import burp.api.montoya.ui.editor.RawEditor;
 import burp.api.montoya.ui.editor.extension.EditorCreationContext;
 import burp.api.montoya.ui.editor.extension.EditorMode;
@@ -20,7 +18,7 @@ import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor;
 // import burp.api.montoya.utilities.Base64Utils;
 import burp.api.montoya.utilities.URLUtils;
 import java.awt.*;
-import java.util.stream.Collectors;
+// import java.util.stream.Collectors;
 
 // import java.util.Optional;
 
@@ -31,31 +29,28 @@ class MyExtensionProvidedHttpRequestEditor
   private final RawEditor requestEditor;
   private final URLUtils urlUtils;
   private HttpRequestResponse requestResponse;
-  private final MontoyaApi api;
+  private final MontoyaApi API;
   private final Logging logger;
 
   private ParsedHttpParameter parsedHttpParameter;
 
   MyExtensionProvidedHttpRequestEditor(
-    MontoyaApi api,
+    MontoyaApi API,
     EditorCreationContext creationContext
   ) {
-    this.api = api;
-    logger = api.logging();
-    urlUtils = api.utilities().urlUtils();
+    this.API = API;
+    logger = API.logging();
+    urlUtils = API.utilities().urlUtils();
 
-    if (creationContext.editorMode() == EditorMode.READ_ONLY) {
-      requestEditor =
-        api.userInterface().createRawEditor(EditorOptions.READ_ONLY);
-    } else {
-      requestEditor = api.userInterface().createRawEditor();
-    }
+
+    requestEditor = API.userInterface().createRawEditor();
+
+    requestEditor.setEditable(creationContext.editorMode() != EditorMode.READ_ONLY);
 
     // logger.logToOutput(
     //   Thread.currentThread().getStackTrace()[1].getMethodName()
     // );
 
-    requestEditor.setContents(byteArray("lol"));
   }
 
   @Override
@@ -71,17 +66,11 @@ class MyExtensionProvidedHttpRequestEditor
     // logger.logToOutput(
     //   Thread.currentThread().getStackTrace()[1].getMethodName()
     // );
+
+    if (requestResponse.response() == null)
+      this.requestEditor.setContents(transformToHTTP1(requestResponse.request().toByteArray()));
+
     this.requestResponse = requestResponse;
-
-    String urlDecoded = urlUtils.decode(parsedHttpParameter.value());
-
-    ByteArray output;
-
-    output = byteArray(urlDecoded);
-
-    this.requestEditor.setContents(
-        ByteArray.byteArray("ptdr " + output.toString())
-      );
   }
 
   /* 
@@ -139,8 +128,8 @@ class MyExtensionProvidedHttpRequestEditor
     // requestResponse.request().
     // logger.logToOutput(requestResponse.request().headers().toString());
     // this.requestEditor.setContents(ByteArray.byteArray(requestToString(requestResponse.request())));
-    requestResponse.request().body();
-    this.requestEditor.setContents(transformToHTTP1(requestResponse.request().toByteArray()));
+    // requestResponse.request().body();
+    // this.requestEditor.setContents(transformToHTTP1(requestResponse.request().toByteArray()));
 
     return true;
   }

@@ -37,29 +37,26 @@ public class Scalpel implements BurpExtension {
     editorPane = new JEditorPane();
     JButton button = new JButton("Run script.");
 
-    button.addActionListener(
-      new ActionListener() {
-        public void actionPerformed(ActionEvent e) {
-          logger.logToOutput("Clicked button");
-          String scriptContent = editorPane.getText();
-          try {
-            String[] scriptOutput = executor.executeScriptAndCaptureOutput(
-              scriptContent
-            );
-            outputArea.setText(
-              String.format(
-                "stdout:\n------------------\n%s\n------------------\n\nstderr:\n------------------\n%s",
-                scriptOutput[0],
-                scriptOutput[1]
-              )
-            );
-          } catch (Exception exception) {
-            outputArea.setText(exception.toString());
-          }
-          logger.logToOutput("Handled action.");
-        }
+    button.addActionListener((ActionEvent e) -> {
+      logger.logToOutput("Clicked button");
+      String scriptContent = editorPane.getText();
+      try {
+        String[] scriptOutput = executor.executeScriptAndCaptureOutput(
+          scriptContent
+        );
+
+        var txt = String.format(
+          "stdout:\n------------------\n%s\n------------------\n\nstderr:\n------------------\n%s",
+          scriptOutput[0],
+          scriptOutput[1]
+        );
+
+        outputArea.setText(txt);
+      } catch (Exception exception) {
+        outputArea.setText(exception.toString());
       }
-    );
+      logger.logToOutput("Handled action.");
+    });
 
     editorPane.setText(
       """
@@ -97,9 +94,11 @@ print('This goes in stderr', file=sys.stderr)
     // Add the scripting editor tab.
     API.userInterface().registerSuiteTab("Scalpel", constructScalpelTab());
 
-    // Add request editor tab ?
+    // Add request editor tab
     // https://github.com/PortSwigger/burp-extensions-montoya-api-examples/blob/main/customrequesteditortab/src/main/java/example/customrequesteditortab/CustomRequestEditorTab.java
-    API.userInterface().registerHttpRequestEditorProvider(new MyHttpRequestEditorProvider(API));
+    API
+      .userInterface()
+      .registerHttpRequestEditorProvider(new MyHttpRequestEditorProvider(API));
 
     // Change this to stop Python from being initialized (for JEP debugging purposes)
     Boolean initPython = true;
