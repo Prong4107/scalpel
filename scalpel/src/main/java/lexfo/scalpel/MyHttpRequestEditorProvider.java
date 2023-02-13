@@ -1,3 +1,4 @@
+
 package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
@@ -7,16 +8,16 @@ import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider;
 
 class MyHttpRequestEditorProvider implements HttpRequestEditorProvider
 {
-    private final MontoyaApi api;
+    private final MontoyaApi API;
 
-    MyHttpRequestEditorProvider(MontoyaApi api)
+    MyHttpRequestEditorProvider(MontoyaApi API)
     {
-        this.api = api;
+        this.API = API;
     }
 
     @Override
     public ExtensionProvidedHttpRequestEditor provideHttpRequestEditor(EditorCreationContext creationContext)
     {
-        return new MyExtensionProvidedHttpRequestEditor(api, creationContext);
+        return new MyExtensionProvidedHttpRequestEditor(API, creationContext);
     }
 }
