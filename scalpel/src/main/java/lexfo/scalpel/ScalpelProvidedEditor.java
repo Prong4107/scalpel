@@ -1,12 +1,8 @@
 package lexfo.scalpel;
 
-// import static burp.api.montoya.core.ByteArray.byteArray;
-
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.message.HttpRequestResponse;
-// import burp.api.montoya.http.message.params.HttpParameter;
-// import burp.api.montoya.http.message.params.ParsedHttpParameter;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.logging.Logging;
 import burp.api.montoya.ui.Selection;
@@ -14,21 +10,14 @@ import burp.api.montoya.ui.editor.RawEditor;
 import burp.api.montoya.ui.editor.extension.EditorCreationContext;
 import burp.api.montoya.ui.editor.extension.EditorMode;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor;
-// import burp.api.montoya.utilities.Base64EncodingOptions;
-// import burp.api.montoya.utilities.Base64Utils;
-// import burp.api.montoya.utilities.URLUtils;
 import java.awt.*;
 
-// import java.util.stream.Collectors;
-
-// import java.util.Optional;
 
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
 class ScalpelProvidedEditor
   implements ExtensionProvidedHttpRequestEditor {
 
   private final RawEditor requestEditor;
-  // private final URLUtils urlUtils;
   private HttpRequestResponse requestResponse;
   private final MontoyaApi API;
   private final Logging logger;
@@ -41,7 +30,6 @@ class ScalpelProvidedEditor
   ) {
     this.API = API;
     logger = API.logging();
-    // urlUtils = API.utilities().urlUtils();
 
     requestEditor = API.userInterface().createRawEditor();
 
@@ -74,21 +62,6 @@ class ScalpelProvidedEditor
 
     this.requestResponse = requestResponse;
   }
-
-  /* 
-  // Wrote this because i didnt read the f docs
-  // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/http/message/requests/HttpRequest.html
-  private String requestToString(HttpRequest req) {
-    return (
-      req
-        .headers()
-        .parallelStream()
-        .map(header -> header.toString())
-        .collect(Collectors.joining("\r\n")) +
-      req.bodyToString()
-    );
-  }
- */
 
   private ByteArray transformToHTTP1(ByteArray reqBytes) {
     var http2Match = reqBytes.indexOf("HTTP/2");
