@@ -12,52 +12,52 @@ import burp.api.montoya.ui.editor.extension.EditorMode;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor;
 import java.awt.*;
 
-
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
-class ScalpelProvidedEditor
-  implements ExtensionProvidedHttpRequestEditor {
+class ScalpelProvidedEditor implements ExtensionProvidedHttpRequestEditor {
 
   private final RawEditor requestEditor;
   private HttpRequestResponse requestResponse;
   private final MontoyaApi API;
   private final Logging logger;
+  private final EditorCreationContext ctx;
 
-  // private ParsedHttpParameter parsedHttpParameter;
-
-  ScalpelProvidedEditor(
-    MontoyaApi API,
-    EditorCreationContext creationContext
-  ) {
+  ScalpelProvidedEditor(MontoyaApi API, EditorCreationContext creationContext) {
     this.API = API;
     logger = API.logging();
-
+    ctx = creationContext;
     requestEditor = API.userInterface().createRawEditor();
-
     requestEditor.setEditable(
       creationContext.editorMode() != EditorMode.READ_ONLY
     );
+  }
 
+  public EditorCreationContext getCtx() {
+    return ctx;
+  }
+
+  public RawEditor getEditor() {
+    return requestEditor;
   }
 
   @Override
   public HttpRequest getRequest() {
+    HttpRequest request = requestResponse != null
+      ? requestResponse.request()
+      : null;
 
-    HttpRequest request;
-
-    if (requestEditor.isModified()) {
-      request = HttpRequest.httpRequest(requestEditor.getContents());
-    } else {
-      request = requestResponse.request();
-    }
+    // TODO: a ne pas faire
+    // if (requestEditor.isModified()) request =
+    //   HttpRequest.httpRequest(requestEditor.getContents());
 
     return request;
   }
 
   @Override
   public void setRequestResponse(HttpRequestResponse requestResponse) {
-
     if (requestResponse.response() == null) this.requestEditor.setContents(
-        transformToHTTP1(requestResponse.request().toByteArray())
+        // TODO: mitmproxy conversions
+        // transformToHTTP1(requestResponse.request().toByteArray())
+        requestResponse.request().toByteArray()
       );
 
     this.requestResponse = requestResponse;
