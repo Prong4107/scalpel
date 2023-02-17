@@ -5,7 +5,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.Enumeration;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -52,7 +51,7 @@ public class ScalpelUnpacker {
       String newPath = extractFolder;
 
       new File(newPath).mkdirs();
-      Enumeration zipFileEntries = zip.entries();
+      var zipFileEntries = zip.entries();
 
       // Process each entry
       while (zipFileEntries.hasMoreElements()) {
@@ -87,6 +86,7 @@ public class ScalpelUnpacker {
           dest.close();
           is.close();
         }
+        zip.close();
       }
     } catch (Exception e) {
       logger.logToError("ERROR: " + e.getMessage());
