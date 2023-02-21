@@ -86,8 +86,8 @@ public class ScalpelUnpacker {
           dest.close();
           is.close();
         }
-        zip.close();
       }
+      zip.close();
     } catch (Exception e) {
       logger.logToError("ERROR: " + e.getMessage());
     }
