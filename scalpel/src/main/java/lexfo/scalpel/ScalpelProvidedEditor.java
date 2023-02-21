@@ -16,6 +16,7 @@ import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpResponseEditor;
 import java.awt.*;
 
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
+// https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpResponseEditor.html
 class ScalpelProvidedEditor
   implements
     ExtensionProvidedHttpRequestEditor, ExtensionProvidedHttpResponseEditor {
@@ -70,7 +71,9 @@ class ScalpelProvidedEditor
 
   @Override
   public void setRequestResponse(HttpRequestResponse requestResponse) {
-    if (this.type == EditorType.REQUEST)
+    if (requestResponse == null)
+      this.editor.setContents(ByteArray.byteArray(""));
+    else if (this.type == EditorType.REQUEST)
       this.editor.setContents(requestResponse.request().toByteArray());
     else if (requestResponse.response() != null)
       this.editor.setContents(requestResponse.response().toByteArray());
