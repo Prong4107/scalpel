@@ -41,9 +41,7 @@ public class Scalpel implements BurpExtension {
       logger.logToOutput("Clicked button");
       String scriptContent = editorPane.getText();
       try {
-        String[] scriptOutput = executor.executeScriptAndCaptureOutput(
-          scriptContent
-        );
+        String[] scriptOutput = executor.evalAndCaptureOutput(scriptContent);
 
         var txt = String.format(
           "stdout:\n------------------\n%s\n------------------\n\nstderr:\n------------------\n%s",
@@ -100,10 +98,6 @@ print('This goes in stderr', file=sys.stderr)
 
     API.userInterface().registerHttpRequestEditorProvider(provider);
 
-    API
-      .http()
-      .registerHttpHandler(new ScalpelHttpRequestHandler(API, provider));
-
     // Change this to stop Python from being initialized (for JEP debugging purposes)
     Boolean initPython = true;
 
@@ -124,7 +118,18 @@ print('This goes in stderr', file=sys.stderr)
         "/lib/python3.10/site-packages/jep/libjep.so"
       );
 
-      executor = new ScalpelExecutor(API, logger);
+      executor =
+        new ScalpelExecutor(
+          API,
+          logger,
+          "/home/nol/Desktop/piperpp/scalpel/scripts/requestTest.py"
+        );
+
+      API
+        .http()
+        .registerHttpHandler(
+          new ScalpelHttpRequestHandler(API, provider, executor)
+        );
     }
     logger.logToOutput("Initialized successfully.");
   }
