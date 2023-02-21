@@ -75,7 +75,8 @@ public class ScalpelExecutor {
 
       // Call request(...) callback
       // https://ninia.github.io/jep/javadoc/4.1/jep/Interpreter.html#invoke-java.lang.String-java.lang.Object...-
-      interp.invoke("request", pyReq, text, tab_name, logger);
+      pyReq =
+        (HttpRequest) interp.invoke("request", pyReq, text, tab_name, logger);
 
       // TODO: Extract Burp request.
       var newReq = pyReq;
