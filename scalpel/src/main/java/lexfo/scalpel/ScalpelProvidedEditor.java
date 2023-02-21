@@ -2,33 +2,44 @@ package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
+import burp.api.montoya.http.Http;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
+import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.logging.Logging;
 import burp.api.montoya.ui.Selection;
 import burp.api.montoya.ui.editor.RawEditor;
 import burp.api.montoya.ui.editor.extension.EditorCreationContext;
 import burp.api.montoya.ui.editor.extension.EditorMode;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor;
+import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpResponseEditor;
 import java.awt.*;
 
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
-class ScalpelProvidedEditor implements ExtensionProvidedHttpRequestEditor {
+class ScalpelProvidedEditor
+  implements
+    ExtensionProvidedHttpRequestEditor, ExtensionProvidedHttpResponseEditor {
 
-  private final RawEditor requestEditor;
+  private final RawEditor editor;
   private HttpRequestResponse requestResponse;
   private final MontoyaApi API;
   private final Logging logger;
   private final EditorCreationContext ctx;
+  private final EditorType type;
 
-  ScalpelProvidedEditor(MontoyaApi API, EditorCreationContext creationContext) {
+  ScalpelProvidedEditor(
+    MontoyaApi API,
+    EditorCreationContext creationContext,
+    EditorType type
+  ) {
     this.API = API;
     logger = API.logging();
     ctx = creationContext;
-    requestEditor = API.userInterface().createRawEditor();
-    requestEditor.setEditable(
+    editor = API.userInterface().createRawEditor();
+    editor.setEditable(
       creationContext.editorMode() != EditorMode.READ_ONLY
     );
+    this.type = type;
   }
 
   public EditorCreationContext getCtx() {
@@ -36,7 +47,7 @@ class ScalpelProvidedEditor implements ExtensionProvidedHttpRequestEditor {
   }
 
   public RawEditor getEditor() {
-    return requestEditor;
+    return editor;
   }
 
   @Override
@@ -45,52 +56,26 @@ class ScalpelProvidedEditor implements ExtensionProvidedHttpRequestEditor {
       ? requestResponse.request()
       : null;
 
-    // TODO: a ne pas faire
-    // if (requestEditor.isModified()) request =
-    //   HttpRequest.httpRequest(requestEditor.getContents());
-
     return request;
   }
 
   @Override
-  public void setRequestResponse(HttpRequestResponse requestResponse) {
-    if (requestResponse.response() == null) this.requestEditor.setContents(
-        // TODO: mitmproxy conversions
-        // transformToHTTP1(requestResponse.request().toByteArray())
-        requestResponse.request().toByteArray()
-      );
+  public HttpResponse getResponse() {
+    HttpResponse response = requestResponse != null
+      ? requestResponse.response()
+      : null;
 
-    this.requestResponse = requestResponse;
+    return response;
   }
 
-  private ByteArray transformToHTTP1(ByteArray reqBytes) {
-    var http2Match = reqBytes.indexOf("HTTP/2");
-    var http2StringLength = "HTTP/2".length();
+  @Override
+  public void setRequestResponse(HttpRequestResponse requestResponse) {
+    if (this.type == EditorType.REQUEST)
+      this.editor.setContents(requestResponse.request().toByteArray());
+    else if (requestResponse.response() != null)
+      this.editor.setContents(requestResponse.response().toByteArray());
 
-    // Ensure HTTP/2 is present before modifying stuff
-    if (http2Match == -1) return reqBytes.copy();
-
-    // Get first line end index
-    var firstLineEnd = reqBytes.indexOf("\r\n");
-
-    // Ensure HTTP/2 was matched at the end of the first line
-    if (http2Match != firstLineEnd - http2StringLength) return reqBytes.copy();
-
-    // Return a new ByteArray with the method changed.
-    // Reserve + 2 bytes for HTTP/1%.1%
-    var newReqBytes = ByteArray.byteArrayOfLength(reqBytes.length() + 2);
-    var reqBytesFirstPart = reqBytes.subArray(0, http2Match);
-    var reqBytesLastPart = reqBytes.subArray(firstLineEnd, reqBytes.length());
-    var http1Bytes = ByteArray.byteArray("HTTP/1.1");
-
-    newReqBytes.setBytes(0, reqBytesFirstPart);
-    newReqBytes.setBytes(reqBytesFirstPart.length(), http1Bytes);
-    newReqBytes.setBytes(
-      reqBytesFirstPart.length() + http1Bytes.length(),
-      reqBytesLastPart
-    );
-
-    return newReqBytes;
+    this.requestResponse = requestResponse;
   }
 
   @Override
@@ -105,18 +90,18 @@ class ScalpelProvidedEditor implements ExtensionProvidedHttpRequestEditor {
 
   @Override
   public Component uiComponent() {
-    return requestEditor.uiComponent();
+    return editor.uiComponent();
   }
 
   @Override
   public Selection selectedData() {
-    return requestEditor.selection().isPresent()
-      ? requestEditor.selection().get()
+    return editor.selection().isPresent()
+      ? editor.selection().get()
       : null;
   }
 
   @Override
   public boolean isModified() {
-    return requestEditor.isModified();
+    return editor.isModified();
   }
 }
