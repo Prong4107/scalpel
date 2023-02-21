@@ -40,7 +40,7 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
     var defaultAction = RequestToBeSentAction.continueWith(httpRequestToBeSent);
 
     // Find a displayed editor.
-    var foundEditor = editorProvider.getDisplayedEditor();
+    var foundEditor = editorProvider.getDisplayedRequestEditor();
 
     // Ensure an editor is displayed.
     if (!foundEditor.isPresent()) return defaultAction;
@@ -84,6 +84,8 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
       "]"
     );
 
-    return ResponseReceivedAction.continueWith(httpResponseReceived);
+    var newResponse = executor.callResponseReceivedCallback(httpResponseReceived);
+
+    return ResponseReceivedAction.continueWith(newResponse);
   }
 }

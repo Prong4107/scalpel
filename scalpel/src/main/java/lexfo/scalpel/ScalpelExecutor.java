@@ -4,6 +4,7 @@ import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.message.HttpHeader;
 import burp.api.montoya.http.message.requests.HttpRequest;
+import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.logging.Logging;
 import jep.Interpreter;
 import jep.SharedInterpreter;
@@ -64,11 +65,12 @@ public class ScalpelExecutor {
     ByteArray text,
     String tab_name
   ) {
-    // TODO: Create a PyRequest / PyResponse wrapper.
+    // Create a PyRequest wrapper.
+    // TODO: Actually implement the wrapper.
     var pyReq = req;
 
     // Instantiate interpreter
-    // TODO: Handle errors
+    // TODO: Handle errors + work with a global interpreter.
     try (Interpreter interp = new SharedInterpreter()) {
       // Run script (declares callbacks)
       interp.runScript(scriptPath);
@@ -82,7 +84,30 @@ public class ScalpelExecutor {
       var newReq = pyReq;
 
       // Return new request with debug header
-      return newReq.withAddedHeader(HttpHeader.httpHeader("X-Scalpel", "true"));
+      return newReq.withAddedHeader(HttpHeader.httpHeader("X-Scalpel-Request", "true"));
+    }
+  }
+
+  public HttpResponse callResponseReceivedCallback(HttpResponse res) {
+    // Create a PyResponse wrapper.
+    // TODO: Actually implement the wrapper.
+    var pyRes = res;
+
+    // Instantiate interpreter
+    // TODO: Handle errors + work with a global interpreter.
+    try (Interpreter interp = new SharedInterpreter()) {
+      // Run script (declares callbacks)
+      interp.runScript(scriptPath);
+
+      // Call response(...) callback
+      // https://ninia.github.io/jep/javadoc/4.1/jep/Interpreter.html#invoke-java.lang.String-java.lang.Object...-
+      pyRes = (HttpResponse) interp.invoke("response", pyRes, logger);
+
+      // TODO: Extract Burp response.
+      var newRes = pyRes;
+
+      // Return new request with debug header
+      return newRes.withAddedHeader(HttpHeader.httpHeader("X-Scalpel-Response", "true"));
     }
   }
 }
