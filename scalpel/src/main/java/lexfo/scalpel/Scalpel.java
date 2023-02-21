@@ -97,6 +97,7 @@ print('This goes in stderr', file=sys.stderr)
     var provider = new ScalpelEditorProvider(API);
 
     API.userInterface().registerHttpRequestEditorProvider(provider);
+    API.userInterface().registerHttpResponseEditorProvider(provider);
 
     // Change this to stop Python from being initialized (for JEP debugging purposes)
     Boolean initPython = true;
@@ -122,6 +123,7 @@ print('This goes in stderr', file=sys.stderr)
         new ScalpelExecutor(
           API,
           logger,
+          // TODO: CHANGE ME!
           "/home/nol/Desktop/piperpp/scalpel/scripts/requestTest.py"
         );
 
