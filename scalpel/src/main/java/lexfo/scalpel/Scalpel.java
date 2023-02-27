@@ -112,7 +112,7 @@ print('This goes in stderr', file=sys.stderr)
           API,
           logger,
           // TODO: CHANGE ME!
-          "/home/nol/Desktop/piperpp/scalpel/scripts/requestTest.py"
+          "/home/nol/Desktop/piperpp/scalpel/scripts/editorTest.py"
         );
 
       // Add request editor tab

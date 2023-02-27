@@ -6,6 +6,7 @@ import burp.api.montoya.http.message.HttpHeader;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.logging.Logging;
+import java.util.Optional;
 import jep.Interpreter;
 import jep.SharedInterpreter;
 
@@ -84,7 +85,7 @@ public class ScalpelExecutor {
       var newReq = pyReq;
 
       // Return new request with debug header
-      return newReq.withAddedHeader(HttpHeader.httpHeader("X-Scalpel-Request", "true"));
+      return newReq.withAddedHeader("X-Scalpel-Request", "true");
     }
   }
 
@@ -107,7 +108,66 @@ public class ScalpelExecutor {
       var newRes = pyRes;
 
       // Return new request with debug header
-      return newRes.withAddedHeader(HttpHeader.httpHeader("X-Scalpel-Response", "true"));
+      return newRes.withAddedHeader(
+        HttpHeader.httpHeader("X-Scalpel-Response", "true")
+      );
     }
+  }
+
+  public Optional<ByteArray> callInEditorCallback(
+    HttpRequest req,
+    String tabName
+  ) {
+    // Format corresponding callback's Python function name.
+    var cbName = Constants.REQ_EDIT_IN_CB_PREFIX + tabName;
+
+    // Instantiate interpreter.
+    try (Interpreter interp = new SharedInterpreter()) {
+      // Load the script.
+      interp.runScript(scriptPath);
+
+      try {
+        // Invoke the callback and get it's result.
+        var result = interp.invoke(cbName, req, logger);
+
+        // Empty return when the cb returns None.
+        if (result == null) return Optional.empty();
+
+        // Ensure the returned data is a supported type.
+        if (result.getClass() != byte[].class) {
+          // TODO: Use a "supported type" Set.
+
+          // Log the error in Burp.
+          logger.logToError(
+            cbName +
+            "() returned unsupported type " +
+            result.getClass().getName()
+          );
+
+          // Empty return.
+          return Optional.empty();
+        }
+
+        try {
+          // Convert the result to Burp's ByteArray class and return it.
+          return Optional.of(ByteArray.byteArray((byte[]) result));
+        } catch (Exception e) {
+          // Something nasty that should be impossible to happen has happened.
+          // Log the exception message and stack trace.
+          TraceLogger.logExceptionStackTrace(logger, e);
+        }
+      } catch (Exception e) {
+        // There has been an error in the callback invokation
+        // Log the exception message and stack trace.
+        TraceLogger.logExceptionStackTrace(logger, e);
+      }
+    } catch (Exception e) {
+      // There has been an error in the interpreter instantiation or script evaluation.
+      // Log the exception message and stack trace.
+      TraceLogger.logExceptionStackTrace(logger, e);
+    }
+
+    // There has been an error, so return an empty Optional.
+    return Optional.empty();
   }
 }

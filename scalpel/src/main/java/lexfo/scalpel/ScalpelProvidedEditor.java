@@ -33,27 +33,29 @@ class ScalpelProvidedEditor
   private final EditorType type;
   private final String id;
   private final ScalpelEditorProvider provider;
+  private final ScalpelExecutor executor;
 
   ScalpelProvidedEditor(
     MontoyaApi API,
     EditorCreationContext creationContext,
     EditorType type,
-    ScalpelEditorProvider provider
+    ScalpelEditorProvider provider,
+    ScalpelExecutor executor
   ) {
     this.API = API;
-    logger = API.logging();
-    id = UUID.randomUUID().toString();
+    this.logger = API.logging();
+    this.id = UUID.randomUUID().toString();
+    this.provider = provider;
+    this.ctx = creationContext;
+    this.executor = executor;
 
     try {
-      this.provider = provider;
-
-      ctx = creationContext;
-      editor = API.userInterface().createRawEditor();
+      this.editor = API.userInterface().createRawEditor();
       editor.setEditable(creationContext.editorMode() != EditorMode.READ_ONLY);
       this.type = type;
     } catch (Exception e) {
       logger.logToError("Couldn't instantiate new editor:");
-      ExceptionLogger.logStackTrace(logger, e);
+      TraceLogger.logExceptionStackTrace(logger, e);
       throw e;
     }
   }
@@ -119,20 +121,40 @@ class ScalpelProvidedEditor
 
   @Override
   public void setRequestResponse(HttpRequestResponse requestResponse) {
-    if (requestResponse == null) this.editor.setContents(
-        ByteArray.byteArray("")
-      ); else if (this.type == EditorType.REQUEST) this.editor.setContents(
-        requestResponse.request().toByteArray()
-      ); else if (requestResponse.response() != null) this.editor.setContents(
-        requestResponse.response().toByteArray()
-      );
 
     this.requestResponse = requestResponse;
   }
 
+  private boolean updateContentFromReq(HttpRequest req) {
+    try {
+      // Call the Python callback and store the returned value.
+      var res = executor.callInEditorCallback(req, caption());
+
+      // Update the editor's content with the returned bytes.
+      res.ifPresent(bytes -> editor.setContents(bytes));
+
+      // Display the tab when bytes are returned.
+      return res.isPresent();
+    } catch (Exception e) {
+      logger.logToError("Error");
+      TraceLogger.logExceptionStackTrace(logger, e);
+    }
+    return false;
+  }
+
   @Override
   public boolean isEnabledFor(HttpRequestResponse requestResponse) {
-    return true;
+    // Ensure requestResponse exist.
+    if (requestResponse == null) return false;
+
+    // TODO: Directly return false if callback doesn't exist.
+
+    // Call corresponding request editor callback when appropriate.
+    if (type == EditorType.REQUEST) return updateContentFromReq(
+      requestResponse.request()
+    );
+
+    return false;
   }
 
   @Override

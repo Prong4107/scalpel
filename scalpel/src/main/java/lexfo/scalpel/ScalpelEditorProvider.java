@@ -79,7 +79,8 @@ class ScalpelEditorProvider
       API,
       creationContext,
       EditorType.REQUEST,
-      this
+      this,
+      executor
     );
     requestEditorList.add(new WeakReference<ScalpelProvidedEditor>(editor));
     return editor;
@@ -93,7 +94,8 @@ class ScalpelEditorProvider
       API,
       creationContext,
       EditorType.RESPONSE,
-      this
+      this,
+      executor
     );
     responseEditorList.add(new WeakReference<ScalpelProvidedEditor>(editor));
     return editor;

@@ -71,7 +71,7 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
       text,
       tab_name
     );
-
+  
     // Return the modified request.
     return RequestToBeSentAction.continueWith(
       newReq,
