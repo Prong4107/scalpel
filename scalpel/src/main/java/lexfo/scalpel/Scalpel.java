@@ -63,7 +63,6 @@ print('This goes in stderr', file=sys.stderr)
 """
     );
     outputArea.setEditable(false);
-
     scriptingPane.setLeftComponent(editorPane);
     scriptingPane.setRightComponent(outputArea);
     scriptingPane.setResizeWeight(0.5);
@@ -92,13 +91,6 @@ print('This goes in stderr', file=sys.stderr)
     // Add the scripting editor tab.
     API.userInterface().registerSuiteTab("Scalpel", constructScalpelTab());
 
-    // Add request editor tab
-    // https://github.com/PortSwigger/burp-extensions-montoya-api-examples/blob/main/customrequesteditortab/src/main/java/example/customrequesteditortab/CustomRequestEditorTab.java
-    var provider = new ScalpelEditorProvider(API);
-
-    API.userInterface().registerHttpRequestEditorProvider(provider);
-    API.userInterface().registerHttpResponseEditorProvider(provider);
-
     // Change this to stop Python from being initialized (for JEP debugging purposes)
     Boolean initPython = true;
 
@@ -109,10 +101,6 @@ print('This goes in stderr', file=sys.stderr)
 
       // TODO: Remove this stuff if not necessary
       unpacker.initializeResourcesDirectory();
-
-      // PyConfig config = new PyConfig();
-      // config.setPythonHome(tmpJepDirectoryPath);
-      // MainInterpreter.setInitParams(config);
 
       MainInterpreter.setJepLibraryPath(
         unpacker.getResourcesPath() +
@@ -126,6 +114,13 @@ print('This goes in stderr', file=sys.stderr)
           // TODO: CHANGE ME!
           "/home/nol/Desktop/piperpp/scalpel/scripts/requestTest.py"
         );
+
+      // Add request editor tab
+      // https://github.com/PortSwigger/burp-extensions-montoya-api-examples/blob/main/customrequesteditortab/src/main/java/example/customrequesteditortab/CustomRequestEditorTab.java
+      var provider = new ScalpelEditorProvider(API, executor);
+
+      API.userInterface().registerHttpRequestEditorProvider(provider);
+      API.userInterface().registerHttpResponseEditorProvider(provider);
 
       API
         .http()
