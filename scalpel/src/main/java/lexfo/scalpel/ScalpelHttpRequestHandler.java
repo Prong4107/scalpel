@@ -9,6 +9,7 @@
 package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.core.Annotations;
 import burp.api.montoya.http.handler.*;
 import burp.api.montoya.logging.Logging;
 
@@ -36,8 +37,17 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
   public RequestToBeSentAction handleHttpRequestToBeSent(
     HttpRequestToBeSent httpRequestToBeSent
   ) {
+    logger.logToOutput("req:");
+    logger.logToOutput(
+      httpRequestToBeSent.annotations() != null
+        ? httpRequestToBeSent.annotations().notes()
+        : null
+    );
     // Keep default behaviour when the request does come from Scalpel editors.
-    var defaultAction = RequestToBeSentAction.continueWith(httpRequestToBeSent);
+    var defaultAction = RequestToBeSentAction.continueWith(
+      httpRequestToBeSent,
+      Annotations.annotations("Default")
+    );
 
     // Find a displayed editor.
     var foundEditor = editorProvider.getDisplayedRequestEditor();
@@ -69,23 +79,42 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
     );
 
     // Return the modified request.
-    return RequestToBeSentAction.continueWith(newReq);
+    return RequestToBeSentAction.continueWith(
+      newReq,
+      Annotations.annotations("scalpel:" + displayedEditor.getId())
+    );
+  }
+
+  private static Boolean isAnnotableFromScalpel(Object obj) {
+    try {
+      Annotations annotations = (Annotations) obj
+        .getClass()
+        .getMethod("annotations")
+        .invoke(obj);
+
+      return (
+        annotations != null && annotations.notes().startsWith("scalpel:")
+      );
+    } catch (Exception e) {
+      return false;
+    }
   }
 
   @Override
   public ResponseReceivedAction handleHttpResponseReceived(
     HttpResponseReceived httpResponseReceived
   ) {
-    logger.logToOutput(
-      "HTTP response from " +
-      httpResponseReceived.initiatingRequest().httpService() +
-      " [" +
-      httpResponseReceived.toolSource().toolType().toolName() +
-      "]"
+    var action = ResponseReceivedAction.continueWith(
+      httpResponseReceived,
+      httpResponseReceived.annotations().withNotes("defaultResponseAction")
     );
 
-    var newResponse = executor.callResponseReceivedCallback(httpResponseReceived);
+    if (isAnnotableFromScalpel(httpResponseReceived)) action =
+      ResponseReceivedAction.continueWith(
+        executor.callResponseReceivedCallback(httpResponseReceived),
+        Annotations.annotations("Scalpeled")
+      );
 
-    return ResponseReceivedAction.continueWith(newResponse);
+    return action;
   }
 }
