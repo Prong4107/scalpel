@@ -37,12 +37,6 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
   public RequestToBeSentAction handleHttpRequestToBeSent(
     HttpRequestToBeSent httpRequestToBeSent
   ) {
-    logger.logToOutput("req:");
-    logger.logToOutput(
-      httpRequestToBeSent.annotations() != null
-        ? httpRequestToBeSent.annotations().notes()
-        : null
-    );
     // Keep default behaviour when the request does come from Scalpel editors.
     var defaultAction = RequestToBeSentAction.continueWith(
       httpRequestToBeSent,
