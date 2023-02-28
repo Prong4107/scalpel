@@ -4,7 +4,7 @@ from burp.api.montoya.http.message.requests import HttpRequest
 def request(req, text, tab_name, logger):
     try:
         logger.logToOutput("Python: request() called")
-        return HttpRequest.httpRequest(text).withService(req.httpService()).withAddedHeader("X-Python-Request", "Hello")
+        return HttpRequest.httpRequest(text).withService(req.httpService()).withAddedHeader("X-Python-Intercept-Request", "Hello")
     except:
         logger.logToError("Python: error")
     return req
@@ -12,16 +12,16 @@ def request(req, text, tab_name, logger):
 
 def response(res, logger):
     logger.logToOutput("Python: response() called")
-    return res.withAddedHeader("X-Python-Response", "Hello")
+    return res.withAddedHeader("X-Python-Intercept-Response", "true")
 
 # OK
-def req_edit_Scalpel(req, logger):
-    logger.logToOutput("Python: req_edit_...() called")
-    return req.withAddedHeader("X-Scalpel-Request-Editor", "true").toByteArray().getBytes()
+def req_edit_in_Scalpel(req, logger):
+    logger.logToOutput("Python: req_edit_in_...() called")
+    return req.withAddedHeader("X-Python-In-Request-Editor", "true").toByteArray().getBytes()
 
-def res_edit_Scalpel(res, logger):
-    logger.logToOutput("Python: res_edit_...() called")
-    return res.withAddedHeader("X-Scalpel-Response-Editor", "true").toByteArray().getBytes()
+def res_edit_in_Scalpel(res, logger):
+    logger.logToOutput("Python: res_edit_in_...() called")
+    return res.withAddedHeader("X-Python-In-Response-Editor", "true").toByteArray().getBytes()
 
 
 # KO
