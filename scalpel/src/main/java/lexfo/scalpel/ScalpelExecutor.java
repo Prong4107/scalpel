@@ -3,6 +3,7 @@ package lexfo.scalpel;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.message.HttpHeader;
+import burp.api.montoya.http.message.HttpMessage;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.logging.Logging;
@@ -115,11 +116,14 @@ public class ScalpelExecutor {
   }
 
   public Optional<ByteArray> callInEditorCallback(
-    HttpRequest req,
+    HttpMessage req,
     String tabName
   ) {
     // Format corresponding callback's Python function name.
-    var cbName = Constants.REQ_EDIT_IN_CB_PREFIX + tabName;
+    var prefix = req.getClass() == HttpRequest.class
+      ? Constants.REQ_EDIT_IN_CB_PREFIX
+      : Constants.RES_EDIT_IN_CB_PREFIX;
+    var cbName = prefix + tabName;
 
     // Instantiate interpreter.
     try (Interpreter interp = new SharedInterpreter()) {
