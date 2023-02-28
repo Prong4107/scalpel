@@ -115,15 +115,32 @@ public class ScalpelExecutor {
     }
   }
 
-  public Optional<ByteArray> callInEditorCallback(
-    HttpMessage req,
-    String tabName
+  private static final String getCallbackName(
+    String tabName,
+    HttpMessage msg,
+    Boolean isInbound
   ) {
     // Format corresponding callback's Python function name.
-    var prefix = req.getClass() == HttpRequest.class
-      ? Constants.REQ_EDIT_IN_CB_PREFIX
-      : Constants.RES_EDIT_IN_CB_PREFIX;
-    var cbName = prefix + tabName;
+    var editPrefix = msg instanceof HttpRequest
+      ? Constants.REQ_EDIT_PREFIX
+      : Constants.RES_EDIT_PREFIX;
+
+    var directionPrefix = isInbound
+      ? Constants.IN_PREFIX
+      : Constants.OUT_PREFIX;
+
+    var cbName = editPrefix + directionPrefix + tabName;
+
+    return cbName;
+  }
+
+  public Optional<ByteArray> callEditorCallback(
+    HttpMessage msg,
+    Boolean isInbound,
+    String tabName
+  ) {
+    // Get callback's Python function name.
+    var cbName = getCallbackName(tabName, msg, isInbound);
 
     // Instantiate interpreter.
     try (Interpreter interp = new SharedInterpreter()) {
@@ -132,7 +149,7 @@ public class ScalpelExecutor {
 
       try {
         // Invoke the callback and get it's result.
-        var result = interp.invoke(cbName, req, logger);
+        var result = interp.invoke(cbName, msg, logger);
 
         // Empty return when the cb returns None.
         if (result == null) return Optional.empty();
