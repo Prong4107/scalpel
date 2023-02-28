@@ -2,6 +2,7 @@ package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
+import burp.api.montoya.http.message.HttpMessage;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
@@ -121,20 +122,19 @@ class ScalpelProvidedEditor
 
   @Override
   public void setRequestResponse(HttpRequestResponse requestResponse) {
-
     this.requestResponse = requestResponse;
   }
 
-  private boolean updateContentFromReq(HttpRequest req) {
+  private boolean updateContentFromHttpMsg(HttpMessage res) {
     try {
       // Call the Python callback and store the returned value.
-      var res = executor.callInEditorCallback(req, caption());
+      var result = executor.callInEditorCallback(res, caption());
 
       // Update the editor's content with the returned bytes.
-      res.ifPresent(bytes -> editor.setContents(bytes));
+      result.ifPresent(bytes -> editor.setContents(bytes));
 
       // Display the tab when bytes are returned.
-      return res.isPresent();
+      return result.isPresent();
     } catch (Exception e) {
       logger.logToError("Error");
       TraceLogger.logExceptionStackTrace(logger, e);
@@ -150,9 +150,11 @@ class ScalpelProvidedEditor
     // TODO: Directly return false if callback doesn't exist.
 
     // Call corresponding request editor callback when appropriate.
-    if (type == EditorType.REQUEST) return updateContentFromReq(
+    if (type == EditorType.REQUEST) return updateContentFromHttpMsg(
       requestResponse.request()
-    );
+    ); else if (
+      requestResponse.response() != null
+    ) return updateContentFromHttpMsg(requestResponse.response());
 
     return false;
   }

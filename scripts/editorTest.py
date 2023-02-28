@@ -19,6 +19,11 @@ def req_edit_Scalpel(req, logger):
     logger.logToOutput("Python: req_edit_...() called")
     return req.withAddedHeader("X-Scalpel-Request-Editor", "true").toByteArray().getBytes()
 
+def res_edit_Scalpel(res, logger):
+    logger.logToOutput("Python: res_edit_...() called")
+    return res.withAddedHeader("X-Scalpel-Response-Editor", "true").toByteArray().getBytes()
+
+
 # KO
 # def req_edit_Scalpel(req, logger):s
 #     logger.logToOutput("called")
