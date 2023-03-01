@@ -13,8 +13,6 @@ import burp.api.montoya.core.Annotations;
 import burp.api.montoya.http.handler.*;
 import burp.api.montoya.logging.Logging;
 
-// import java.awt.Component;
-
 public class ScalpelHttpRequestHandler implements HttpHandler {
 
   private final MontoyaApi API;
@@ -71,7 +69,7 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
       text,
       tab_name
     );
-  
+
     // Return the modified request.
     return RequestToBeSentAction.continueWith(
       newReq,

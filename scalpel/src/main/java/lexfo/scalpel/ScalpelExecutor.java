@@ -7,6 +7,8 @@ import burp.api.montoya.http.message.HttpMessage;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.logging.Logging;
+import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import jep.Interpreter;
 import jep.SharedInterpreter;
@@ -80,7 +82,11 @@ public class ScalpelExecutor {
       // Call request(...) callback
       // https://ninia.github.io/jep/javadoc/4.1/jep/Interpreter.html#invoke-java.lang.String-java.lang.Object...-
       pyReq =
-        (HttpRequest) interp.invoke("request", pyReq, text, tab_name, logger);
+        (HttpRequest) interp.invoke(
+          "request",
+          new Object[] { pyReq, text, tab_name },
+          Map.of("logger", logger)
+        );
 
       // TODO: Extract Burp request.
       var newReq = pyReq;
@@ -103,7 +109,12 @@ public class ScalpelExecutor {
 
       // Call response(...) callback
       // https://ninia.github.io/jep/javadoc/4.1/jep/Interpreter.html#invoke-java.lang.String-java.lang.Object...-
-      pyRes = (HttpResponse) interp.invoke("response", pyRes, logger);
+      pyRes =
+        (HttpResponse) interp.invoke(
+          "response",
+          new Object[] { pyRes },
+          Map.of("logger", logger)
+        );
 
       // TODO: Extract Burp response.
       var newRes = pyRes;
@@ -117,11 +128,11 @@ public class ScalpelExecutor {
 
   private static final String getCallbackName(
     String tabName,
-    HttpMessage msg,
+    Boolean isRequest,
     Boolean isInbound
   ) {
     // Format corresponding callback's Python function name.
-    var editPrefix = msg instanceof HttpRequest
+    var editPrefix = isRequest
       ? Constants.REQ_EDIT_PREFIX
       : Constants.RES_EDIT_PREFIX;
 
@@ -134,13 +145,16 @@ public class ScalpelExecutor {
     return cbName;
   }
 
-  public Optional<ByteArray> callEditorCallback(
-    HttpMessage msg,
+  @SuppressWarnings("unchecked")
+  public <T extends Object> Optional<T> callEditorCallback(
+    Object[] params,
+    Boolean isRequest,
     Boolean isInbound,
-    String tabName
+    String tabName,
+    Class<T> expectedClass
   ) {
     // Get callback's Python function name.
-    var cbName = getCallbackName(tabName, msg, isInbound);
+    var cbName = getCallbackName(tabName, isRequest, isInbound);
 
     // Instantiate interpreter.
     try (Interpreter interp = new SharedInterpreter()) {
@@ -149,20 +163,22 @@ public class ScalpelExecutor {
 
       try {
         // Invoke the callback and get it's result.
-        var result = interp.invoke(cbName, msg, logger);
+        var result = interp.invoke(cbName, params, Map.of("logger", logger));
 
         // Empty return when the cb returns None.
         if (result == null) return Optional.empty();
 
         // Ensure the returned data is a supported type.
-        if (result.getClass() != byte[].class) {
-          // TODO: Use a "supported type" Set.
-
+        if (result.getClass() != expectedClass) {
           // Log the error in Burp.
           logger.logToError(
             cbName +
-            "() returned unsupported type " +
-            result.getClass().getName()
+            "() returned unexpected type " +
+            result.getClass().getSimpleName() +
+            " instead of " +
+            expectedClass.getSimpleName() +
+            " | param: " +
+            params.getClass().getSimpleName()
           );
 
           // Empty return.
@@ -170,8 +186,8 @@ public class ScalpelExecutor {
         }
 
         try {
-          // Convert the result to Burp's ByteArray class and return it.
-          return Optional.of(ByteArray.byteArray((byte[]) result));
+          // Convert the result to provided expected class and return it.
+          return Optional.of(((T) result));
         } catch (Exception e) {
           // Something nasty that should be impossible to happen has happened.
           // Log the exception message and stack trace.
@@ -190,5 +206,64 @@ public class ScalpelExecutor {
 
     // There has been an error, so return an empty Optional.
     return Optional.empty();
+  }
+
+  public <T extends Object> Optional<T> callEditorCallback(
+    Object param,
+    Boolean isRequest,
+    Boolean isInbound,
+    String tabName,
+    Class<T> expectedClass
+  ) {
+    return callEditorCallback(
+      new Object[] { param },
+      isRequest,
+      isInbound,
+      tabName,
+      expectedClass
+    );
+  }
+
+  public Optional<ByteArray> callEditorCallback(
+    HttpMessage msg,
+    Boolean isInbound,
+    String tabName
+  ) {
+    // Pass a request to py. callback and convert the returned byte[] to Burp's ByteArray.
+    // When no data is returned by the callback, an empty Optional is returned.
+    return callEditorCallback(
+      msg,
+      msg instanceof HttpRequest,
+      isInbound,
+      tabName,
+      byte[].class
+    )
+      .flatMap(bytes ->
+        bytes == null
+          ? Optional.empty()
+          : Optional.of(ByteArray.byteArray(bytes))
+      );
+  }
+
+  public Optional<ByteArray> callEditorCallback(
+    HttpMessage msg,
+    ByteArray byteArray,
+    Boolean isInbound,
+    String tabName
+  ) {
+    // Pass a request to py. callback and convert the returned byte[] to Burp's ByteArray.
+    // When no data is returned by the callback, an empty Optional is returned.
+    return callEditorCallback(
+      new Object[] { msg, byteArray.getBytes() },
+      msg instanceof HttpRequest,
+      isInbound,
+      tabName,
+      byte[].class
+    )
+      .flatMap(bytes ->
+        bytes == null
+          ? Optional.empty()
+          : Optional.of(ByteArray.byteArray(bytes))
+      );
   }
 }
