@@ -35,45 +35,12 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
   public RequestToBeSentAction handleHttpRequestToBeSent(
     HttpRequestToBeSent httpRequestToBeSent
   ) {
-    // Keep default behaviour when the request does come from Scalpel editors.
-    var defaultAction = RequestToBeSentAction.continueWith(
-      httpRequestToBeSent,
-      Annotations.annotations("Default")
-    );
-
-    // Find a displayed editor.
-    var foundEditor = editorProvider.getDisplayedRequestEditor();
-
-    // Ensure an editor is displayed.
-    if (!foundEditor.isPresent()) return defaultAction;
-
-    // Get the displayed editor.
-    var displayedEditor = foundEditor.get();
-
-    // Ensure the requestToBeSent originates from the displayed editor.
-    if (
-      displayedEditor == null ||
-      displayedEditor.getCtx().toolSource().toolType() !=
-      httpRequestToBeSent.toolSource().toolType()
-    ) return defaultAction;
-
-    // Extract the editor's content.
-    var text = displayedEditor.getEditor().getContents();
-
-    // Get the editor tab name.
-    var tab_name = displayedEditor.caption();
-
     // Call the request() Python callback
-    var newReq = executor.callRequestToBeSentCallback(
-      httpRequestToBeSent,
-      text,
-      tab_name
-    );
+    var newReq = executor.callRequestToBeSentCallback(httpRequestToBeSent);
 
-    // Return the modified request.
+    // Return the modified request when requested, else return the original.
     return RequestToBeSentAction.continueWith(
-      newReq,
-      Annotations.annotations("scalpel:" + displayedEditor.getId())
+      newReq.orElse(httpRequestToBeSent)
     );
   }
 
@@ -96,16 +63,11 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
   public ResponseReceivedAction handleHttpResponseReceived(
     HttpResponseReceived httpResponseReceived
   ) {
-    var action = ResponseReceivedAction.continueWith(
-      httpResponseReceived,
-      httpResponseReceived.annotations().withNotes("defaultResponseAction")
-    );
+    var action = ResponseReceivedAction.continueWith(httpResponseReceived);
 
-    if (isAnnotableFromScalpel(httpResponseReceived)) action =
-      ResponseReceivedAction.continueWith(
-        executor.callResponseReceivedCallback(httpResponseReceived),
-        Annotations.annotations("Scalpeled")
-      );
+    ResponseReceivedAction.continueWith(
+      executor.callResponseReceivedCallback(httpResponseReceived)
+    );
 
     return action;
   }
