@@ -15,6 +15,7 @@ import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpResponseEditor;
 import java.awt.*;
 import java.util.LinkedList;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -104,7 +105,21 @@ class ScalpelProvidedEditor
       ? requestResponse.request()
       : null;
 
-    return request;
+    // Ensure request exists and has to be processed again before calling Python
+    if (editor.isModified() == false || request == null) return request;
+
+    // Call Python "inbound" request editor callback with editor's contents.
+    Optional<HttpRequest> msg = pythonBuildHttpMsgFromBytes(
+      request,
+      editor.getContents()
+    );
+
+    // Nothing was returned, return the original request untouched.
+    if (msg.isEmpty()) return request;
+
+    // A new request was returned, add the original request
+    //  httpService (network stuff) to it and return it.
+    return msg.get().withService(request.httpService());
   }
 
   @Override
@@ -112,6 +127,10 @@ class ScalpelProvidedEditor
     HttpResponse response = requestResponse != null
       ? requestResponse.response()
       : null;
+
+    if (response == null) return null;
+
+    // TODO: Python-process outbound response.
 
     return response;
   }
@@ -136,10 +155,44 @@ class ScalpelProvidedEditor
       // Display the tab when bytes are returned.
       return result.isPresent();
     } catch (Exception e) {
-      logger.logToError("Error");
+      // Log the error and stack trace.
       TraceLogger.logExceptionStackTrace(logger, e);
     }
+    // Disable the tab.
     return false;
+  }
+
+  @SuppressWarnings("unchecked")
+  private static final <
+    T extends HttpMessage
+  > T cloneHttpMessageAndReplaceBytes(T msg, ByteArray bytes) {
+    // Return a HttpRequest or HttpResponse depending on msg real type (HttpRequest or HttpResponse).
+    return (T) (
+      msg instanceof HttpRequest
+        ? HttpRequest.httpRequest(((HttpRequest) msg).httpService(), bytes)
+        : HttpResponse.httpResponse(bytes)
+    );
+  }
+
+  private <T extends HttpMessage> Optional<T> pythonBuildHttpMsgFromBytes(
+    T msg,
+    ByteArray bytes
+  ) {
+    try {
+      // Call the Python callback and return the result.
+      var result = executor.callEditorCallback(msg, bytes, false, caption());
+
+      // When new bytes are returned, use them to create a new http message from the original one.
+      if (result.isPresent()) return Optional.of(
+        cloneHttpMessageAndReplaceBytes(msg, result.get())
+      );
+    } catch (Exception e) {
+      logger.logToError("buildHttpMsgFromBytes(): Error ");
+      TraceLogger.logExceptionStackTrace(logger, e);
+    }
+
+    // Nothing was returned and / or an error happened, so we return
+    return Optional.empty();
   }
 
   @Override
@@ -150,10 +203,10 @@ class ScalpelProvidedEditor
     // TODO: Directly return false if callback doesn't exist.
 
     // Call corresponding request editor callback when appropriate.
-    if (type == EditorType.REQUEST) return updateContentFromHttpMsg(
-      requestResponse.request()
-    ); else if (
-      requestResponse.response() != null
+    if (
+      type == EditorType.REQUEST && requestResponse.request() != null
+    ) return updateContentFromHttpMsg(requestResponse.request()); else if (
+      type == EditorType.RESPONSE && requestResponse.response() != null
     ) return updateContentFromHttpMsg(requestResponse.response());
 
     return false;
