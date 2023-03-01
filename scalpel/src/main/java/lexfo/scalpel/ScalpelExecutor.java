@@ -64,36 +64,14 @@ public class ScalpelExecutor {
     this.scriptPath = path;
   }
 
-  public HttpRequest callRequestToBeSentCallback(
-    HttpRequest req,
-    ByteArray text,
-    String tab_name
-  ) {
+  public Optional<HttpRequest> callRequestToBeSentCallback(HttpRequest req) {
     // Create a PyRequest wrapper.
     // TODO: Actually implement the wrapper.
     var pyReq = req;
 
-    // Instantiate interpreter
-    // TODO: Handle errors + work with a global interpreter.
-    try (Interpreter interp = new SharedInterpreter()) {
-      // Run script (declares callbacks)
-      interp.runScript(scriptPath);
-
-      // Call request(...) callback
-      // https://ninia.github.io/jep/javadoc/4.1/jep/Interpreter.html#invoke-java.lang.String-java.lang.Object...-
-      pyReq =
-        (HttpRequest) interp.invoke(
-          "request",
-          new Object[] { pyReq, text, tab_name },
-          Map.of("logger", logger)
-        );
-
-      // TODO: Extract Burp request.
-      var newReq = pyReq;
-
-      // Return new request with debug header
-      return newReq.withAddedHeader("X-Scalpel-Request", "true");
-    }
+    return safeJepInvoke(Constants.REQ_CB_NAME, pyReq, HttpRequest.class)
+      .flatMap(r -> Optional.of(r.withAddedHeader("X-Scalpel-Request", "true"))
+      );
   }
 
   public HttpResponse callResponseReceivedCallback(HttpResponse res) {
@@ -126,7 +104,7 @@ public class ScalpelExecutor {
     }
   }
 
-  private static final String getCallbackName(
+  private static final String getEditorCallbackName(
     String tabName,
     Boolean isRequest,
     Boolean isInbound
@@ -146,52 +124,46 @@ public class ScalpelExecutor {
   }
 
   @SuppressWarnings("unchecked")
-  public <T extends Object> Optional<T> callEditorCallback(
-    Object[] params,
-    Boolean isRequest,
-    Boolean isInbound,
-    String tabName,
+  public <T extends Object> Optional<T> safeJepInvoke(
+    String name,
+    Object[] args,
+    Map<String, Object> kwargs,
     Class<T> expectedClass
   ) {
-    // Get callback's Python function name.
-    var cbName = getCallbackName(tabName, isRequest, isInbound);
-
     // Instantiate interpreter.
     try (Interpreter interp = new SharedInterpreter()) {
       // Load the script.
+      // TODO: Load at construct and re-use interpreter
       interp.runScript(scriptPath);
 
       try {
         // Invoke the callback and get it's result.
-        var result = interp.invoke(cbName, params, Map.of("logger", logger));
+        var result = interp.invoke(name, args, kwargs);
 
         // Empty return when the cb returns None.
         if (result == null) return Optional.empty();
 
         // Ensure the returned data is a supported type.
-        if (result.getClass() != expectedClass) {
+        try {
+          // Convert the result to provided expected class and return it.s
+          return Optional.of(((T) result));
+        } catch (Exception e) {
           // Log the error in Burp.
           logger.logToError(
-            cbName +
+            name +
             "() returned unexpected type " +
             result.getClass().getSimpleName() +
             " instead of " +
             expectedClass.getSimpleName() +
             " | param: " +
-            params.getClass().getSimpleName()
+            args.getClass().getSimpleName()
           );
+
+          // Log the stack trace.
+          TraceLogger.logStackTrace(logger, true);
 
           // Empty return.
           return Optional.empty();
-        }
-
-        try {
-          // Convert the result to provided expected class and return it.
-          return Optional.of(((T) result));
-        } catch (Exception e) {
-          // Something nasty that should be impossible to happen has happened.
-          // Log the exception message and stack trace.
-          TraceLogger.logExceptionStackTrace(logger, e);
         }
       } catch (Exception e) {
         // There has been an error in the callback invokation
@@ -206,6 +178,35 @@ public class ScalpelExecutor {
 
     // There has been an error, so return an empty Optional.
     return Optional.empty();
+  }
+
+  public <T extends Object> Optional<T> safeJepInvoke(
+    String name,
+    Object arg,
+    Class<T> expectedClass
+  ) {
+    return safeJepInvoke(
+      name,
+      new Object[] { arg },
+      Map.of("logger", logger),
+      expectedClass
+    );
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T extends Object> Optional<T> callEditorCallback(
+    Object[] params,
+    Boolean isRequest,
+    Boolean isInbound,
+    String tabName,
+    Class<T> expectedClass
+  ) {
+    return safeJepInvoke(
+      getEditorCallbackName(tabName, isRequest, isInbound),
+      params,
+      Map.of("logger", logger),
+      expectedClass
+    );
   }
 
   public <T extends Object> Optional<T> callEditorCallback(

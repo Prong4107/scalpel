@@ -5,4 +5,6 @@ public class Constants {
     public static final String RES_EDIT_PREFIX = "res_edit_";
     public static final String IN_PREFIX = "in_";
     public static final String OUT_PREFIX = "out_";
+    public static final String REQ_CB_NAME = "request";
+    public static final String RES_CB_NAME = "response";
 }
