@@ -38,3 +38,7 @@ build/
 out/
 dist/
 bin/
+.prettierc
+cf.md
+
+*.pyc
