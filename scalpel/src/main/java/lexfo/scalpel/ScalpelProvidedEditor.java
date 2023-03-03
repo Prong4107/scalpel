@@ -144,10 +144,10 @@ class ScalpelProvidedEditor
     this.requestResponse = requestResponse;
   }
 
-  private boolean updateContentFromHttpMsg(HttpMessage res) {
+  private boolean updateContentFromHttpMsg(HttpMessage msg) {
     try {
       // Call the Python callback and store the returned value.
-      var result = executor.callEditorCallback(res, true, caption());
+      var result = executor.callEditorCallback(msg, true, caption());
 
       // Update the editor's content with the returned bytes.
       result.ifPresent(bytes -> editor.setContents(bytes));
