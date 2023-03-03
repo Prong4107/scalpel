@@ -316,7 +316,7 @@ class ByteArray(Protocol):
     #      *
     #      * @return New {@code ByteArray} wrapping the provided byte array.
     #      
-    @abstractmethod
+    # @abstractmethod
     @staticmethod
     def byteArray(data: bytes) -> 'ByteArray':
         """ generated source for method byteArray """
@@ -431,7 +431,7 @@ class HttpRequest(Protocol):
     def toByteArray() -> ByteArray:
         raise NotImplementedError
 
-    @abstractmethod
+    # @abstractmethod
     @staticmethod
     def httpRequest(bytes: ByteArray) -> 'HttpRequest':
         raise NotImplementedError
@@ -450,7 +450,7 @@ class HttpResponse(Protocol):
     def toByteArray() -> ByteArray:
         raise NotImplementedError
     
-    @abstractmethod
+    # @abstractmethod
     @staticmethod
     def httpResponse(bytes: ByteArray) -> 'HttpResponse':
         raise NotImplementedError
