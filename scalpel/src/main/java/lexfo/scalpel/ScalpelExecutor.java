@@ -20,26 +20,45 @@ public class ScalpelExecutor {
   private File script;
 
   public ScalpelExecutor(MontoyaApi API, Logging logger, String scriptPath) {
+    // Store Montoya API object
     this.API = API;
+
+    // Keep a reference to a logger
     this.logger = logger;
+
+    // Create a File wrapper from the script path.
     this.script = new File(scriptPath);
   }
 
   private final SharedInterpreter initInterpreter() {
+    // Instantiate a Python interpreter.
     var interp = new SharedInterpreter();
+
+    // Make the Montoya API object accessible in Python
     interp.set("__montoya__", API);
+
+    // Set the script's filename to corresponding Python variable
     interp.set("__file__", script.getAbsolutePath());
+
+    // Set the script's directory to be able to add it to Python's path.
     interp.set("__directory__", script.getParent());
+
+    // Add the script's directory to Python's path to allow imports of adjacent files.
     interp.exec(
       """
     from sys import path
     path.append(__directory__)
     """
     );
+
+    // Run the script.
     interp.runScript(script.getAbsolutePath());
+
+    // Return the initialized interpreter.
     return interp;
   }
 
+  // Unused utils function
   public String[] evalAndCaptureOutput(String scriptContent) {
     try (Interpreter interp = initInterpreter()) {
       // Running Python instructions on the fly.
@@ -74,6 +93,7 @@ public class ScalpelExecutor {
   }
 
   public void setScript(String path) {
+    // Update the script path.
     this.script = new File(path);
   }
 
@@ -82,6 +102,7 @@ public class ScalpelExecutor {
     // TODO: Actually implement the wrapper.
     var pyReq = req;
 
+    // Call the corresponding Python callback and add a debug HTTP header.
     return safeJepInvoke(Constants.REQ_CB_NAME, pyReq, HttpRequest.class)
       .flatMap(r -> Optional.of(r.withAddedHeader("X-Scalpel-Request", "true"))
       );
@@ -96,6 +117,7 @@ public class ScalpelExecutor {
     // TODO: Handle errors + work with a global interpreter.
     try (Interpreter interp = initInterpreter()) {
       // Call response(...) callback
+      // TODO: Use safeJepInvoke.
       // https://ninia.github.io/jep/javadoc/4.1/jep/Interpreter.html#invoke-java.lang.String-java.lang.Object...-
       pyRes =
         (HttpResponse) interp.invoke(
@@ -114,22 +136,28 @@ public class ScalpelExecutor {
     }
   }
 
+  // Format corresponding callback's Python function name.
   private static final String getEditorCallbackName(
     String tabName,
     Boolean isRequest,
     Boolean isInbound
   ) {
-    // Format corresponding callback's Python function name.
+
+    // Either req_ or res_ depending if it is a request or a response.
     var editPrefix = isRequest
       ? Constants.REQ_EDIT_PREFIX
       : Constants.RES_EDIT_PREFIX;
 
+    // Either in_ or out_ depending on context.
     var directionPrefix = isInbound
       ? Constants.IN_PREFIX
       : Constants.OUT_PREFIX;
 
+
+    // Concatenate the prefixes and the tab name.
     var cbName = editPrefix + directionPrefix + tabName;
 
+    // Return the callback Python function name.
     return cbName;
   }
 
@@ -185,6 +213,7 @@ public class ScalpelExecutor {
     Object arg,
     Class<T> expectedClass
   ) {
+    // Call base safeJepInvoke with a single argument and a logger as default kwarg.
     return safeJepInvoke(
       name,
       new Object[] { arg },
@@ -201,6 +230,7 @@ public class ScalpelExecutor {
     String tabName,
     Class<T> expectedClass
   ) {
+    // Call safeJepInvoke with the corresponding function name and a logger as a default kwarg.
     return safeJepInvoke(
       getEditorCallbackName(tabName, isRequest, isInbound),
       params,
@@ -216,6 +246,7 @@ public class ScalpelExecutor {
     String tabName,
     Class<T> expectedClass
   ) {
+    // Call base method with a single parameter.
     return callEditorCallback(
       new Object[] { param },
       isRequest,

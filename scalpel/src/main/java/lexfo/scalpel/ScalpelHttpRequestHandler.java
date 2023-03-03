@@ -25,9 +25,16 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
     ScalpelEditorProvider editorProvider,
     ScalpelExecutor executor
   ) {
+    // Get a logger object.
     this.logger = API.logging();
+
+    // Keep a reference to the Montoya API.
     this.API = API;
+
+    // Keep a reference to the provider.
     this.editorProvider = editorProvider;
+
+    // Reference the executor to be able to call Python callbacks.
     this.executor = executor;
   }
 
@@ -49,6 +56,7 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
   public ResponseReceivedAction handleHttpResponseReceived(
     HttpResponseReceived httpResponseReceived
   ) {
+    // TODO: Finish implementing the callback ?
     var action = ResponseReceivedAction.continueWith(httpResponseReceived);
 
     ResponseReceivedAction.continueWith(
