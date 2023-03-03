@@ -4,8 +4,6 @@ tmp/
 .venv/
 docker.sh
 Dockerfile
-TODO.md
-perso.md
 burp-extensions-montoya-api-examples/
 
 # Compiled class file
@@ -39,6 +37,9 @@ out/
 dist/
 bin/
 .prettierc
-cf.md
 
 *.pyc
+
+notes/
+
+log*.txt
