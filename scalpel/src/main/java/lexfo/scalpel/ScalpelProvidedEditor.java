@@ -202,14 +202,16 @@ class ScalpelProvidedEditor
 
     // TODO: Directly return false if callback doesn't exist.
 
-    // Call corresponding request editor callback when appropriate.
-    if (
-      type == EditorType.REQUEST && requestResponse.request() != null
-    ) return updateContentFromHttpMsg(requestResponse.request()); else if (
-      type == EditorType.RESPONSE && requestResponse.response() != null
-    ) return updateContentFromHttpMsg(requestResponse.response());
+    // Get corresponding message.
+    HttpMessage msg = (type == EditorType.REQUEST
+      ? requestResponse.request()
+      : requestResponse.response());
 
-    return false;
+    // Ensure message exists.
+    if (msg == null || msg.toByteArray().length() == 0) return false;
+
+    // Call corresponding request editor callback when appropriate.
+    return updateContentFromHttpMsg(msg);
   }
 
   @Override
