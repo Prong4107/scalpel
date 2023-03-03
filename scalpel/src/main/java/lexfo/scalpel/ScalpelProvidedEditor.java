@@ -24,8 +24,7 @@ import java.util.concurrent.atomic.AtomicReference;
 class ScalpelProvidedEditor
   implements
     ExtensionProvidedHttpRequestEditor,
-    ExtensionProvidedHttpResponseEditor,
-    AutoCloseable {
+    ExtensionProvidedHttpResponseEditor{
 
   private final RawEditor editor;
   private HttpRequestResponse requestResponse;
