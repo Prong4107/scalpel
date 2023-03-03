@@ -423,12 +423,20 @@ class HttpRequest(Protocol):
         raise NotImplementedError
 
     @abstractmethod
+    def withAddedHeader(self, key: str, value: str) -> 'HttpRequest':
+        raise NotImplementedError
+
+    @abstractmethod
     def toByteArray() -> ByteArray:
         raise NotImplementedError
     
 class HttpResponse(Protocol):
     @abstractmethod
     def withUpdatedHeader(self, key: str, value: str) -> 'HttpResponse':
+        raise NotImplementedError
+
+    @abstractmethod
+    def withAddedHeader(self, key: str, value: str) -> 'HttpResponse':
         raise NotImplementedError
 
     @abstractmethod
