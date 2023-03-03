@@ -44,20 +44,6 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
     );
   }
 
-  private static Boolean isAnnotableFromScalpel(Object obj) {
-    try {
-      Annotations annotations = (Annotations) obj
-        .getClass()
-        .getMethod("annotations")
-        .invoke(obj);
-
-      return (
-        annotations != null && annotations.notes().startsWith("scalpel:")
-      );
-    } catch (Exception e) {
-      return false;
-    }
-  }
 
   @Override
   public ResponseReceivedAction handleHttpResponseReceived(
