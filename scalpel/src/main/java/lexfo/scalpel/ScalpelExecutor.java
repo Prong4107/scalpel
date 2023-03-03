@@ -239,11 +239,7 @@ public class ScalpelExecutor {
       tabName,
       byte[].class
     )
-      .flatMap(bytes ->
-        bytes == null
-          ? Optional.empty()
-          : Optional.of(ByteArray.byteArray(bytes))
-      );
+      .flatMap(bytes -> Optional.of(ByteArray.byteArray(bytes)));
   }
 
   public Optional<ByteArray> callEditorCallback(
@@ -261,10 +257,6 @@ public class ScalpelExecutor {
       tabName,
       byte[].class
     )
-      .flatMap(bytes ->
-        bytes == null
-          ? Optional.empty()
-          : Optional.of(ByteArray.byteArray(bytes))
-      );
+      .flatMap(bytes -> Optional.of(ByteArray.byteArray(bytes)));
   }
 }
