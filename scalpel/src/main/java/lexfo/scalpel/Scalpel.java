@@ -28,7 +28,7 @@ public class Scalpel implements BurpExtension {
 
   private JEditorPane editorPane;
 
-  // https://miashs-www.u-ga.fr/prevert/Prog/Java/swing/JTextPane.html
+  // Constructs the debug Python testing Burp tab.
   private Component constructScalpelTab() {
     // Split pane
     JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -99,14 +99,16 @@ print('This goes in stderr', file=sys.stderr)
       // Instantiate unpacker
       unpacker = new ScalpelUnpacker(logger);
 
-      // TODO: Remove this stuff if not necessary
+      // Extract the ressources to a new unique temporary directory.
       unpacker.initializeResourcesDirectory();
 
+      // Set Jep path.
       MainInterpreter.setJepLibraryPath(
         unpacker.getResourcesPath() +
         "/lib/python3.10/site-packages/jep/libjep.so"
       );
 
+      // Instantiate the executor (handles Python execution)
       executor =
         new ScalpelExecutor(
           API,
@@ -116,17 +118,23 @@ print('This goes in stderr', file=sys.stderr)
         );
 
       // Add request editor tab
-      // https://github.com/PortSwigger/burp-extensions-montoya-api-examples/blob/main/customrequesteditortab/src/main/java/example/customrequesteditortab/CustomRequestEditorTab.java
       var provider = new ScalpelEditorProvider(API, executor);
 
+      // Add the request editor to Burp.
       API.userInterface().registerHttpRequestEditorProvider(provider);
+
+      // Add the response editor to Burp.
       API.userInterface().registerHttpResponseEditorProvider(provider);
+
+      // Add an HTTP intercepter to Burp.
       API
         .http()
         .registerHttpHandler(
           new ScalpelHttpRequestHandler(API, provider, executor)
         );
     }
+
+    // Log that the extension has finished loading.
     logger.logToOutput("Initialized successfully.");
   }
 }

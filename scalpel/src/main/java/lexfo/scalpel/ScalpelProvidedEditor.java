@@ -43,28 +43,51 @@ class ScalpelProvidedEditor
     ScalpelEditorProvider provider,
     ScalpelExecutor executor
   ) {
+    // Keep a reference to the Montoya API
     this.API = API;
+
+    // Get a logger
     this.logger = API.logging();
+
+    // Associate the editor with an unique ID (obsolete)
     this.id = UUID.randomUUID().toString();
+
+    // Keep a reference to the provider.
     this.provider = provider;
+
+    // Store the context (e.g.: Tool origin, HTTP message type,...)
     this.ctx = creationContext;
+
+    // Reference the executor to be able to call Python callbacks.
     this.executor = executor;
 
     try {
+      // Create a new editor UI component.
       this.editor = API.userInterface().createRawEditor();
+
+      // Decide wherever the editor must be editable or read only depending on context.
       editor.setEditable(creationContext.editorMode() != EditorMode.READ_ONLY);
+
+      // Set the editor type (REQUEST or RESPONSE).
       this.type = type;
     } catch (Exception e) {
+      // Log the error.
       logger.logToError("Couldn't instantiate new editor:");
+
+      // Log the stack trace.
       TraceLogger.logExceptionStackTrace(logger, e);
+
+      // Throw the error again.
       throw e;
     }
   }
 
   public EditorType getEditorType() {
+    // Get the editor type (REQUEST or RESPONSE)
     return type;
   }
 
+  // Print the UI component hierarchy tree.
   private void printUiTrace() {
     LinkedList<Container> lst = new LinkedList<>();
     Container current = uiComponent().getParent();
@@ -83,19 +106,23 @@ class ScalpelProvidedEditor
   }
 
   public String getId() {
+    // Get the editor's unique ID.
     return id;
   }
 
   public EditorCreationContext getCtx() {
+    // Get the editor's creation context.
     return ctx;
   }
 
   public RawEditor getEditor() {
+    // Get the editor component.
     return editor;
   }
 
   @Override
   public HttpRequest getRequest() {
+    // Safely extract the request from the requestResponse.
     HttpRequest request = requestResponse != null
       ? requestResponse.request()
       : null;
@@ -119,14 +146,17 @@ class ScalpelProvidedEditor
 
   @Override
   public HttpResponse getResponse() {
+    // Safely extract the response from the requestResponse.
     HttpResponse response = requestResponse != null
       ? requestResponse.response()
       : null;
 
+    // Ensure response exists before sending it to Python (TODO).
     if (response == null) return null;
 
     // TODO: Python-process outbound response.
 
+    // Return the Python-processed response (TODO).
     return response;
   }
 
@@ -182,7 +212,10 @@ class ScalpelProvidedEditor
         cloneHttpMessageAndReplaceBytes(msg, result.get())
       );
     } catch (Exception e) {
-      logger.logToError("buildHttpMsgFromBytes(): Error ");
+      // Log the function name.
+      logger.logToError("buildHttpMsgFromBytes(): Error");
+
+      // Log the error and stack trace.
       TraceLogger.logExceptionStackTrace(logger, e);
     }
 
@@ -211,6 +244,7 @@ class ScalpelProvidedEditor
 
   @Override
   public String caption() {
+    // Return the tab name.
     return "Scalpel";
   }
 

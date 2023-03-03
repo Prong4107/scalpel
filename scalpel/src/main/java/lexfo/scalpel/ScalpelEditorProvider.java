@@ -30,6 +30,7 @@ class ScalpelEditorProvider
   }
 
   public Optional<ScalpelProvidedEditor> getDisplayedRequestEditor() {
+    // Find the displayed editor among the stored request editors.
     return getRequestEditors()
       .stream()
       .filter(e -> e.uiComponent().isShowing())
@@ -75,6 +76,7 @@ class ScalpelEditorProvider
   public ExtensionProvidedHttpRequestEditor provideHttpRequestEditor(
     EditorCreationContext creationContext
   ) {
+    // Instantiate a new request editor.
     ScalpelProvidedEditor editor = new ScalpelProvidedEditor(
       API,
       creationContext,
@@ -82,7 +84,11 @@ class ScalpelEditorProvider
       this,
       executor
     );
+
+    // Add the editor to the weak ref list.
     requestEditorList.add(new WeakReference<ScalpelProvidedEditor>(editor));
+
+    // Return the editor.
     return editor;
   }
 
@@ -90,6 +96,7 @@ class ScalpelEditorProvider
   public ExtensionProvidedHttpResponseEditor provideHttpResponseEditor(
     EditorCreationContext creationContext
   ) {
+    // Instantiate a new response editor.
     ScalpelProvidedEditor editor = new ScalpelProvidedEditor(
       API,
       creationContext,
@@ -97,7 +104,11 @@ class ScalpelEditorProvider
       this,
       executor
     );
+    
+    // Add the editor to the weak ref list.
     responseEditorList.add(new WeakReference<ScalpelProvidedEditor>(editor));
+    
+    // Return the editor.
     return editor;
   }
 }
