@@ -25,12 +25,17 @@ public class ScalpelExecutor {
     this.scriptPath = scriptPath;
   }
 
+  private final SharedInterpreter initInterpreter() {
+    var interp = new SharedInterpreter();
+    interp.set("montoyaAPI", API);
+    interp.runScript(scriptPath);
+    return interp;
+  }
+
   public String[] evalAndCaptureOutput(String scriptContent) {
-    try (Interpreter interp = new SharedInterpreter()) {
+    try (Interpreter interp = initInterpreter()) {
       // Running Python instructions on the fly.
       // https://github.com/t2y/jep-samples/blob/master/src/HelloWorld.java
-
-      interp.set("montoyaAPI", API);
       interp.exec(
         """
     from io import StringIO
@@ -81,10 +86,7 @@ public class ScalpelExecutor {
 
     // Instantiate interpreter
     // TODO: Handle errors + work with a global interpreter.
-    try (Interpreter interp = new SharedInterpreter()) {
-      // Run script (declares callbacks)
-      interp.runScript(scriptPath);
-
+    try (Interpreter interp = initInterpreter()) {
       // Call response(...) callback
       // https://ninia.github.io/jep/javadoc/4.1/jep/Interpreter.html#invoke-java.lang.String-java.lang.Object...-
       pyRes =
@@ -131,44 +133,34 @@ public class ScalpelExecutor {
     Class<T> expectedClass
   ) {
     // Instantiate interpreter.
-    try (Interpreter interp = new SharedInterpreter()) {
-      // Load the script.
-      // TODO: Load at construct and re-use interpreter
-      interp.runScript(scriptPath);
+    try (Interpreter interp = initInterpreter()) {
+      // Invoke the callback and get it's result.
+      var result = interp.invoke(name, args, kwargs);
 
+      // Empty return when the cb returns None.
+      if (result == null) return Optional.empty();
+
+      // Ensure the returned data is a supported type.
       try {
-        // Invoke the callback and get it's result.
-        var result = interp.invoke(name, args, kwargs);
-
-        // Empty return when the cb returns None.
-        if (result == null) return Optional.empty();
-
-        // Ensure the returned data is a supported type.
-        try {
-          // Convert the result to provided expected class and return it.s
-          return Optional.of(((T) result));
-        } catch (Exception e) {
-          // Log the error in Burp.
-          logger.logToError(
-            name +
-            "() returned unexpected type " +
-            result.getClass().getSimpleName() +
-            " instead of " +
-            expectedClass.getSimpleName() +
-            " | param: " +
-            args.getClass().getSimpleName()
-          );
-
-          // Log the stack trace.
-          TraceLogger.logStackTrace(logger, true);
-
-          // Empty return.
-          return Optional.empty();
-        }
+        // Cast the result to provided expected class and return it.
+        return Optional.of(((T) result));
       } catch (Exception e) {
-        // There has been an error in the callback invokation
-        // Log the exception message and stack trace.
-        TraceLogger.logExceptionStackTrace(logger, e);
+        // Log the error in Burp.
+        logger.logToError(
+          name +
+          "() returned unexpected type " +
+          result.getClass().getSimpleName() +
+          " instead of " +
+          expectedClass.getSimpleName() +
+          " | param: " +
+          args.getClass().getSimpleName()
+        );
+
+        // Log the stack trace.
+        TraceLogger.logStackTrace(logger, true);
+
+        // Empty return.
+        return Optional.empty();
       }
     } catch (Exception e) {
       // There has been an error in the interpreter instantiation or script evaluation.
