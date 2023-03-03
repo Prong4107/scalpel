@@ -8,13 +8,13 @@
 
 package lexfo.scalpel;
 
+
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.logging.Logging;
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
 import jep.MainInterpreter;
+import lexfo.scalpel.UIBuilder;
+
 
 //Burp will auto-detect and load any class that extends BurpExtension.
 public class Scalpel implements BurpExtension {
@@ -25,54 +25,6 @@ public class Scalpel implements BurpExtension {
   private ScalpelExecutor executor;
 
   private MontoyaApi API;
-
-  private JEditorPane editorPane;
-
-  // Constructs the debug Python testing Burp tab.
-  private Component constructScalpelTab() {
-    // Split pane
-    JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-    JSplitPane scriptingPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-    JTextArea outputArea = new JTextArea();
-    editorPane = new JEditorPane();
-    JButton button = new JButton("Run script.");
-
-    button.addActionListener((ActionEvent e) -> {
-      logger.logToOutput("Clicked button");
-      String scriptContent = editorPane.getText();
-      try {
-        String[] scriptOutput = executor.evalAndCaptureOutput(scriptContent);
-
-        var txt = String.format(
-          "stdout:\n------------------\n%s\n------------------\n\nstderr:\n------------------\n%s",
-          scriptOutput[0],
-          scriptOutput[1]
-        );
-
-        outputArea.setText(txt);
-      } catch (Exception exception) {
-        outputArea.setText(exception.toString());
-      }
-      logger.logToOutput("Handled action.");
-    });
-
-    editorPane.setText(
-      """
-print('This goes in stdout')
-print('This goes in stderr', file=sys.stderr)
-"""
-    );
-    outputArea.setEditable(false);
-    scriptingPane.setLeftComponent(editorPane);
-    scriptingPane.setRightComponent(outputArea);
-    scriptingPane.setResizeWeight(0.5);
-
-    splitPane.setResizeWeight(1);
-    splitPane.setLeftComponent(scriptingPane);
-    splitPane.setRightComponent(button);
-
-    return splitPane;
-  }
 
   @Override
   public void initialize(MontoyaApi API) {
@@ -87,9 +39,6 @@ print('This goes in stderr', file=sys.stderr)
 
     // Show that the extension is loading.
     logger.logToOutput("Initializing...");
-
-    // Add the scripting editor tab.
-    API.userInterface().registerSuiteTab("Scalpel", constructScalpelTab());
 
     // Change this to stop Python from being initialized (for JEP debugging purposes)
     Boolean initPython = true;
@@ -116,6 +65,9 @@ print('This goes in stderr', file=sys.stderr)
           // TODO: CHANGE ME!
           "/home/nol/Desktop/piperpp/scalpel/scripts/editorTest.py"
         );
+
+      // Add the scripting editor tab.
+      API.userInterface().registerSuiteTab("ScalpelInterpreter", UIBuilder.constructScalpelInterpreterTab(executor, logger));
 
       // Add request editor tab
       var provider = new ScalpelEditorProvider(API, executor);
