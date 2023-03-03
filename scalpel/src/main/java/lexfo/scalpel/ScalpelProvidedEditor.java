@@ -62,10 +62,6 @@ class ScalpelProvidedEditor
     }
   }
 
-  public void close() {
-    logger.logToOutput("CLOSED " + id);
-  }
-
   public EditorType getEditorType() {
     return type;
   }
