@@ -7,7 +7,7 @@ import burp.api.montoya.http.message.HttpMessage;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.logging.Logging;
-import java.util.Arrays;
+import java.io.File;
 import java.util.Map;
 import java.util.Optional;
 import jep.Interpreter;
@@ -17,18 +17,26 @@ public class ScalpelExecutor {
 
   private final Logging logger;
   private final MontoyaApi API;
-  private String scriptPath;
+  private File script;
 
   public ScalpelExecutor(MontoyaApi API, Logging logger, String scriptPath) {
     this.API = API;
     this.logger = logger;
-    this.scriptPath = scriptPath;
+    this.script = new File(scriptPath);
   }
 
   private final SharedInterpreter initInterpreter() {
     var interp = new SharedInterpreter();
-    interp.set("montoyaAPI", API);
-    interp.runScript(scriptPath);
+    interp.set("__montoya__", API);
+    interp.set("__file__", script.getAbsolutePath());
+    interp.set("__directory__", script.getParent());
+    interp.exec(
+      """
+    from sys import path
+    path.append(__directory__)
+    """
+    );
+    interp.runScript(script.getAbsolutePath());
     return interp;
   }
 
@@ -66,7 +74,7 @@ public class ScalpelExecutor {
   }
 
   public void setScript(String path) {
-    this.scriptPath = path;
+    this.script = new File(path);
   }
 
   public Optional<HttpRequest> callRequestToBeSentCallback(HttpRequest req) {
