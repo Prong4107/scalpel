@@ -121,7 +121,6 @@ print('This goes in stderr', file=sys.stderr)
 
       API.userInterface().registerHttpRequestEditorProvider(provider);
       API.userInterface().registerHttpResponseEditorProvider(provider);
-
       API
         .http()
         .registerHttpHandler(
