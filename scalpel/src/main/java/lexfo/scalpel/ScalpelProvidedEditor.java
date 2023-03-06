@@ -75,7 +75,7 @@ class ScalpelProvidedEditor
       logger.logToError("Couldn't instantiate new editor:");
 
       // Log the stack trace.
-      TraceLogger.logExceptionStackTrace(logger, e);
+      TraceLogger.logStackTrace(logger, e);
 
       // Throw the error again.
       throw e;
@@ -181,7 +181,7 @@ class ScalpelProvidedEditor
       return result.isPresent();
     } catch (Exception e) {
       // Log the error and stack trace.
-      TraceLogger.logExceptionStackTrace(logger, e);
+      TraceLogger.logStackTrace(logger, e);
     }
     // Disable the tab.
     return false;
@@ -216,7 +216,7 @@ class ScalpelProvidedEditor
       logger.logToError("buildHttpMsgFromBytes(): Error");
 
       // Log the error and stack trace.
-      TraceLogger.logExceptionStackTrace(logger, e);
+      TraceLogger.logStackTrace(logger, e);
     }
 
     // Nothing was returned and / or an error happened, so we return
