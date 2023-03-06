@@ -201,7 +201,7 @@ public class ScalpelExecutor {
     } catch (Exception e) {
       // There has been an error in the interpreter instantiation or script evaluation.
       // Log the exception message and stack trace.
-      TraceLogger.logExceptionStackTrace(logger, e);
+      TraceLogger.logStackTrace(logger, e);
     }
 
     // There has been an error, so return an empty Optional.
@@ -255,7 +255,7 @@ public class ScalpelExecutor {
       expectedClass
     );
   }
-
+  
   public Optional<ByteArray> callEditorCallback(
     HttpMessage msg,
     Boolean isInbound,

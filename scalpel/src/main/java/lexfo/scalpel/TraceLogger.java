@@ -5,7 +5,7 @@ import java.util.Arrays;
 
 public class TraceLogger {
 
-  static void logExceptionStackTrace(Logging logger, Throwable throwed) {
+  static void logStackTrace(Logging logger, Throwable throwed) {
     logger.logToError("ERROR:");
     logger.logToError(throwed.toString());
     Arrays

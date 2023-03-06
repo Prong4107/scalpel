@@ -89,7 +89,7 @@ public class ScalpelUnpacker {
       try {
         if (zip != null) zip.close();
       } catch (Exception e) {
-        TraceLogger.logExceptionStackTrace(logger, e);
+        TraceLogger.logStackTrace(logger, e);
       }
     }
   }
