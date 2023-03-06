@@ -5,14 +5,14 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.UUID;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
-import org.apache.commons.io.FileUtils;
 
 public class ScalpelUnpacker {
 
-  private String tmpResourcesDirectoryPath;
+  private Path ressourcesDirectory;
 
   private burp.api.montoya.logging.Logging logger;
 
@@ -21,11 +21,7 @@ public class ScalpelUnpacker {
   }
 
   public String getResourcesPath() {
-    return tmpResourcesDirectoryPath;
-  }
-
-  private static String generateTmpDirectoryPath() {
-    return "/tmp/.scalpel_" + UUID.randomUUID().toString();
+    return ressourcesDirectory.toString();
   }
 
   // https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file#:~:text=return%20new%20File(MyClass.class.getProtectionDomain().getCodeSource().getLocation()%0A%20%20%20%20.toURI()).getPath()%3B
@@ -46,7 +42,6 @@ public class ScalpelUnpacker {
     try {
       int BUFFER = 2048;
       File file = new File(zipFile);
-
       ZipFile zip = new ZipFile(file);
       String newPath = extractFolder;
 
@@ -96,25 +91,16 @@ public class ScalpelUnpacker {
   public void initializeResourcesDirectory() {
     try {
       // Generate an unique directory name to avoid "libjep.so already loaded in another classloader"
-      tmpResourcesDirectoryPath = generateTmpDirectoryPath();
-
-      // Init File wrapper for jep directory.
-      var dir = new File(tmpResourcesDirectoryPath);
-
-      // Create dir if not exists
-      dir.mkdirs();
-
-      // Clean already existing directory.
-      FileUtils.cleanDirectory(dir);
+      ressourcesDirectory = Files.createTempDirectory("scalpel_");
 
       // Extract running JAR to tmp directory.
-      extractFolder(getRunningJarPath(), tmpResourcesDirectoryPath);
+      extractFolder(getRunningJarPath(), getResourcesPath());
 
       logger.logToOutput(
-        "Successfully extracted running .jar to " + tmpResourcesDirectoryPath
+        "Successfully extracted running .jar to " + ressourcesDirectory
       );
     } catch (Exception e) {
-      // Log the function name/
+      // Log the function name.
       logger.logToError("initializeResourcesDirectory() failed.");
 
       // Log the error reason.
