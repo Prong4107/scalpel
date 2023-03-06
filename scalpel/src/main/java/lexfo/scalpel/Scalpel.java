@@ -13,7 +13,6 @@ import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.logging.Logging;
 import jep.MainInterpreter;
-import lexfo.scalpel.UIBuilder;
 
 
 //Burp will auto-detect and load any class that extends BurpExtension.
@@ -54,7 +53,7 @@ public class Scalpel implements BurpExtension {
       // Set Jep path.
       MainInterpreter.setJepLibraryPath(
         unpacker.getResourcesPath() +
-        "/lib/python3.10/site-packages/jep/libjep.so"
+        "/libjep.so"
       );
 
       // Instantiate the executor (handles Python execution)
