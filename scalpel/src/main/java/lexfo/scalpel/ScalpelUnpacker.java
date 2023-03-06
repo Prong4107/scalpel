@@ -39,10 +39,12 @@ public class ScalpelUnpacker {
 
   // https://stackoverflow.com/questions/9324933/what-is-a-good-java-library-to-zip-unzip-files#:~:text=Extract%20zip%20file%20and%20all%20its%20subfolders%2C%20using%20only%20the%20JDK%3A
   private void extractFolder(String zipFile, String extractFolder) {
+    ZipFile zip = null;
     try {
       int BUFFER = 2048;
       File file = new File(zipFile);
-      ZipFile zip = new ZipFile(file);
+      zip = new ZipFile(file);
+
       String newPath = extractFolder;
 
       new File(newPath).mkdirs();
@@ -55,7 +57,6 @@ public class ScalpelUnpacker {
         String currentEntry = entry.getName();
 
         File destFile = new File(newPath, currentEntry);
-        //destFile = new File(newPath, destFile.getName());
         File destinationParent = destFile.getParentFile();
 
         // create the parent directory structure if needed
@@ -82,9 +83,14 @@ public class ScalpelUnpacker {
           is.close();
         }
       }
-      zip.close();
     } catch (Exception e) {
       logger.logToError("ERROR: " + e.getMessage());
+    } finally {
+      try {
+        if (zip != null) zip.close();
+      } catch (Exception e) {
+        TraceLogger.logExceptionStackTrace(logger, e);
+      }
     }
   }
 
