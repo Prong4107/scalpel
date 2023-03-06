@@ -91,7 +91,7 @@ public class ScalpelUnpacker {
   public void initializeResourcesDirectory() {
     try {
       // Generate an unique directory name to avoid "libjep.so already loaded in another classloader"
-      ressourcesDirectory = Files.createTempDirectory("scalpel_");
+      ressourcesDirectory = Files.createTempDirectory(".scalpel_");
 
       // Extract running JAR to tmp directory.
       extractFolder(getRunningJarPath(), getResourcesPath());
