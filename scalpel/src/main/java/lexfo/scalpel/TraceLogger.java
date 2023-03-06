@@ -5,11 +5,11 @@ import java.util.Arrays;
 
 public class TraceLogger {
 
-  static void logExceptionStackTrace(Logging logger, Exception exception) {
+  static void logExceptionStackTrace(Logging logger, Throwable throwed) {
     logger.logToError("ERROR:");
-    logger.logToError(exception.toString());
+    logger.logToError(throwed.toString());
     Arrays
-      .stream(exception.getStackTrace())
+      .stream(throwed.getStackTrace())
       .forEach(el -> logger.logToError(el.toString()));
   }
 
