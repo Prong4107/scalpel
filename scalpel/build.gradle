@@ -14,13 +14,21 @@ repositories {
 }
 
 def venvPath = '../.venv'
-def jepPath = venvPath + '/lib/python3.10/site-packages/jep'
+
+
+def jepDir = file(venvPath + '/lib/').listFiles()
+    .find { it.name.startsWith('python3') }
+    .listFiles().find { it.name.matches('site-packages') }
+    .listFiles().find { it.name.matches('jep') }
+    .getAbsolutePath()
+
+def jepJar = fileTree(dir: venvPath + '/lib', include: '**/jep/jep-*.jar').files.first().getAbsolutePath()
 
 dependencies {
     compileOnly 'net.portswigger.burp.extensions:montoya-api:2023.1'
 
     // JEP installed from pip in a venv.
-    implementation files(jepPath + '/jep-4.1.1.jar')
+    implementation files(jepJar)
 
     implementation 'commons-io:commons-io:2.6'
 }
@@ -29,13 +37,12 @@ jar {
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
-    
 }
 
 sourceSets {
     main {
         resources {
-            srcDirs venvPath
+            srcDirs jepDir
         }
     }
 }
