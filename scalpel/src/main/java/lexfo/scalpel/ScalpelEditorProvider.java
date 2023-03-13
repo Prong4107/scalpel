@@ -34,7 +34,6 @@ class ScalpelEditorProvider
       executor
     );
 
-    // Return the editor.
     return editor;
   }
 
@@ -51,7 +50,6 @@ class ScalpelEditorProvider
       executor
     );
     
-    // Return the editor.
     return editor;
   }
 }
