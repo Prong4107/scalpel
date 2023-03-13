@@ -23,8 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpResponseEditor.html
 class ScalpelProvidedEditor
   implements
-    ExtensionProvidedHttpRequestEditor,
-    ExtensionProvidedHttpResponseEditor{
+    ExtensionProvidedHttpRequestEditor, ExtensionProvidedHttpResponseEditor {
 
   private final RawEditor editor;
   private HttpRequestResponse requestResponse;
@@ -120,44 +119,51 @@ class ScalpelProvidedEditor
     return editor;
   }
 
+  private HttpMessage getMessage() {
+    // Ensure request response exists.
+    if (requestResponse == null) return null;
+
+    // Safely extract the message from the requestResponse.
+    return type == EditorType.REQUEST
+      ? requestResponse.request()
+      : requestResponse.response();
+  }
+
+  private HttpMessage processOutboundMessage() {
+    try {
+      // Safely extract the message from the requestResponse.
+      HttpMessage msg = getMessage();
+
+      // Ensure request exists and has to be processed again before calling Python
+      if (msg == null || !editor.isModified()) return null;
+
+      // Call Python "outbound" message editor callback with editor's contents.
+      Optional<HttpMessage> result = pythonBuildHttpMsgFromBytes(
+        msg,
+        editor.getContents()
+      );
+
+      // Nothing was returned, return the original msg untouched.
+      if (result.isEmpty()) return msg;
+
+      // Return the Python-processed message.
+      return result.get();
+    } catch (Exception e) {
+      TraceLogger.logStackTrace(logger, e);
+    }
+    return null;
+  }
+
   @Override
   public HttpRequest getRequest() {
-    // Safely extract the request from the requestResponse.
-    HttpRequest request = requestResponse != null
-      ? requestResponse.request()
-      : null;
-
-    // Ensure request exists and has to be processed again before calling Python
-    if (editor.isModified() == false || request == null) return request;
-
-    // Call Python "inbound" request editor callback with editor's contents.
-    Optional<HttpRequest> msg = pythonBuildHttpMsgFromBytes(
-      request,
-      editor.getContents()
-    );
-
-    // Nothing was returned, return the original request untouched.
-    if (msg.isEmpty()) return request;
-
-    // A new request was returned, add the original request
-    //  httpService (network stuff) to it and return it.
-    return msg.get().withService(request.httpService());
+    // Cast the generic HttpMessage interface back to it's concrete type.
+    return (HttpRequest) processOutboundMessage();
   }
 
   @Override
   public HttpResponse getResponse() {
-    // Safely extract the response from the requestResponse.
-    HttpResponse response = requestResponse != null
-      ? requestResponse.response()
-      : null;
-
-    // Ensure response exists before sending it to Python (TODO).
-    if (response == null) return null;
-
-    // TODO: Python-process outbound response.
-
-    // Return the Python-processed response (TODO).
-    return response;
+    // Cast the generic HttpMessage interface back to it's concrete type.
+    return (HttpResponse) processOutboundMessage();
   }
 
   public HttpRequestResponse getRequestResponse() {
@@ -225,21 +231,23 @@ class ScalpelProvidedEditor
 
   @Override
   public boolean isEnabledFor(HttpRequestResponse requestResponse) {
-    // Ensure requestResponse exist.
-    if (requestResponse == null) return false;
+    try {
+      // Initialize requestResponse member.
+      this.requestResponse =
+        requestResponse == null ? this.requestResponse : requestResponse;
 
-    // TODO: Directly return false if callback doesn't exist.
+      // Extract the message from the requestResoponse.
+      HttpMessage msg = getMessage();
 
-    // Get corresponding message.
-    HttpMessage msg = (type == EditorType.REQUEST
-      ? requestResponse.request()
-      : requestResponse.response());
+      // Ensure message exists.
+      if (msg == null || msg.toByteArray().length() == 0) return false;
 
-    // Ensure message exists.
-    if (msg == null || msg.toByteArray().length() == 0) return false;
-
-    // Call corresponding request editor callback when appropriate.
-    return updateContentFromHttpMsg(msg);
+      // Call corresponding request editor callback when appropriate.
+      return updateContentFromHttpMsg(msg);
+    } catch (Exception e) {
+      TraceLogger.logStackTrace(logger, e);
+    }
+    return false;
   }
 
   @Override
