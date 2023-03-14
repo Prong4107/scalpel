@@ -22,7 +22,6 @@ public class Scalpel implements BurpExtension {
 
   private ScalpelUnpacker unpacker;
   private ScalpelExecutor executor;
-
   private MontoyaApi API;
 
   @Override
@@ -66,7 +65,7 @@ public class Scalpel implements BurpExtension {
         );
 
       // Add the scripting editor tab.
-      API.userInterface().registerSuiteTab("ScalpelInterpreter", UIBuilder.constructScalpelInterpreterTab(executor, logger));
+      API.userInterface().registerSuiteTab("Scalpel Interpreter", UIBuilder.constructScalpelInterpreterTab(executor, logger));
 
       // Add request editor tab
       var provider = new ScalpelEditorProvider(API, executor);
