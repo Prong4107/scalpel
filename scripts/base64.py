@@ -27,7 +27,8 @@ try:
         except Exception as ex:
             logger.logToOutput(traceback.format_exc())
             logger.logToError(f"Python: {fun_name()}() error:\n\t{ex}")
-            
+        return to_bytes(req)
+        
     def req_edit_out_Scalpel(req: IHttpRequest, text: bytes):
         try:
             logger.logToOutput(f"Python: {fun_name()}() called")
