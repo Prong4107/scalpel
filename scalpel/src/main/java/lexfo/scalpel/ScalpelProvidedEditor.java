@@ -245,6 +245,7 @@ class ScalpelProvidedEditor
       // Call corresponding request editor callback when appropriate.
       return updateContentFromHttpMsg(msg);
     } catch (Exception e) {
+      // Log the error trace.
       TraceLogger.logStackTrace(logger, e);
     }
     return false;
