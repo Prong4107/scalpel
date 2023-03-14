@@ -27,11 +27,11 @@ try:
         except Exception as ex:
             logger.logToOutput(traceback.format_exc())
             logger.logToError(f"Python: {fun_name()}() error:\n\t{ex}")
-
+            
     def req_edit_out_Scalpel(req: IHttpRequest, text: bytes):
         try:
             logger.logToOutput(f"Python: {fun_name()}() called")
-            req = new_request(text)
+            req = new_request(bytes(text))
             body_bytes = b64encode(get_bytes(req.body()))
             new_body = byte_array(body_bytes)
             new_req = req.withBody(new_body)
