@@ -32,40 +32,42 @@ public class ScalpelExecutor {
 
   private final SharedInterpreter initInterpreter() {
     try {
-    // Instantiate a Python interpreter.
-    var interp = new SharedInterpreter();
+      // Instantiate a Python interpreter.
+      var interp = new SharedInterpreter();
 
-    // Make the Montoya API object accessible in Python
-    interp.set("__montoya__", API);
+      // Make the Montoya API object accessible in Python
+      interp.set("__montoya__", API);
 
-    // Set the script's filename to corresponding Python variable
-    interp.set("__file__", script.getAbsolutePath());
+      // Set the script's filename to corresponding Python variable
+      interp.set("__file__", script.getAbsolutePath());
 
-    // Set the script's directory to be able to add it to Python's path.
-    interp.set("__directory__", script.getParent());
+      // Set the script's directory to be able to add it to Python's path.
+      interp.set("__directory__", script.getParent());
 
-    // Add logger global
-    interp.set("__logger__", logger);
+      // Add logger global
+      interp.set("__logger__", logger);
 
-    // Add the script's directory to Python's path to allow imports of adjacent files.
-    interp.exec(
-      """
+      // Add the script's directory to Python's path to allow imports of adjacent files.
+      interp.exec(
+        """
     from sys import path
     path.append(__directory__)
     """
-    );
+      );
 
-    // Set importable logger.
-    interp.exec("""
+      // Set importable logger.
+      interp.exec(
+        """
     import scalpel._globals
     scalpel._globals.logger = __logger__
-    """);
+    """
+      );
 
-    // Run the script.
-    interp.runScript(script.getAbsolutePath());
+      // Run the script.
+      interp.runScript(script.getAbsolutePath());
 
-    // Return the initialized interpreter.
-    return interp;
+      // Return the initialized interpreter.
+      return interp;
     } catch (Exception e) {
       logger.logToError("Failed to instantiate interpreter:");
       TraceLogger.logStackTrace(logger, e);
@@ -123,7 +125,9 @@ public class ScalpelExecutor {
       );
   }
 
-  public HttpResponse callResponseReceivedCallback(HttpResponse res) {
+  public synchronized HttpResponse callResponseReceivedCallback(
+    HttpResponse res
+  ) {
     // Create a PyResponse wrapper.
     // TODO: Actually implement the wrapper.
     var pyRes = res;
@@ -138,17 +142,21 @@ public class ScalpelExecutor {
         (HttpResponse) interp.invoke(
           "response",
           new Object[] { pyRes },
-          Map.of("logger", logger)
+          Map.of()
         );
 
       // TODO: Extract Burp response.
       var newRes = pyRes;
-
+      interp.close();
       // Return new request with debug header
       return newRes.withAddedHeader(
         HttpHeader.httpHeader("X-Scalpel-Response", "true")
       );
+    } catch (Exception e) {
+      TraceLogger.logStackTrace(logger, e);
     }
+
+    return null;
   }
 
   // Format corresponding callback's Python function name.
@@ -175,27 +183,27 @@ public class ScalpelExecutor {
   }
 
   @SuppressWarnings("unchecked")
-  public <T extends Object> Optional<T> safeJepInvoke(
+  public synchronized <T extends Object> Optional<T> safeJepInvoke(
     String name,
     Object[] args,
     Map<String, Object> kwargs,
     Class<T> expectedClass
   ) {
     // Instantiate interpreter.
+
     try (Interpreter interp = initInterpreter()) {
       // Invoke the callback and get it's result.
       var result = interp.invoke(name, args, kwargs);
-
       if (result == null) {
         // Ensure interpreter is closed
         interp.close();
-
         // Empty return when the cb returns None.
         return Optional.empty();
       }
 
       // Ensure the returned data is a supported type.
       try {
+        interp.close();
         // Cast the result to provided expected class and return it.
         return Optional.of(((T) result));
       } catch (Exception e) {
@@ -235,12 +243,7 @@ public class ScalpelExecutor {
     Class<T> expectedClass
   ) {
     // Call base safeJepInvoke with a single argument and a logger as default kwarg.
-    return safeJepInvoke(
-      name,
-      new Object[] { arg },
-      Map.of(),
-      expectedClass
-    );
+    return safeJepInvoke(name, new Object[] { arg }, Map.of(), expectedClass);
   }
 
   @SuppressWarnings("unchecked")
