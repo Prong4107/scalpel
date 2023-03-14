@@ -31,6 +31,7 @@ public class ScalpelExecutor {
   }
 
   private final SharedInterpreter initInterpreter() {
+    try {
     // Instantiate a Python interpreter.
     var interp = new SharedInterpreter();
 
@@ -43,6 +44,9 @@ public class ScalpelExecutor {
     // Set the script's directory to be able to add it to Python's path.
     interp.set("__directory__", script.getParent());
 
+    // Add logger global
+    interp.set("__logger__", logger);
+
     // Add the script's directory to Python's path to allow imports of adjacent files.
     interp.exec(
       """
@@ -51,11 +55,22 @@ public class ScalpelExecutor {
     """
     );
 
+    // Set importable logger.
+    interp.exec("""
+    import scalpel._globals
+    scalpel._globals.logger = __logger__
+    """);
+
     // Run the script.
     interp.runScript(script.getAbsolutePath());
 
     // Return the initialized interpreter.
     return interp;
+    } catch (Exception e) {
+      logger.logToError("Failed to instantiate interpreter:");
+      TraceLogger.logStackTrace(logger, e);
+      throw e;
+    }
   }
 
   // Unused utils function
@@ -142,7 +157,6 @@ public class ScalpelExecutor {
     Boolean isRequest,
     Boolean isInbound
   ) {
-
     // Either req_ or res_ depending if it is a request or a response.
     var editPrefix = isRequest
       ? Constants.REQ_EDIT_PREFIX
@@ -152,7 +166,6 @@ public class ScalpelExecutor {
     var directionPrefix = isInbound
       ? Constants.IN_PREFIX
       : Constants.OUT_PREFIX;
-
 
     // Concatenate the prefixes and the tab name.
     var cbName = editPrefix + directionPrefix + tabName;
@@ -173,8 +186,13 @@ public class ScalpelExecutor {
       // Invoke the callback and get it's result.
       var result = interp.invoke(name, args, kwargs);
 
-      // Empty return when the cb returns None.
-      if (result == null) return Optional.empty();
+      if (result == null) {
+        // Ensure interpreter is closed
+        interp.close();
+
+        // Empty return when the cb returns None.
+        return Optional.empty();
+      }
 
       // Ensure the returned data is a supported type.
       try {
@@ -194,6 +212,9 @@ public class ScalpelExecutor {
 
         // Log the stack trace.
         TraceLogger.logStackTrace(logger, true);
+
+        // Ensure the interpreter is closed.
+        interp.close();
 
         // Empty return.
         return Optional.empty();
@@ -217,7 +238,7 @@ public class ScalpelExecutor {
     return safeJepInvoke(
       name,
       new Object[] { arg },
-      Map.of("logger", logger),
+      Map.of(),
       expectedClass
     );
   }
@@ -234,7 +255,7 @@ public class ScalpelExecutor {
     return safeJepInvoke(
       getEditorCallbackName(tabName, isRequest, isInbound),
       params,
-      Map.of("logger", logger),
+      Map.of(),
       expectedClass
     );
   }
@@ -255,7 +276,7 @@ public class ScalpelExecutor {
       expectedClass
     );
   }
-  
+
   public Optional<ByteArray> callEditorCallback(
     HttpMessage msg,
     Boolean isInbound,
