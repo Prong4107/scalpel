@@ -18,7 +18,7 @@ import jep.ClassEnquirer;
 import jep.ClassList;
 import jep.Interpreter;
 import jep.JepConfig;
-import jep.SharedInterpreter;
+import jep.SubInterpreter;
 import lexfo.scalpel.HttpMsgUtils;
 
 public class ScalpelExecutor {
@@ -142,11 +142,6 @@ public class ScalpelExecutor {
 
     this.lastScriptModificationTimestamp = this.script.lastModified();
 
-    //monter 2eme voir gabriel
-    SharedInterpreter.setConfig(
-      new JepConfig().setClassEnquirer(new CustomEnquirer())
-    );
-
     // Launch task thread.
     this.runner = this.launchTaskRunner();
   }
@@ -220,7 +215,7 @@ public class ScalpelExecutor {
     return hasChanged;
   }
 
-  private final SharedInterpreter reloadInterpreter(SharedInterpreter interp) {
+  private final SubInterpreter reloadInterpreter(SubInterpreter interp) {
     TraceLogger.log(logger, "Reloading interpreter...");
     interp.close();
     return initInterpreter();
@@ -233,7 +228,7 @@ public class ScalpelExecutor {
 
       try {
         // Instantiate the interpreter.
-        SharedInterpreter interp = initInterpreter();
+        SubInterpreter interp = initInterpreter();
         isRunnerAlive = true;
         while (true) {
           // Relaunch interpreter when file has changed (hot reload).
@@ -325,11 +320,11 @@ public class ScalpelExecutor {
     return thread;
   }
 
-  private final SharedInterpreter initInterpreter() {
+  private final SubInterpreter initInterpreter() {
     try {
       debugClassLoad();
       // Instantiate a Python interpreter.
-      SharedInterpreter interp = new SharedInterpreter();
+      SubInterpreter interp = new SubInterpreter(new JepConfig().setClassEnquirer(new CustomEnquirer()));
 
       // Make the Montoya API object accessible in Python
       interp.set("__montoya__", API);
