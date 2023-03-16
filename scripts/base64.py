@@ -1,11 +1,11 @@
 import traceback
 from sys import _getframe
 try:
-    from scalpel.burp.http_request import IHttpRequest, HttpRequest
-    from scalpel.burp.http_response import IHttpResponse, HttpResponse
-    from scalpel.burp.byte_array import IByteArray, ByteArray
-    from scalpel.burp.logging import Logging
-    from scalpel.utils import new_response, byte_array, to_bytes, get_bytes, new_request, logger
+    from pyscalpel.burp.http_request import IHttpRequest, HttpRequest
+    from pyscalpel.burp.http_response import IHttpResponse, HttpResponse
+    from pyscalpel.burp.byte_array import IByteArray, ByteArray
+    from pyscalpel.burp.logging import Logging
+    from pyscalpel.utils import new_response, byte_array, to_bytes, get_bytes, new_request, logger
     from base64 import b64decode, b64encode
 
 
