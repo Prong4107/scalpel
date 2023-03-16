@@ -110,7 +110,7 @@ public class ScalpelExecutor {
           } catch (InterruptedException e) {
             // Log the error.
             TraceLogger.logError(logger, "Task " + name + "interrupted:");
-            
+
             // Log the stack trace.
             TraceLogger.logStackTrace(logger, e);
           }
@@ -128,6 +128,7 @@ public class ScalpelExecutor {
   private Thread runner;
   private Queue<Task> tasks = new LinkedBlockingQueue<>();
   private long lastScriptModificationTimestamp;
+  private Boolean isRunnerAlive;
 
   public ScalpelExecutor(MontoyaApi API, Logging logger, String scriptPath) {
     // Store Montoya API object
@@ -141,6 +142,7 @@ public class ScalpelExecutor {
 
     this.lastScriptModificationTimestamp = this.script.lastModified();
 
+    //monter 2eme voir gabriel
     SharedInterpreter.setConfig(
       new JepConfig().setClassEnquirer(new CustomEnquirer())
     );
@@ -157,10 +159,18 @@ public class ScalpelExecutor {
     // Create task object.
     final Task task = new Task(name, args, kwargs);
 
-    // Queue the task.
-    tasks.add(task);
+    synchronized (tasks) {
+      // Ensure the runner is alive.
+      if (isRunnerAlive) {
+        // Queue the task.
+        tasks.add(task);
+      } else {
+        // The runner is dead, reject this task to avoid blocking Burp when awaiting.
+        task.result = Optional.empty();
+      }
+    }
 
-    // Return the queued task.
+    // Return the queued or rejected task.
     return task;
   }
 
@@ -200,7 +210,8 @@ public class ScalpelExecutor {
 
   private final Boolean hasScriptChanged() {
     // Check if the last modification date has changed since last record.
-    final Boolean hasChanged = lastScriptModificationTimestamp != script.lastModified();
+    final Boolean hasChanged =
+      lastScriptModificationTimestamp != script.lastModified();
 
     // Update the last modification date record.
     lastScriptModificationTimestamp = script.lastModified();
@@ -220,9 +231,10 @@ public class ScalpelExecutor {
     final var thread = new Thread(() -> {
       TraceLogger.log(logger, "Starting task loop.");
 
-      try  {
+      try {
         // Instantiate the interpreter.
         SharedInterpreter interp = initInterpreter();
+        isRunnerAlive = true;
         while (true) {
           // Relaunch interpreter when file has changed (hot reload).
           if (hasScriptChanged()) {
@@ -270,8 +282,10 @@ public class ScalpelExecutor {
             // Log the result value.
             TraceLogger.log(logger, "" + task.result.orElse("null"));
 
-            // Notify the task to release the awaitResult() wait() lock. 
+            // Notify the task to release the awaitResult() wait() lock.
             task.notifyAll();
+
+            TraceLogger.log(logger, "Notified " + task.name);
           }
         }
       } catch (Exception e) {
@@ -280,6 +294,28 @@ public class ScalpelExecutor {
       }
       // Log the error.
       TraceLogger.log(logger, "Task loop has crashed");
+
+      synchronized (tasks) {
+        tasks.forEach(t -> {
+          synchronized (t) {
+            t.result = Optional.empty();
+            t.notifyAll();
+          }
+
+          tasks.clear();
+        });
+
+        isRunnerAlive = false;
+      }
+
+      try {
+        Thread.sleep(300);
+      } catch (InterruptedException e) {
+        TraceLogger.logStackTrace(logger, e);
+      }
+
+      // Relaunch the task thread
+      this.runner = launchTaskRunner();
     });
 
     // Start the task runner thread.
@@ -291,8 +327,9 @@ public class ScalpelExecutor {
 
   private final SharedInterpreter initInterpreter() {
     try {
+      debugClassLoad();
       // Instantiate a Python interpreter.
-      final SharedInterpreter interp = new SharedInterpreter();
+      SharedInterpreter interp = new SharedInterpreter();
 
       // Make the Montoya API object accessible in Python
       interp.set("__montoya__", API);
