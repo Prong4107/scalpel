@@ -9,14 +9,78 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.logging.Logging;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
+import jep.ClassEnquirer;
+import jep.ClassList;
 import jep.Interpreter;
+import jep.JepConfig;
 import jep.SharedInterpreter;
+import lexfo.scalpel.HttpMsgUtils;
 
 public class ScalpelExecutor {
+
+  private class CustomEnquirer implements ClassEnquirer {
+
+    private ClassList base;
+
+    CustomEnquirer() {
+      this.base = ClassList.getInstance();
+    }
+
+    public String[] getClassNames(String pkg) {
+      TraceLogger.log(logger, "getClassNames called with |" + pkg + "|");
+      if (pkg == "lexfo") {
+        return new String[] { "HttpMsgUtils" };
+      }
+      return base.getClassNames(pkg);
+    }
+
+    public static ClassList getInstance() {
+      return getInstance();
+    }
+
+    public String[] getSubPackages(String p) {
+      TraceLogger.log(logger, "getSubPackages called with |" + p + "|");
+      return base.getSubPackages(p);
+    }
+
+    public boolean isJavaPackage(String s) {
+      TraceLogger.log(logger, "isJavaPackage called with |" + s + "|");
+
+      // https://github.com/ninia/jep/issues/347
+      // fucking piece of fucking shit this fucking sucks fuck fuck fuck this FUCK
+      if (s.equals("lexfo") | s.equals("lexfo.scalpel")) {
+        TraceLogger.log(logger, "Returning true");
+        return true;
+      }
+      return base.isJavaPackage(s);
+    }
+
+    public static void main(String[] argv) {
+      main(argv);
+    }
+  }
+
+  private final void printClasses(String pkg) {
+    var cl = new CustomEnquirer();
+    if (!cl.isJavaPackage(pkg)) {
+      TraceLogger.log(logger, pkg + " is not a importable package.");
+      return;
+    }
+    TraceLogger.log(logger, pkg + ":");
+    Arrays
+      .stream(cl.getClassNames(pkg))
+      .forEach(s -> TraceLogger.log(logger, "\t" + s));
+  }
+
+  private final void debugClassLoad() {
+    // printClasses("burp");
+    printClasses("lexfo");
+  }
 
   private class Task {
 
@@ -76,6 +140,10 @@ public class ScalpelExecutor {
     this.script = new File(scriptPath);
 
     this.lastScriptModificationTimestamp = this.script.lastModified();
+
+    SharedInterpreter.setConfig(
+      new JepConfig().setClassEnquirer(new CustomEnquirer())
+    );
 
     // Launch task thread.
     this.runner = this.launchTaskRunner();
