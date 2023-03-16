@@ -43,7 +43,7 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
     HttpRequestToBeSent httpRequestToBeSent
   ) {
     // Call the request() Python callback
-    var newReq = executor.callRequestToBeSentCallback(httpRequestToBeSent);
+    var newReq = executor.callIntercepterCallback(httpRequestToBeSent);
 
     // Return the modified request when requested, else return the original.
     return RequestToBeSentAction.continueWith(
@@ -51,18 +51,16 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
     );
   }
 
-
   @Override
   public ResponseReceivedAction handleHttpResponseReceived(
     HttpResponseReceived httpResponseReceived
   ) {
-    // TODO: Finish implementing the callback ?
-    var action = ResponseReceivedAction.continueWith(httpResponseReceived);
+    // Call the request() Python callback
+    var newRes = executor.callIntercepterCallback(httpResponseReceived);
 
-    ResponseReceivedAction.continueWith(
-      executor.callResponseReceivedCallback(httpResponseReceived)
+    // Return the modified request when requested, else return the original.
+    return ResponseReceivedAction.continueWith(
+      newRes.orElse(httpResponseReceived)
     );
-
-    return action;
   }
 }
