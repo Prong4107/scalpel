@@ -1,9 +1,10 @@
-from scalpel.burp.http_request import IHttpRequest, HttpRequest
-from scalpel.burp.http_response import IHttpResponse, HttpResponse
-from scalpel.burp.byte_array import IByteArray, ByteArray
-import scalpel._globals
+from pyscalpel.burp.http_request import IHttpRequest, HttpRequest
+from pyscalpel.burp.http_response import IHttpResponse, HttpResponse
+from pyscalpel.burp.byte_array import IByteArray, ByteArray
+import pyscalpel._globals
+# from typing import List, TypeVar
 
-logger = scalpel._globals.logger
+logger = pyscalpel._globals.logger
 
 def new_response(res: IHttpResponse) -> IHttpResponse:
     return HttpResponse.httpResponse(res)
@@ -23,3 +24,8 @@ def get_bytes(array: IByteArray) -> bytes:
 def to_bytes(obj: IHttpRequest | IHttpResponse) -> bytes:
     return get_bytes(obj.toByteArray())
 
+
+# T = TypeVar('T', IHttpRequest, IHttpResponse)
+
+# def update_header(msg: T, name: str, value: str) -> T:
+#     return HttpMsgUtils.updateHeader(msg, name, value)
