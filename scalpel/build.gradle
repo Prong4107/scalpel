@@ -1,7 +1,5 @@
 plugins {
     id 'java'
-
-    // Bundle JEP in .jar
     id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
@@ -15,7 +13,6 @@ repositories {
 
 def venvPath = '../.venv'
 
-
 def jepDir = file(venvPath + '/lib/').listFiles()
     .find { it.name.startsWith('python3') }
     .listFiles().find { it.name.matches('site-packages') }
@@ -26,10 +23,9 @@ def jepJar = fileTree(dir: venvPath + '/lib', include: '**/jep/jep-*.jar').files
 
 dependencies {
     compileOnly 'net.portswigger.burp.extensions:montoya-api:2023.1'
-
+    
     // JEP installed from pip in a venv.
     implementation files(jepJar)
-
     implementation 'commons-io:commons-io:2.6'
 }
 
@@ -48,3 +44,16 @@ sourceSets {
 }
 
 tasks.withType(Copy).all { duplicatesStrategy 'exclude' }
+
+
+configurations {
+    javadocImplementation.extendsFrom implementation
+}
+
+javadoc {
+    source = sourceSets.main.allJava
+    classpath += configurations.javadocImplementation
+    options.links("https://portswigger.github.io/burp-extensions-montoya-api/javadoc/")
+    options.memberLevel = JavadocMemberLevel.PRIVATE
+    options.addStringOption('Xdoclint:none', null)
+}
