@@ -9,7 +9,6 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.logging.Logging;
 import java.io.File;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
@@ -19,7 +18,6 @@ import jep.ClassList;
 import jep.Interpreter;
 import jep.JepConfig;
 import jep.SubInterpreter;
-import lexfo.scalpel.HttpMsgUtils;
 
 /**
  * Responds to requested Python tasks from multiple threads through a task queue handled in a single sepearate thread.
@@ -73,7 +71,6 @@ public class ScalpelExecutor {
       TraceLogger.log(logger, "getClassNames called with |" + pkg + "|");
       return base.getClassNames(pkg);
     }
-
 
     /**
      * Gets the names of all the sub-packages of a package.
@@ -147,7 +144,7 @@ public class ScalpelExecutor {
 
     /**
      * Add the task to the queue and wait for it to be completed by the task thread.
-     *  
+     *
      * @return the result of the task.
      */
     public Optional<Object> awaitResult() {
@@ -189,7 +186,7 @@ public class ScalpelExecutor {
    * The path of the Scalpel script to execute.
    */
   private File script;
-  
+
   /**
    * The task runner thread.
    */
@@ -642,7 +639,7 @@ public class ScalpelExecutor {
 
   /**
    * Calls the given Python function with the given argument.
-   * 
+   *
    * @param <T> the expected class of the returned value.
    * @param name the name of the Python function to call.
    * @param arg the argument to pass to the function.
@@ -658,7 +655,6 @@ public class ScalpelExecutor {
     // Call base safeJepInvoke with a single argument and a logger as default kwarg.
     return safeJepInvoke(name, new Object[] { arg }, Map.of(), expectedClass);
   }
-
 
   /**
    * Calls the corresponding Python callback for the given tab.
