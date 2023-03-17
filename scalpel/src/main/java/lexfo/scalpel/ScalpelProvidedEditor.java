@@ -21,20 +21,68 @@ import java.util.concurrent.atomic.AtomicReference;
 
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpResponseEditor.html
-class ScalpelProvidedEditor
+/**
+  Provides an UI text editor component for editing HTTP requests or responses.
+  Calls Python scripts to initialize the editor and update the requests or responses.
+*/
+public class ScalpelProvidedEditor
   implements
     ExtensionProvidedHttpRequestEditor, ExtensionProvidedHttpResponseEditor {
 
+  /**
+    The editor swing UI component.
+  */
   private final RawEditor editor;
+
+  /**
+    The HTTP request or response being edited.
+  */
   private HttpRequestResponse requestResponse;
+
+  /**
+    The Montoya API object.
+  */
   private final MontoyaApi API;
+
+  /**
+    The logger object.
+  */
   private final Logging logger;
+
+  /**
+    The editor creation context.
+  */
   private final EditorCreationContext ctx;
+
+  /**
+    The editor type (REQUEST or RESPONSE).
+  */
   private final EditorType type;
+
+  /**
+    The editor ID. (unused)
+  */
   private final String id;
+
+  /**
+    The editor provider that instantiated this editor. (unused)
+  */
   private final ScalpelEditorProvider provider;
+
+  /**
+    The executor responsible for interacting with Python.
+  */
   private final ScalpelExecutor executor;
 
+
+  /**
+    Constructs a new ScalpelProvidedEditor object with the specified MontoyaApi object, EditorCreationContext object, EditorType object, ScalpelEditorProvider object and ScalpelExecutor object.
+    @param API The MontoyaApi object to use.
+    @param creationContext The EditorCreationContext object containing information about the editor.
+    @param type The EditorType object containing information about the editor type (REQUEST or RESPONSE).
+    @param provider The ScalpelEditorProvider object that instantiated this editor.
+    @param executor The ScalpelExecutor object to use.
+  */
   ScalpelProvidedEditor(
     MontoyaApi API,
     EditorCreationContext creationContext,
@@ -81,12 +129,17 @@ class ScalpelProvidedEditor
     }
   }
 
+  /**
+    Returns the editor type (REQUEST or RESPONSE).
+    @return The editor type (REQUEST or RESPONSE).
+  */
   public EditorType getEditorType() {
-    // Get the editor type (REQUEST or RESPONSE)
     return type;
   }
 
-  // Print the UI component hierarchy tree.
+  /**
+    Prints the UI component hierarchy tree. (debugging)
+  */
   private void printUiTrace() {
     LinkedList<Container> lst = new LinkedList<>();
     Container current = uiComponent().getParent();
@@ -104,21 +157,34 @@ class ScalpelProvidedEditor
     });
   }
 
+  /**
+    Returns the editor's unique ID. (unused)
+    @return The editor's unique ID.
+  */
   public String getId() {
-    // Get the editor's unique ID.
     return id;
   }
 
+  /**
+    Returns the editor's creation context.
+    @return The editor's creation context.
+  */
   public EditorCreationContext getCtx() {
-    // Get the editor's creation context.
     return ctx;
   }
 
+  /**
+    Returns the Burp editor object.
+    @return The Burp editor object.
+  */
   public RawEditor getEditor() {
-    // Get the editor component.
     return editor;
   }
 
+  /** 
+   * Returns the HTTP message being edited.
+   * @return The HTTP message being edited.
+   */
   private HttpMessage getMessage() {
     // Ensure request response exists.
     if (requestResponse == null) return null;
@@ -129,6 +195,11 @@ class ScalpelProvidedEditor
       : requestResponse.response();
   }
 
+  /**
+   *  Creates a new HTTP message by passing the editor's contents through a Python callback.
+   * 
+   * @return The new HTTP message.
+  */  
   private HttpMessage processOutboundMessage() {
     try {
       // Safely extract the message from the requestResponse.
@@ -154,27 +225,58 @@ class ScalpelProvidedEditor
     return null;
   }
 
+  /**
+   *  Creates a new HTTP request by passing the editor's contents through a Python callback.
+   * (called by Burp)
+   * 
+   * @return The new HTTP request.
+  */
   @Override
   public HttpRequest getRequest() {
     // Cast the generic HttpMessage interface back to it's concrete type.
     return (HttpRequest) processOutboundMessage();
   }
 
+
+  /**
+   *  Creates a new HTTP response by passing the editor's contents through a Python callback.
+   * (called by Burp)
+   * 
+   * @return The new HTTP response.
+  */
   @Override
   public HttpResponse getResponse() {
     // Cast the generic HttpMessage interface back to it's concrete type.
     return (HttpResponse) processOutboundMessage();
   }
 
+  /**
+    Returns the stored HttpRequestResponse.
+
+    @return The stored HttpRequestResponse.
+  */
   public HttpRequestResponse getRequestResponse() {
     return requestResponse;
   }
 
+  /**
+    Sets the HttpRequestResponse to be edited.
+    (called by Burp)
+
+    @param requestResponse The HttpRequestResponse to be edited.
+  */
   @Override
   public void setRequestResponse(HttpRequestResponse requestResponse) {
     this.requestResponse = requestResponse;
   }
 
+  
+  /**
+    Initializes the editor with Python callbacks output of the inputted HTTP message.
+    @param msg The HTTP message to be edited.
+
+    @return True when the Python callback returned bytes, false otherwise.
+  */
   private boolean updateContentFromHttpMsg(HttpMessage msg) {
     try {
       // Call the Python callback and store the returned value.
@@ -193,6 +295,17 @@ class ScalpelProvidedEditor
     return false;
   }
 
+
+  /**
+    Clone an HttpMessage and replace its bytes with the provided bytes.
+    Allows to keep the original request network service and other properties and work generically with both HttpRequest and HttpResponse.
+
+    @param <T> The type of the HttpMessage to be returned.
+    @param msg The HttpMessage to be cloned.
+    @param bytes The bytes to be used to create the new HttpMessage.
+
+    @return A new HttpMessage with the same properties as the provided one, but with the provided bytes.
+  */
   @SuppressWarnings("unchecked")
   private static final <
     T extends HttpMessage
@@ -205,6 +318,15 @@ class ScalpelProvidedEditor
     );
   }
 
+
+  /**
+   * Creates a new HTTP message by passing the provided bytes through a Python callback.
+   * 
+   * @param <T> The type of the HttpMessage to be returned.
+   * @param msg The HTTP message to be edited.
+   * @param bytes The bytes to be used to create the new HttpMessage.
+   * @return The new HttpMessage with the bytes outputted by the Python callback.
+  */
   private <T extends HttpMessage> Optional<T> pythonBuildHttpMsgFromBytes(
     T msg,
     ByteArray bytes
@@ -229,6 +351,13 @@ class ScalpelProvidedEditor
     return Optional.empty();
   }
 
+  /**
+    Determines whether the editor should be enabled for the provided HttpRequestResponse.
+    Also initializes the editor with Python callbacks output of the inputted HTTP message.
+    (called by Burp)
+
+    @param requestResponse The HttpRequestResponse to be edited.
+  */
   @Override
   public boolean isEnabledFor(HttpRequestResponse requestResponse) {
     try {
@@ -251,22 +380,46 @@ class ScalpelProvidedEditor
     return false;
   }
 
+  /**
+    Returns the name of the tab.
+    (called by Burp)
+
+    @return The name of the tab.
+  */
   @Override
   public String caption() {
     // Return the tab name.
     return "Scalpel";
   }
 
+  /**
+    Returns the underlying UI component.
+    (called by Burp)
+
+    @return The underlying UI component.
+  */
   @Override
   public Component uiComponent() {
     return editor.uiComponent();
   }
 
+  /**
+    Returns the selected data.
+    (called by Burp)
+
+    @return The selected data.
+  */
   @Override
   public Selection selectedData() {
     return editor.selection().isPresent() ? editor.selection().get() : null;
   }
 
+  /**
+    Returns whether the editor has been modified.
+    (called by Burp)
+
+    @return Whether the editor has been modified.
+  */
   @Override
   public boolean isModified() {
     return editor.isModified();

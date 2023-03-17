@@ -8,10 +8,18 @@ import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.proxy.http.InterceptedRequest;
 import burp.api.montoya.proxy.http.InterceptedResponse;
 
-import java.util.Map;
-
+/**
+  Utility class for HttpMessage objects.
+*/
 public class HttpMsgUtils {
 
+  /**
+    Returns the real class name of the specified HttpMessage object.
+
+    @param <T> The type of the HttpMessage object.
+    @param msg The HttpMessage object to get the class name of.
+    @return The class name of the specified HttpMessage object.
+  */
   public static <T extends HttpMessage> String getClassName(T msg) {
     // Retrieve real type.
     // We cannot naively use msg.getClass() so we have no choice but to use an instanceof if forest.
@@ -30,6 +38,17 @@ public class HttpMsgUtils {
     );
   }
 
+  /**
+    Updates the specified HttpMessage object's header with the specified name and value.
+    Creates the header when it doesn't exist.
+    <p> (Burp's withUpdatedHeader() method does not create the header.)
+
+    @param <T> The type of the HttpMessage object.
+    @param msg The HttpMessage object to update.
+    @param name The name of the header to update.
+    @param value The value of the header to update.
+    @return The updated HttpMessage object.
+  */
   @SuppressWarnings({ "unchecked" })
   public static <T extends HttpMessage> T updateHeader(
     T msg,

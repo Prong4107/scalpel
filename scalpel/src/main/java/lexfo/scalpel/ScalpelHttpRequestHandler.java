@@ -13,13 +13,37 @@ import burp.api.montoya.core.Annotations;
 import burp.api.montoya.http.handler.*;
 import burp.api.montoya.logging.Logging;
 
+/**
+  Handles HTTP requests and responses.
+*/
 public class ScalpelHttpRequestHandler implements HttpHandler {
 
+  /**
+    The MontoyaApi object used to interact with Burp Suite.
+  */
   private final MontoyaApi API;
+
+  /**
+    The logger object used to log messages to Burp Suite's output tab and standard streams.
+  */
   private final Logging logger;
+
+  /**
+    The ScalpelEditorProvider object used to provide new editors.
+  */
   private final ScalpelEditorProvider editorProvider;
+
+  /**
+    The ScalpelExecutor object used to execute Python scripts.
+  */
   private final ScalpelExecutor executor;
 
+  /**
+    Constructs a new ScalpelHttpRequestHandler object with the specified MontoyaApi object and ScalpelExecutor object.
+    @param API The MontoyaApi object to use.
+    @param editorProvider The ScalpelEditorProvider object to use.
+    @param executor The ScalpelExecutor object to use.
+  */
   public ScalpelHttpRequestHandler(
     MontoyaApi API,
     ScalpelEditorProvider editorProvider,
@@ -38,6 +62,11 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
     this.executor = executor;
   }
 
+  /**
+    Handles HTTP requests.
+    @param httpRequestToBeSent The HttpRequestToBeSent object containing information about the HTTP request.
+    @return A RequestToBeSentAction object containing information about how to handle the HTTP request.
+  */
   @Override
   public RequestToBeSentAction handleHttpRequestToBeSent(
     HttpRequestToBeSent httpRequestToBeSent
@@ -51,6 +80,11 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
     );
   }
 
+  /**
+    Handles HTTP responses.
+    @param httpResponseReceived The HttpResponseReceived object containing information about the HTTP response.
+    @return A ResponseReceivedAction object containing information about how to handle the HTTP response.
+  */
   @Override
   public ResponseReceivedAction handleHttpResponseReceived(
     HttpResponseReceived httpResponseReceived

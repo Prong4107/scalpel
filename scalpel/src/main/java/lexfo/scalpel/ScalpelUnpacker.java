@@ -10,21 +10,43 @@ import java.nio.file.Path;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+/**
+  Provides methods for unpacking the Scalpel resources.
+*/
 public class ScalpelUnpacker {
 
+  /**
+    The path to the Scalpel resources directory.
+  */
   private Path ressourcesDirectory;
 
-  private burp.api.montoya.logging.Logging logger;
 
+  /**
+    The Logging object to use.
+  */
+  private Logging logger;
+
+  /**
+    Creates a new ScalpelUnpacker object.
+    @param logger The Logging object to use.
+  */
   public ScalpelUnpacker(Logging logger) {
     this.logger = logger;
   }
 
+  /**
+    Returns the path to the Scalpel resources directory.
+    @return The path to the Scalpel resources directory.
+  */
   public String getResourcesPath() {
     return ressourcesDirectory.toString();
   }
 
   // https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file#:~:text=return%20new%20File(MyClass.class.getProtectionDomain().getCodeSource().getLocation()%0A%20%20%20%20.toURI()).getPath()%3B
+  /**
+    Returns the path to the Scalpel JAR file.
+    @return The path to the Scalpel JAR file.
+  */
   private String getRunningJarPath() {
     try {
       return Scalpel.class.getProtectionDomain()
@@ -38,6 +60,12 @@ public class ScalpelUnpacker {
   }
 
   // https://stackoverflow.com/questions/9324933/what-is-a-good-java-library-to-zip-unzip-files#:~:text=Extract%20zip%20file%20and%20all%20its%20subfolders%2C%20using%20only%20the%20JDK%3A
+  /**
+    Extracts the Scalpel resources from the Scalpel JAR file.
+
+    @param zipFile The path to the Scalpel JAR file.
+    @param extractFolder The path to the Scalpel resources directory.
+  */
   private void extractFolder(String zipFile, String extractFolder) {
     ZipFile zip = null;
     try {
@@ -94,6 +122,9 @@ public class ScalpelUnpacker {
     }
   }
 
+  /**
+    Initializes the Scalpel resources directory.
+  */
   public void initializeResourcesDirectory() {
     try {
       // Generate an unique directory name to avoid "libjep.so already loaded in another classloader"
