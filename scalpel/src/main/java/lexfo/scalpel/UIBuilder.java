@@ -5,15 +5,34 @@ import java.awt.event.*;
 import javax.swing.*;
 import burp.api.montoya.logging.Logging;
 
+/**
+  Provides methods for constructing the Burp Suite UI.
+*/
 public class UIBuilder {
 
-  // Constructs the debug Python testing Burp tab.
+
+  // Unused configuration tab constructor
+  /**
+    Constructs the configuration Burp tab.
+    @param executor The ScalpelExecutor object to use.
+    @return The constructed tab.
+  */
+  public final static Component constructConfigTab(ScalpelExecutor executor) {
+    return null;
+  }
+
+  /**
+    Constructs the debug Python testing Burp tab.
+    @param executor The ScalpelExecutor object to use.
+    @param logger The Logging object to use.
+    @return The constructed tab.
+  */
   public final static Component constructScalpelInterpreterTab(ScalpelExecutor executor, Logging logger) {
     // Split pane
     JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
     JSplitPane scriptingPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
     JTextArea outputArea = new JTextArea();
-    var editorPane = new JEditorPane();
+    JEditorPane editorPane = new JEditorPane();
     JButton button = new JButton("Run script.");
 
     button.addActionListener((ActionEvent e) -> {

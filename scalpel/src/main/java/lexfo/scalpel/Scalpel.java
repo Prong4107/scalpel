@@ -1,11 +1,3 @@
-/*
- * Copyright (c) 2022-2023. PortSwigger Ltd. All rights reserved.
- *
- * This code may be used to extend the functionality of Burp Suite Community Edition
- * and Burp Suite Professional, provided that this usage does not violate the
- * license terms for those products.
- */
-
 package lexfo.scalpel;
 
 
@@ -16,14 +8,37 @@ import jep.MainInterpreter;
 
 
 //Burp will auto-detect and load any class that extends BurpExtension.
+/**
+  The main class of the extension.
+  This class is instantiated by Burp Suite and is used to initialize the extension.
+*/
 public class Scalpel implements BurpExtension {
 
+  /**
+    The logger object used to log messages to Burp Suite's output tab.
+  */
   private Logging logger;
 
+  /**
+    The ScalpelUnpacker object used to extract the extension's resources to a temporary directory.
+  */
   private ScalpelUnpacker unpacker;
+
+  /**
+    The ScalpelExecutor object used to execute Python scripts.
+  */
   private ScalpelExecutor executor;
+
+  /**
+    The MontoyaApi object used to interact with Burp Suite.
+  */
   private MontoyaApi API;
 
+
+  /**
+    Initializes the extension.
+    @param API The MontoyaApi object to use.
+  */
   @Override
   public void initialize(MontoyaApi API) {
     // Init API member.

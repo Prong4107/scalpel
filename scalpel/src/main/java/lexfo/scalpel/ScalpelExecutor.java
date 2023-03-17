@@ -21,30 +21,77 @@ import jep.JepConfig;
 import jep.SubInterpreter;
 import lexfo.scalpel.HttpMsgUtils;
 
+/**
+ * Responds to requested Python tasks from multiple threads through a task queue handled in a single sepearate thread.
+ *
+ * <p>The executor is responsible for managing a single global Python interpreter
+ * for every script that's being executed.
+ *
+ * <p>The executor itself is designed to be used concurrently by different threads.
+ * It provides a simple interface for submitting tasks to be executed by the script,
+ * and blocks each thread until the task has been completed, providing a thread-safe
+ * way to ensure that the script's state remains consistent.
+ *
+ * <p>Tasks are submitted as function calls with optional arguments and keyword
+ * arguments. Each function call is executed in the script's global context, and
+ * the result of the function is returned to the JVM thread that submitted the
+ * task.
+ *
+ * <p>The executor is capable of restarting the Python interpreter when the
+ * script file changes on disk. This ensures that any modifications made to the
+ * script are automatically loaded by the executor without requiring a manual
+ * restart of the extension.
+ *
+ */
 public class ScalpelExecutor {
 
+  /**
+   * A custom ClassEnquirer for the Jep interpreter used by the script executor.
+   */
   private class CustomEnquirer implements ClassEnquirer {
 
+    /**
+     * The base ClassEnquirer to use.
+     */
     private ClassList base;
 
+    /**
+     * Constructs a new CustomEnquirer object.
+     */
     CustomEnquirer() {
       this.base = ClassList.getInstance();
     }
+
+    /**
+     * Gets the names of all the classes in a package.
+     *
+     * @param pkg the name of the package.
+     * @return an array of the names of the classes in the package.
+     */
 
     public String[] getClassNames(String pkg) {
       TraceLogger.log(logger, "getClassNames called with |" + pkg + "|");
       return base.getClassNames(pkg);
     }
 
-    public static ClassList getInstance() {
-      return getInstance();
-    }
 
+    /**
+     * Gets the names of all the sub-packages of a package.
+     *
+     * @param p the name of the package.
+     * @return an array of the names of the sub-packages of the package.
+     */
     public String[] getSubPackages(String p) {
       TraceLogger.log(logger, "getSubPackages called with |" + p + "|");
       return base.getSubPackages(p);
     }
 
+    /**
+     * Determines whether a string represents a valid Java package.
+     *
+     * @param s the string to check.
+     * @return true if the string represents a valid Java package, false otherwise.
+     */
     public boolean isJavaPackage(String s) {
       TraceLogger.log(logger, "isJavaPackage called with |" + s + "|");
 
@@ -56,36 +103,40 @@ public class ScalpelExecutor {
       }
       return base.isJavaPackage(s);
     }
-
-    public static void main(String[] argv) {
-      main(argv);
-    }
   }
 
-  private final void printClasses(String pkg) {
-    var cl = new CustomEnquirer();
-    if (!cl.isJavaPackage(pkg)) {
-      TraceLogger.log(logger, pkg + " is not a importable package.");
-      return;
-    }
-    TraceLogger.log(logger, pkg + ":");
-    Arrays
-      .stream(cl.getClassNames(pkg))
-      .forEach(s -> TraceLogger.log(logger, "\t" + s));
-  }
-
-  private final void debugClassLoad() {
-    // printClasses("burp");
-    printClasses("lexfo");
-  }
-
+  /**
+   * A class representing a task to be executed by the Scalpel script.
+   */
   private class Task {
 
+    /**
+     * The name of the task.
+     */
     String name;
+
+    /**
+     * The arguments passed to the task.
+     */
     Object[] args;
+
+    /**
+     * The keyword arguments passed to the task.
+     */
     Map<String, Object> kwargs;
+
+    /**
+     * An optional object containing the result of the task, if it has been completed.
+     */
     private Optional<Object> result = null;
 
+    /**
+     * Constructs a new Task object.
+     *
+     * @param name the name of the task.
+     * @param args the arguments passed to the task.
+     * @param kwargs the keyword arguments passed to the task.
+     */
     public Task(String name, Object[] args, Map<String, Object> kwargs) {
       this.name = name;
       this.args = args;
@@ -94,6 +145,11 @@ public class ScalpelExecutor {
       TraceLogger.log(logger, "Created task: " + name);
     }
 
+    /**
+     * Add the task to the queue and wait for it to be completed by the task thread.
+     *  
+     * @return the result of the task.
+     */
     public Optional<Object> awaitResult() {
       // Acquire the lock on the Task object.
       synchronized (this) {
@@ -119,13 +175,48 @@ public class ScalpelExecutor {
     }
   }
 
+  /**
+   * The logging object to use for logging messages.
+   */
   private final Logging logger;
+
+  /**
+   * The MontoyaApi object to use for sending and receiving HTTP messages.
+   */
   private final MontoyaApi API;
+
+  /**
+   * The path of the Scalpel script to execute.
+   */
   private File script;
+  
+  /**
+   * The task runner thread.
+   */
   private Thread runner;
-  private Queue<Task> tasks = new LinkedBlockingQueue<>();
+
+  /**
+   * The Python task queue.
+   */
+  private final Queue<Task> tasks = new LinkedBlockingQueue<>();
+
+  /**
+   * The timestamp of the last recorded modification to the script file.
+   */
   private long lastScriptModificationTimestamp;
+
+  /**
+   * Flag indicating whether the task runner loop is running.
+   */
   private Boolean isRunnerAlive = false;
+
+  /**
+   * Constructs a new ScalpelExecutor object.
+   *
+   * @param API the MontoyaApi object to use for sending and receiving HTTP messages.
+   * @param logger the Logging object to use for logging messages.
+   * @param scriptPath the path of the Scalpel script to execute.
+   */
 
   public ScalpelExecutor(MontoyaApi API, Logging logger, String scriptPath) {
     // Store Montoya API object
@@ -143,6 +234,14 @@ public class ScalpelExecutor {
     this.runner = this.launchTaskRunner();
   }
 
+  /**
+   * Adds a new task to the queue of tasks to be executed by the script.
+   *
+   * @param name the name of the python function to be called.
+   * @param args the arguments to pass to the python function.
+   * @param kwargs the keyword arguments to pass to the python function.
+   * @return a Task object representing the added task.
+   */
   private final Task addTask(
     String name,
     Object[] args,
@@ -169,6 +268,15 @@ public class ScalpelExecutor {
     return task;
   }
 
+  /**
+   * Awaits the result of a task.
+   *
+   * @param <T> the type of the result of the task.
+   * @param name the name of the python function to be called.
+   * @param args the arguments to pass to the python function.
+   * @param kwargs the keyword arguments to pass to the python function.
+   * @return an Optional object containing the result of the task, or empty if the task was rejected or failed.
+   */
   @SuppressWarnings({ "unchecked" })
   private final <T> Optional<T> awaitTask(
     String name,
@@ -203,6 +311,11 @@ public class ScalpelExecutor {
     return Optional.empty();
   }
 
+  /**
+   * Checks if the script file has been modified since the last check.
+   *
+   * @return true if the script file has been modified since the last check, false otherwise.
+   */
   private final Boolean hasScriptChanged() {
     // Check if the last modification date has changed since last record.
     final Boolean hasChanged =
@@ -215,12 +328,23 @@ public class ScalpelExecutor {
     return hasChanged;
   }
 
+  /**
+   * Close and reinstantiante the interpreter and returns it.
+   *
+   * @param interp the interpreter to reload.
+   * @return the reloaded interpreter.
+   */
   private final SubInterpreter reloadInterpreter(SubInterpreter interp) {
     TraceLogger.log(logger, "Reloading interpreter...");
     interp.close();
     return initInterpreter();
   }
 
+  /**
+   * Launches the task runner thread.
+   *
+   * @return the launched thread.
+   */
   private final Thread launchTaskRunner() {
     // Instantiate the task runner thread.
     final var thread = new Thread(() -> {
@@ -327,9 +451,13 @@ public class ScalpelExecutor {
     return thread;
   }
 
+  /**
+   * Initializes the interpreter.
+   *
+   * @return the initialized interpreter.
+   */
   private final SubInterpreter initInterpreter() {
     try {
-      debugClassLoad();
       // Instantiate a Python interpreter.
       SubInterpreter interp = new SubInterpreter(
         new JepConfig().setClassEnquirer(new CustomEnquirer())
@@ -375,7 +503,12 @@ public class ScalpelExecutor {
     }
   }
 
-  // Unused utils function
+  /**
+   * Evaluates the given script and returns the output.
+   *
+   * @param scriptContent the script to evaluate.
+   * @return the output of the script.
+   */
   public String[] evalAndCaptureOutput(String scriptContent) {
     try (Interpreter interp = initInterpreter()) {
       // Running Python instructions on the fly.
@@ -409,11 +542,23 @@ public class ScalpelExecutor {
     }
   }
 
+  /**
+   * Sets the script path.
+   *
+   * @param path the path to the script.
+   */
   public void setScript(String path) {
     // Update the script path.
     this.script = new File(path);
   }
 
+  /**
+   * Returns the name of the corresponding Python callback for the given message intercepted by Proxy.
+   *
+   * @param <T> the type of the message.
+   * @param msg the message to get the callback name for.
+   * @return the name of the corresponding Python callback.
+   */
   private static final <T extends HttpMessage> String getMessageCbName(T msg) {
     if (
       msg instanceof HttpRequest || msg instanceof HttpRequestToBeSent
@@ -424,6 +569,13 @@ public class ScalpelExecutor {
     throw new RuntimeException("Passed wrong type to geMessageCbName");
   }
 
+  /**
+   * Calls the corresponding Python callback for the given message intercepted by Proxy.
+   *
+   * @param <T> the type of the message.
+   * @param msg the message to call the callback for.
+   * @return the result of the callback.
+   */
   @SuppressWarnings({ "unchecked" })
   public <T extends HttpMessage> Optional<T> callIntercepterCallback(T msg) {
     // Call the corresponding Python callback and add a debug HTTP header.
@@ -439,7 +591,14 @@ public class ScalpelExecutor {
       );
   }
 
-  // Format corresponding callback's Python function name.
+  /**
+   * Returns the name of the corresponding Python callback for the given tab.
+   *
+   * @param tabName the name of the tab.
+   * @param isRequest whether the tab is a request tab.
+   * @param isInbound whether the callback is use to modify the request back or update the editor's content.
+   * @return the name of the corresponding Python callback.
+   */
   private static final String getEditorCallbackName(
     String tabName,
     Boolean isRequest,
@@ -462,6 +621,16 @@ public class ScalpelExecutor {
     return cbName;
   }
 
+  /**
+   * Calls the given Python function with the given arguments and keyword arguments.
+   *
+   * @param <T> the expected class of the returned value.
+   * @param name the name of the Python function to call.
+   * @param args the arguments to pass to the function.
+   * @param kwargs the keyword arguments to pass to the function.
+   * @param expectedClass the expected class of the returned value.
+   * @return the result of the function call.
+   */
   public synchronized <T extends Object> Optional<T> safeJepInvoke(
     String name,
     Object[] args,
@@ -470,6 +639,16 @@ public class ScalpelExecutor {
   ) {
     return awaitTask(name, args, kwargs);
   }
+
+  /**
+   * Calls the given Python function with the given argument.
+   * 
+   * @param <T> the expected class of the returned value.
+   * @param name the name of the Python function to call.
+   * @param arg the argument to pass to the function.
+   * @param expectedClass the expected class of the returned value.
+   * @return the result of the function call.
+   */
 
   public <T> Optional<T> safeJepInvoke(
     String name,
@@ -480,6 +659,18 @@ public class ScalpelExecutor {
     return safeJepInvoke(name, new Object[] { arg }, Map.of(), expectedClass);
   }
 
+
+  /**
+   * Calls the corresponding Python callback for the given tab.
+   *
+   * @param <T> the expected class of the returned value.
+   * @param params the parameters to pass to the callback.
+   * @param isRequest whether the tab is a request tab.
+   * @param isInbound whether the callback is use to modify the request back or update the editor's content.
+   * @param tabName the name of the tab.
+   * @param expectedClass the expected class of the returned value.
+   * @return the result of the callback.
+   */
   public <T> Optional<T> callEditorCallback(
     Object[] params,
     Boolean isRequest,
@@ -496,6 +687,17 @@ public class ScalpelExecutor {
     );
   }
 
+  /**
+   * Calls the corresponding Python callback for the given tab.
+   *
+   * @param <T> the expected class of the returned value.
+   * @param param the parameter to pass to the callback.
+   * @param isRequest whether the tab is a request tab.
+   * @param isInbound whether the callback is use to modify the request back or update the editor's content.
+   * @param tabName the name of the tab.
+   * @param expectedClass the expected class of the returned value.
+   * @return the result of the callback.
+   */
   public <T> Optional<T> callEditorCallback(
     Object param,
     Boolean isRequest,
@@ -513,6 +715,14 @@ public class ScalpelExecutor {
     );
   }
 
+  /**
+   * Calls the corresponding Python callback for the given tab.
+   *
+   * @param msg the message to pass to the callback.
+   * @param isInbound whether the callback is use to modify the request back or update the editor's content.
+   * @param tabName the name of the tab.
+   * @return the result of the callback.
+   */
   public Optional<ByteArray> callEditorCallback(
     HttpMessage msg,
     Boolean isInbound,
@@ -530,6 +740,15 @@ public class ScalpelExecutor {
       .flatMap(bytes -> Optional.of(ByteArray.byteArray(bytes)));
   }
 
+  /**
+   * Calls the corresponding Python callback for the given tab.
+   *
+   * @param msg the message to pass to the callback.
+   * @param byteArray the byte array to pass to the callback (editor content).
+   * @param isInbound whether the callback is use to modify the request back or update the editor's content.
+   * @param tabName the name of the tab.
+   * @return the result of the callback.
+   */
   public Optional<ByteArray> callEditorCallback(
     HttpMessage msg,
     ByteArray byteArray,
