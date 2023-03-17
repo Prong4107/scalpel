@@ -324,7 +324,7 @@ class IByteArray(Protocol):
     #
     # @abstractmethod
     @abstractmethod
-    def byteArray(self, data: bytes) -> 'IByteArray':
+    def byteArray(self, data: bytes | str | int) -> 'IByteArray':
         """ generated source for method byteArray """
     #
     #      * Create a new {@code ByteArray} with the provided integers after a narrowing primitive conversion to bytes.<br>
