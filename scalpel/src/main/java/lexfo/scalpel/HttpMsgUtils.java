@@ -58,7 +58,7 @@ public class HttpMsgUtils {
     String methName = msg
         .headers()
         .stream()
-        .filter(header -> header.name() == name)
+        .filter(header -> header.name().equalsIgnoreCase(name))
         .findAny()
         .isPresent()
       ? "withUpdatedHeader"
