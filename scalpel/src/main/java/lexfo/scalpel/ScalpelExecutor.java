@@ -33,9 +33,6 @@ public class ScalpelExecutor {
 
     public String[] getClassNames(String pkg) {
       TraceLogger.log(logger, "getClassNames called with |" + pkg + "|");
-      if (pkg == "lexfo") {
-        return new String[] { "HttpMsgUtils" };
-      }
       return base.getClassNames(pkg);
     }
 
@@ -53,7 +50,7 @@ public class ScalpelExecutor {
 
       // https://github.com/ninia/jep/issues/347
       // fucking piece of fucking shit this fucking sucks fuck fuck fuck this FUCK
-      if (s.equals("lexfo") | s.equals("lexfo.scalpel")) {
+      if (s.equals("lexfo") || s.equals("lexfo.scalpel")) {
         TraceLogger.log(logger, "Returning true");
         return true;
       }
@@ -128,7 +125,7 @@ public class ScalpelExecutor {
   private Thread runner;
   private Queue<Task> tasks = new LinkedBlockingQueue<>();
   private long lastScriptModificationTimestamp;
-  private Boolean isRunnerAlive;
+  private Boolean isRunnerAlive = false;
 
   public ScalpelExecutor(MontoyaApi API, Logging logger, String scriptPath) {
     // Store Montoya API object
@@ -159,6 +156,9 @@ public class ScalpelExecutor {
       if (isRunnerAlive) {
         // Queue the task.
         tasks.add(task);
+
+        // Release the runner's lock.
+        tasks.notifyAll();
       } else {
         // The runner is dead, reject this task to avoid blocking Burp when awaiting.
         task.result = Optional.empty();
@@ -236,51 +236,58 @@ public class ScalpelExecutor {
             TraceLogger.log(logger, script.getPath() + " has changed.");
             interp = reloadInterpreter(interp);
           }
-          // Extract the oldest pending task from the queue.
-          final Task task = tasks.poll();
+          synchronized (tasks) {
+            TraceLogger.log(logger, "Runner waiting for notifications.");
 
-          // Ensure a task was polled or poll again.
-          if (task == null) continue;
+            // Sleep the thread while there isn't any new tasks
+            tasks.wait();
 
-          synchronized (task) {
-            // Log that a task was polled.
-            TraceLogger.log(logger, "Processing task: " + task.name);
+            // Extract the oldest pending task from the queue.
+            final Task task = tasks.poll();
 
-            // Initialize the task result.
-            task.result = Optional.empty();
-            try {
-              // Invoke python function and get the returned value.
-              final var pythonResult = interp.invoke(
-                task.name,
-                task.args,
-                task.kwargs
-              );
+            // Ensure a task was polled or poll again.
+            if (task == null) continue;
 
-              // Log the success.
-              TraceLogger.log(logger, "Executed task: " + task.name);
+            synchronized (task) {
+              // Log that a task was polled.
+              TraceLogger.log(logger, "Processing task: " + task.name);
 
-              // Let the result value to an empty optional when nothing is returned.
-              if (pythonResult != null) {
-                // Wrap the returned value in an Optional.
-                task.result = Optional.of(pythonResult);
+              // Initialize the task result.
+              task.result = Optional.empty();
+              try {
+                // Invoke python function and get the returned value.
+                final var pythonResult = interp.invoke(
+                  task.name,
+                  task.args,
+                  task.kwargs
+                );
+
+                // Log the success.
+                TraceLogger.log(logger, "Executed task: " + task.name);
+
+                // Let the result value to an empty optional when nothing is returned.
+                if (pythonResult != null) {
+                  // Wrap the returned value in an Optional.
+                  task.result = Optional.of(pythonResult);
+                }
+              } catch (Exception e) {
+                // Log the failure.
+                TraceLogger.logError(logger, "Error in task loop:");
+
+                // Log the error.
+                TraceLogger.logStackTrace(logger, e);
               }
-            } catch (Exception e) {
-              // Log the failure.
-              TraceLogger.logError(logger, "Error in task loop:");
+              // Log the success.
+              TraceLogger.log(logger, "Processed task");
 
-              // Log the error.
-              TraceLogger.logStackTrace(logger, e);
+              // Log the result value.
+              TraceLogger.log(logger, "" + task.result.orElse("null"));
+
+              // Notify the task to release the awaitResult() wait() lock.
+              task.notifyAll();
+
+              TraceLogger.log(logger, "Notified " + task.name);
             }
-            // Log the success.
-            TraceLogger.log(logger, "Processed task");
-
-            // Log the result value.
-            TraceLogger.log(logger, "" + task.result.orElse("null"));
-
-            // Notify the task to release the awaitResult() wait() lock.
-            task.notifyAll();
-
-            TraceLogger.log(logger, "Notified " + task.name);
           }
         }
       } catch (Exception e) {
@@ -324,7 +331,9 @@ public class ScalpelExecutor {
     try {
       debugClassLoad();
       // Instantiate a Python interpreter.
-      SubInterpreter interp = new SubInterpreter(new JepConfig().setClassEnquirer(new CustomEnquirer()));
+      SubInterpreter interp = new SubInterpreter(
+        new JepConfig().setClassEnquirer(new CustomEnquirer())
+      );
 
       // Make the Montoya API object accessible in Python
       interp.set("__montoya__", API);
