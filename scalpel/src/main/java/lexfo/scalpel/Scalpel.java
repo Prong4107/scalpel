@@ -1,11 +1,9 @@
 package lexfo.scalpel;
 
-
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.logging.Logging;
 import jep.MainInterpreter;
-
 
 //Burp will auto-detect and load any class that extends BurpExtension.
 /**
@@ -33,7 +31,6 @@ public class Scalpel implements BurpExtension {
     The MontoyaApi object used to interact with Burp Suite.
   */
   private MontoyaApi API;
-
 
   /**
     Initializes the extension.
@@ -66,8 +63,7 @@ public class Scalpel implements BurpExtension {
 
       // Set Jep path.
       MainInterpreter.setJepLibraryPath(
-        unpacker.getResourcesPath() +
-        "/libjep.so"
+        unpacker.getResourcesPath() + "/libjep.so"
       );
 
       // Instantiate the executor (handles Python execution)
@@ -80,7 +76,12 @@ public class Scalpel implements BurpExtension {
         );
 
       // Add the scripting editor tab.
-      API.userInterface().registerSuiteTab("Scalpel Interpreter", UIBuilder.constructScalpelInterpreterTab(executor, logger));
+      API
+        .userInterface()
+        .registerSuiteTab(
+          "Scalpel Interpreter",
+          UIBuilder.constructScalpelInterpreterTab(executor, logger)
+        );
 
       // Add request editor tab
       var provider = new ScalpelEditorProvider(API, executor);
