@@ -10,6 +10,16 @@ import javax.swing.*;
 */
 public class UIBuilder {
 
+	// Unused configuration tab constructor
+	/**
+		Constructs the configuration Burp tab.
+	 @param executor The ScalpelExecutor object to use.
+	 @return The constructed tab.
+	 */
+	public static final Component constructConfigTab(ScalpelExecutor executor, String defaultPath) {
+		return new ConfigTab(executor, defaultPath).uiComponent();
+	}
+
 	/**
 		Constructs the debug Python testing Burp tab.
 		@param executor The ScalpelExecutor object to use.

@@ -78,6 +78,13 @@ public class Scalpel implements BurpExtension {
 				.userInterface()
 				.registerSuiteTab("Scalpel Interpreter", UIBuilder.constructScalpelInterpreterTab(executor, logger));
 
+			API
+				.userInterface()
+				.registerSuiteTab(
+					"Scalpel Config",
+					UIBuilder.constructConfigTab(executor, "/home/nol/Desktop/piperpp/scalpel/scripts/editorTest.py")
+				);
+
 			// Add request editor tab
 			var provider = new ScalpelEditorProvider(API, executor);
 
