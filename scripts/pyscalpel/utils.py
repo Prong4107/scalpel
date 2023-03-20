@@ -10,14 +10,20 @@ logger = pyscalpel._globals.logger
  
 
 def new_response(obj: IHttpResponse | IByteArray | bytes) -> IHttpResponse:
-    if isinstance(obj, bytes):
-        obj = byte_array(obj)
+    # https://stackoverflow.com/a/34870210
+    # TODO: Single dispatch generic functions
+    try:
+        obj = byte_array(obj) # type: ignore
+    except TypeError:
+        pass
 
     return HttpResponse.httpResponse(obj)
 
 def new_request(obj: IHttpRequest | IByteArray | bytes) -> IHttpRequest:
-    if isinstance(obj, bytes):
-        obj = byte_array(obj)
+    try:
+        obj = byte_array(obj) # type: ignore
+    except TypeError:
+        pass
  
     return HttpRequest.httpRequest(obj)
 
