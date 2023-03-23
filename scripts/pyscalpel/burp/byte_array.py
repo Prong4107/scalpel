@@ -1,9 +1,10 @@
 from typing import Protocol
 from abc import abstractmethod
 from burp.api.montoya.core import ByteArray as _BurpByteArray
+from .java_object import JavaObject
 
 
-class IByteArray(Protocol):
+class IByteArray(JavaObject):
     """ generated source for interface ByteArray """
     #
     #      * Access the byte stored at the provided index.
@@ -333,5 +334,6 @@ class IByteArray(Protocol):
     #      *
     #      * @return New {@code ByteArray} wrapping the provided data after a narrowing primitive conversion to bytes.
     #
+
 
 ByteArray: IByteArray = _BurpByteArray

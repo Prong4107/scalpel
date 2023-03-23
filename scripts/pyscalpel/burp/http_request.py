@@ -2,6 +2,7 @@ from abc import abstractmethod
 from .http_message import IHttpMessage
 from .byte_array import IByteArray
 from burp.api.montoya.http.message.requests import HttpRequest as _BurpHttpRequest
+from .http_parameter import IHttpParameter
 
 #  * Burp HTTP request able to retrieve and modify details of an HTTP request.
 #
@@ -79,7 +80,7 @@ class IHttpRequest(IHttpMessage):
     #      * @return The parameters contained in the request.
     #
     @abstractmethod
-    def parameters(self):
+    def parameters(self) -> list[IHttpParameter]:
         """ generated source for method parameters """
 
     #
@@ -222,7 +223,7 @@ class IHttpRequest(IHttpMessage):
     #      * @return A new {@code HttpRequest} instance.
     #
     @abstractmethod
-    def withUpdatedParameters(self, parameters) -> 'IHttpRequest':
+    def withUpdatedParameters(self, parameters: list[IHttpParameter]) -> 'IHttpRequest':
         """ generated source for method withUpdatedParameters """
 
     #

@@ -1,11 +1,13 @@
 from typing import Protocol
 from abc import abstractmethod
+from .java_object import JavaObject
+
 #
 #   * Provides access to the functionality related to logging and events.
 #
 
 
-class Logging(Protocol):
+class Logging(JavaObject):
     """ generated source for interface Logging """
     #
     #       * Obtain the current extension's standard output
@@ -89,5 +91,3 @@ class Logging(Protocol):
     @abstractmethod
     def raiseCriticalEvent(self, message):
         """ generated source for method raiseCriticalEvent """
-
-
