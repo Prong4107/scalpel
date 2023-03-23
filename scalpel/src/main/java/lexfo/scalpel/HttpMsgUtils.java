@@ -31,7 +31,11 @@ public class HttpMsgUtils {
 		if (msg instanceof HttpResponse) return "HttpResponse";
 
 		// This exception shouldn't happen as all concrete instances of an HttpMessage is one of the above.
-		throw new RuntimeException("Wrong type " + msg.getClass().getSimpleName() + " was passed to getClassName()");
+		throw new RuntimeException(
+			"Wrong type " +
+			msg.getClass().getSimpleName() +
+			" was passed to getClassName()"
+		);
 	}
 
 	/**
@@ -46,8 +50,12 @@ public class HttpMsgUtils {
     @return The updated HttpMessage object.
   */
 	@SuppressWarnings({ "unchecked" })
-	public static <T extends HttpMessage> T updateHeader(T msg, String name, String value) {
-		String methName = msg
+	public static <T extends HttpMessage> T updateHeader(
+		T msg,
+		String name,
+		String value
+	) {
+		final String methName = msg
 				.headers()
 				.stream()
 				.filter(header -> header.name().equalsIgnoreCase(name))
@@ -57,13 +65,19 @@ public class HttpMsgUtils {
 			: "withAddedHeader";
 
 		try {
-			var meth = msg.getClass().getMethod(methName, String.class, String.class);
+			final var meth = msg
+				.getClass()
+				.getMethod(methName, String.class, String.class);
 
 			return (T) meth.invoke(msg, name, value);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		throw new RuntimeException("Wrong type " + msg.getClass().getSimpleName() + " was passed to updateHeader()");
+		throw new RuntimeException(
+			"Wrong type " +
+			msg.getClass().getSimpleName() +
+			" was passed to updateHeader()"
+		);
 	}
 }
