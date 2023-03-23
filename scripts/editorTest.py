@@ -5,9 +5,6 @@ try:
     from pyscalpel.utils import IHttpRequest, HttpRequest, ByteArray, logger, IHttpResponse, HttpResponse, update_header, to_bytes, new_request, new_response
 
     # Test script that adds debug headers
- 
-    # TODO: Find why httpRequest.withUpdatedHeader() is broken ?
-
     def fun_name(  ):
         return _getframe(1).f_code.co_name
 
