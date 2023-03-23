@@ -18,6 +18,7 @@ import jep.ClassList;
 import jep.Interpreter;
 import jep.JepConfig;
 import jep.SubInterpreter;
+import lexfo.scalpel.TraceLogger.Level;
 
 /**
  * Responds to requested Python tasks from multiple threads through a task queue handled in a single sepearate thread.
@@ -66,7 +67,6 @@ public class ScalpelExecutor {
 		 * @param pkg the name of the package.
 		 * @return an array of the names of the classes in the package.
 		 */
-
 		public String[] getClassNames(String pkg) {
 			TraceLogger.log(logger, "getClassNames called with |" + pkg + "|");
 			return base.getClassNames(pkg);
@@ -153,24 +153,39 @@ public class ScalpelExecutor {
 		 */
 		public Optional<Object> awaitResult() {
 			// Log before awaiting to debug potential deadlocks.
-			TraceLogger.log(logger, "Awaiting task: " + name);
+			TraceLogger.log(
+				logger,
+				TraceLogger.Level.DEBUG,
+				"Awaiting task: " + name
+			);
 
 			// Acquire the lock on the Task object.
 			synchronized (this) {
 				// Ensure we return only when result has been set
-				// (apprently wait() might return even if notify hasn't been called for some weird software and hardware issues)
-				while (isFinished() == false) {
+				// (apparently wait() might return even if notify hasn't been called for some weird software and hardware issues)
+				while (!isFinished()) {
 					// Wrap the wait in try/catch to handle InterruptedException.
 					try {
 						// Wait for the object to be notified.
-						this.wait(10000);
-						TraceLogger.log(logger, "Task " + name + " is still waiting...");
+						this.wait(1000);
+
+						if (!isFinished()) {
+							// Warn the user that a task is taking a long time.
+							TraceLogger.log(
+								logger,
+								Level.WARN,
+								"Task " + name + " is still waiting..."
+							);
+						}
 						synchronized (tasks) {
 							tasks.notifyAll();
 						}
 					} catch (InterruptedException e) {
 						// Log the error.
-						TraceLogger.logError(logger, "Task " + name + "interrupted:");
+						TraceLogger.logError(
+							logger,
+							"Task " + name + "interrupted:"
+						);
 
 						// Log the stack trace.
 						TraceLogger.logStackTrace(logger, e);
@@ -178,6 +193,11 @@ public class ScalpelExecutor {
 				}
 			}
 
+			TraceLogger.log(
+				logger,
+				TraceLogger.Level.DEBUG,
+				"Finished awaiting task: " + name
+			);
 			// Return the awaited result.
 			return result;
 		}
@@ -200,7 +220,7 @@ public class ScalpelExecutor {
 	/**
 	 * The path of the Scalpel script to execute.
 	 */
-	private File script;
+	private Optional<File> script = Optional.empty();
 
 	/**
 	 * The task runner thread.
@@ -215,7 +235,7 @@ public class ScalpelExecutor {
 	/**
 	 * The timestamp of the last recorded modification to the script file.
 	 */
-	private long lastScriptModificationTimestamp;
+	private long lastScriptModificationTimestamp = -1;
 
 	/**
 	 * Flag indicating whether the task runner loop is running.
@@ -238,12 +258,25 @@ public class ScalpelExecutor {
 		this.logger = logger;
 
 		// Create a File wrapper from the script path.
-		this.script = new File(scriptPath);
+		this.script = Optional.ofNullable(new File(scriptPath));
 
-		this.lastScriptModificationTimestamp = this.script.lastModified();
+		this.script.ifPresent(s -> {
+				this.lastScriptModificationTimestamp = s.lastModified();
 
-		// Launch task thread.
-		this.runner = this.launchTaskRunner();
+				// Launch task thread.
+				this.runner = this.launchTaskRunner();
+			});
+	}
+
+	/**
+	 * Constructs a new ScalpelExecutor object.
+	 *
+	 * @param API the MontoyaApi object to use for sending and receiving HTTP messages.
+	 * @param logger the Logging object to use for logging messages.
+	 */
+
+	public ScalpelExecutor(MontoyaApi API, Logging logger) {
+		this(API, logger, "");
 	}
 
 	/**
@@ -254,7 +287,11 @@ public class ScalpelExecutor {
 	 * @param kwargs the keyword arguments to pass to the python function.
 	 * @return a Task object representing the added task.
 	 */
-	private final Task addTask(String name, Object[] args, Map<String, Object> kwargs) {
+	private final Task addTask(
+		String name,
+		Object[] args,
+		Map<String, Object> kwargs
+	) {
 		// Create task object.
 		final Task task = new Task(name, args, kwargs);
 
@@ -277,6 +314,21 @@ public class ScalpelExecutor {
 		return task;
 	}
 
+	/* Debug method.
+		private String getClassNames(Object obj) {
+			final var cl = obj.getClass();
+
+			final var arr = new String[] {
+				cl.getName(),
+				cl.getSimpleName(),
+				cl.getCanonicalName(),
+				cl.toGenericString(),
+				cl.getTypeName(),
+			};
+			return "|\n\t" + String.join("|\n\t", arr);
+		}
+	*/
+
 	/**
 	 * Awaits the result of a task.
 	 *
@@ -287,27 +339,45 @@ public class ScalpelExecutor {
 	 * @return an Optional object containing the result of the task, or empty if the task was rejected or failed.
 	 */
 	@SuppressWarnings({ "unchecked" })
-	private final <T> Optional<T> awaitTask(String name, Object[] args, Map<String, Object> kwargs) {
+	private final <T> Optional<T> awaitTask(
+		String name,
+		Object[] args,
+		Map<String, Object> kwargs,
+		Class<T> expectedClass
+	) {
 		// Queue a new task and await it's result.
-		Optional<Object> result = addTask(name, args, kwargs).awaitResult();
+		final Optional<Object> result = addTask(name, args, kwargs)
+			.awaitResult();
 
-		if (result.isEmpty()) return Optional.empty();
+		if (result.isPresent()) {
+			try {
+				T castedResult = (T) result.get();
+				var resultClass = result.get().getClass();
+				if (resultClass != expectedClass) throw new ClassCastException(
+					"ERROR: Expected " +
+					UnObfuscator.getClassName(expectedClass) +
+					" instead of " +
+					UnObfuscator.getClassName(result.get())
+				);
 
-		try {
-			// Cast the result to the expected type.
-			Optional<T> castedResult = (Optional<T>) result;
-
-			// Log that the task has been successfully awaited.
-			System.out.println("Finished awaiting task: " + name);
-
-			// Return the well-formed result.
-			return castedResult;
-		} catch (Exception e) {
-			// Log the error stack trace.
-			TraceLogger.logStackTrace(logger, e);
+				TraceLogger.log(
+					logger,
+					"Successfully casted " +
+					resultClass.getSimpleName() +
+					" to " +
+					expectedClass.getSimpleName()
+				);
+				// Ensure the result can be casted to the expected type.
+				return Optional.of(castedResult);
+			} catch (ClassCastException e) {
+				TraceLogger.logError(
+					logger,
+					"Failed casting " + name + "'s result:"
+				);
+				// Log the error stack trace.
+				TraceLogger.logStackTrace(logger, e);
+			}
 		}
-		// Log the failure.
-		logger.logToError("Failed awaiting task: " + name);
 
 		// Return an empty object.
 		return Optional.empty();
@@ -319,14 +389,19 @@ public class ScalpelExecutor {
 	 * @return true if the script file has been modified since the last check, false otherwise.
 	 */
 	private final Boolean hasScriptChanged() {
-		// Check if the last modification date has changed since last record.
-		final Boolean hasChanged = lastScriptModificationTimestamp != script.lastModified();
+		return script
+			.map(script -> {
+				// Check if the last modification date has changed since last record.
+				final Boolean hasChanged =
+					lastScriptModificationTimestamp != script.lastModified();
 
-		// Update the last modification date record.
-		lastScriptModificationTimestamp = script.lastModified();
+				// Update the last modification date record.
+				lastScriptModificationTimestamp = script.lastModified();
 
-		// Return the check result.²
-		return hasChanged;
+				// Return the check result.²
+				return hasChanged;
+			})
+			.orElse(false);
 	}
 
 	/**
@@ -341,14 +416,25 @@ public class ScalpelExecutor {
 
 			try {
 				// Instantiate the interpreter.
-				SubInterpreter interp = initInterpreter();
+				final SubInterpreter interp = initInterpreter();
 				isRunnerAlive = true;
 				while (true) {
 					// Relaunch interpreter when file has changed (hot reload).
-					if (hasScriptChanged()) break;
+					if (hasScriptChanged()) {
+						TraceLogger.log(
+							logger,
+							Level.INFO,
+							"Script has changed, reloading interpreter..."
+						);
+						break;
+					}
 
 					synchronized (tasks) {
-						TraceLogger.log(logger, "Runner waiting for notifications.");
+						TraceLogger.log(
+							logger,
+							TraceLogger.Level.DEBUG,
+							"Runner waiting for notifications."
+						);
 
 						// Sleep the thread while there isn't any new tasks
 						tasks.wait();
@@ -361,14 +447,24 @@ public class ScalpelExecutor {
 
 						synchronized (task) {
 							// Log that a task was polled.
-							TraceLogger.log(logger, "Processing task: " + task.name);
+							TraceLogger.log(
+								logger,
+								"Processing task: " + task.name
+							);
 
 							try {
 								// Invoke python function and get the returned value.
-								final Object pythonResult = interp.invoke(task.name, task.args, task.kwargs);
+								final Object pythonResult = interp.invoke(
+									task.name,
+									task.args,
+									task.kwargs
+								);
 
 								// Log the success.
-								TraceLogger.log(logger, "Executed task: " + task.name);
+								TraceLogger.log(
+									logger,
+									"Executed task: " + task.name
+								);
 
 								// Let the result value to an empty optional when nothing is returned.
 								if (pythonResult != null) {
@@ -378,17 +474,33 @@ public class ScalpelExecutor {
 							} catch (Exception e) {
 								task.result = Optional.empty();
 
-								// Log the failure.
-								TraceLogger.logError(logger, "Error in task loop:");
+								if (
+									!e
+										.getMessage()
+										.contains("Unable to find object")
+								) {
+									// Log the failure.
+									TraceLogger.logError(
+										logger,
+										"Error in task loop:"
+									);
 
-								// Log the error.
-								TraceLogger.logStackTrace(logger, e);
+									// Log the error.
+									TraceLogger.logStackTrace(logger, e);
+								}
 							}
 							// Log the success.
-							TraceLogger.log(logger, "Processed task");
+							TraceLogger.log(
+								logger,
+								TraceLogger.Level.DEBUG,
+								"Processed task"
+							);
 
 							// Log the result value.
-							TraceLogger.log(logger, "" + task.result.orElse("null"));
+							TraceLogger.log(
+								logger,
+								"" + task.result.orElse("null")
+							);
 
 							task.finished = true;
 
@@ -443,38 +555,48 @@ public class ScalpelExecutor {
 	 */
 	private final SubInterpreter initInterpreter() {
 		try {
-			// Instantiate a Python interpreter.
-			SubInterpreter interp = new SubInterpreter(new JepConfig().setClassEnquirer(new CustomEnquirer()));
+			return script
+				.map(script -> {
+					// Instantiate a Python interpreter.
+					final SubInterpreter interp = new SubInterpreter(
+						new JepConfig().setClassEnquirer(new CustomEnquirer())
+					);
 
-			// Make the Montoya API object accessible in Python
-			interp.set("__montoya__", API);
+					// Make the Montoya API object accessible in Python
+					interp.set("__montoya__", API);
 
-			// Set the script's filename to corresponding Python variable
-			interp.set("__file__", script.getAbsolutePath());
+					// Set the script's filename to corresponding Python variable
+					interp.set("__file__", script.getAbsolutePath());
 
-			// Set the script's directory to be able to add it to Python's path.
-			interp.set("__directory__", script.getParent());
+					// Set the script's directory to be able to add it to Python's path.
+					interp.set("__directory__", script.getParent());
 
-			// Add logger global
-			interp.set("__logger__", logger);
+					// Add logger global
+					interp.set("__logger__", logger);
 
-			// Add the script's directory to Python's path to allow imports of adjacent files.
-			interp.exec("""
+					// Add the script's directory to Python's path to allow imports of adjacent files.
+					interp.exec(
+						"""
     from sys import path
     path.append(__directory__)
-    """);
+    """
+					);
 
-			// Set importable logger.
-			interp.exec("""
+					// Set importable logger.
+					interp.exec(
+						"""
     import pyscalpel._globals
     pyscalpel._globals.logger = __logger__
-    """);
+    """
+					);
 
-			// Run the script.
-			interp.runScript(script.getAbsolutePath());
+					// Run the script.
+					interp.runScript(script.getAbsolutePath());
 
-			// Return the initialized interpreter.
-			return interp;
+					// Return the initialized interpreter.
+					return interp;
+				})
+				.orElseThrow();
 		} catch (Exception e) {
 			logger.logToError("Failed to instantiate interpreter:");
 			TraceLogger.logStackTrace(logger, e);
@@ -509,7 +631,13 @@ public class ScalpelExecutor {
 			String capturedOut = (String) interp.getValue("captured_out");
 			String capturedErr = (String) interp.getValue("captured_err");
 			logger.logToOutput(
-				String.format("Executed:\n%s\nOutput:\n%s\nErr:%s\n", scriptContent, capturedOut, capturedErr, null)
+				String.format(
+					"Executed:\n%s\nOutput:\n%s\nErr:%s\n",
+					scriptContent,
+					capturedOut,
+					capturedErr,
+					null
+				)
 			);
 			return new String[] { capturedOut, capturedErr };
 		}
@@ -522,7 +650,14 @@ public class ScalpelExecutor {
 	 */
 	public void setScript(String path) {
 		// Update the script path.
-		this.script = new File(path);
+		this.script = Optional.ofNullable(new File(path));
+
+		API.persistence().preferences().setString("scalpelScript", path);
+
+		if (runner == null) script.ifPresent(script -> {
+			this.lastScriptModificationTimestamp = script.lastModified();
+			this.runner = launchTaskRunner();
+		});
 
 		// Reset the timestamp to reload the interpreter.
 		this.lastScriptModificationTimestamp = -1;
@@ -535,9 +670,15 @@ public class ScalpelExecutor {
 	 * @param msg the message to get the callback name for.
 	 * @return the name of the corresponding Python callback.
 	 */
-	private static final <T extends HttpMessage> String getMessageCbName(T msg) {
-		if (msg instanceof HttpRequest || msg instanceof HttpRequestToBeSent) return Constants.REQ_CB_NAME;
-		if (msg instanceof HttpResponse || msg instanceof HttpResponseReceived) return Constants.RES_CB_NAME;
+	private static final <T extends HttpMessage> String getMessageCbName(
+		T msg
+	) {
+		if (
+			msg instanceof HttpRequest || msg instanceof HttpRequestToBeSent
+		) return Constants.REQ_CB_NAME;
+		if (
+			msg instanceof HttpResponse || msg instanceof HttpResponseReceived
+		) return Constants.RES_CB_NAME;
 		throw new RuntimeException("Passed wrong type to geMessageCbName");
 	}
 
@@ -551,9 +692,19 @@ public class ScalpelExecutor {
 	@SuppressWarnings({ "unchecked" })
 	public <T extends HttpMessage> Optional<T> callIntercepterCallback(T msg) {
 		// Call the corresponding Python callback and add a debug HTTP header.
-		return safeJepInvoke(getMessageCbName(msg), msg, (Class<T>) msg.getClass())
+		return safeJepInvoke(
+			getMessageCbName(msg),
+			msg,
+			(Class<T>) msg.getClass()
+		)
 			.flatMap(r ->
-				Optional.of(HttpMsgUtils.updateHeader(r, "X-Scalpel-" + HttpMsgUtils.getClassName(msg), "true"))
+				Optional.of(
+					HttpMsgUtils.updateHeader(
+						r,
+						"X-Scalpel-" + HttpMsgUtils.getClassName(msg),
+						"true"
+					)
+				)
 			);
 	}
 
@@ -565,12 +716,20 @@ public class ScalpelExecutor {
 	 * @param isInbound whether the callback is use to modify the request back or update the editor's content.
 	 * @return the name of the corresponding Python callback.
 	 */
-	private static final String getEditorCallbackName(String tabName, Boolean isRequest, Boolean isInbound) {
+	private static final String getEditorCallbackName(
+		String tabName,
+		Boolean isRequest,
+		Boolean isInbound
+	) {
 		// Either req_ or res_ depending if it is a request or a response.
-		final var editPrefix = isRequest ? Constants.REQ_EDIT_PREFIX : Constants.RES_EDIT_PREFIX;
+		final var editPrefix = isRequest
+			? Constants.REQ_EDIT_PREFIX
+			: Constants.RES_EDIT_PREFIX;
 
 		// Either in_ or out_ depending on context.
-		final var directionPrefix = isInbound ? Constants.IN_PREFIX : Constants.OUT_PREFIX;
+		final var directionPrefix = isInbound
+			? Constants.IN_PREFIX
+			: Constants.OUT_PREFIX;
 
 		// Concatenate the prefixes and the tab name.
 		final var cbName = editPrefix + directionPrefix + tabName;
@@ -595,7 +754,8 @@ public class ScalpelExecutor {
 		Map<String, Object> kwargs,
 		Class<T> expectedClass
 	) {
-		return awaitTask(name, args, kwargs);
+		// Create a task and await the result.
+		return awaitTask(name, args, kwargs, expectedClass);
 	}
 
 	/**
@@ -608,9 +768,18 @@ public class ScalpelExecutor {
 	 * @return the result of the function call.
 	 */
 
-	public <T> Optional<T> safeJepInvoke(String name, Object arg, Class<T> expectedClass) {
+	public <T> Optional<T> safeJepInvoke(
+		String name,
+		Object arg,
+		Class<T> expectedClass
+	) {
 		// Call base safeJepInvoke with a single argument and a logger as default kwarg.
-		return safeJepInvoke(name, new Object[] { arg }, Map.of(), expectedClass);
+		return safeJepInvoke(
+			name,
+			new Object[] { arg },
+			Map.of(),
+			expectedClass
+		);
 	}
 
 	/**
@@ -632,7 +801,12 @@ public class ScalpelExecutor {
 		Class<T> expectedClass
 	) {
 		// Call safeJepInvoke with the corresponding function name and a logger as a default kwarg.
-		return safeJepInvoke(getEditorCallbackName(tabName, isRequest, isInbound), params, Map.of(), expectedClass);
+		return safeJepInvoke(
+			getEditorCallbackName(tabName, isRequest, isInbound),
+			params,
+			Map.of(),
+			expectedClass
+		);
 	}
 
 	/**
@@ -654,7 +828,13 @@ public class ScalpelExecutor {
 		Class<T> expectedClass
 	) {
 		// Call base method with a single parameter.
-		return callEditorCallback(new Object[] { param }, isRequest, isInbound, tabName, expectedClass);
+		return callEditorCallback(
+			new Object[] { param },
+			isRequest,
+			isInbound,
+			tabName,
+			expectedClass
+		);
 	}
 
 	/**
@@ -665,11 +845,36 @@ public class ScalpelExecutor {
 	 * @param tabName the name of the tab.
 	 * @return the result of the callback.
 	 */
-	public Optional<ByteArray> callEditorCallback(HttpMessage msg, Boolean isInbound, String tabName) {
-		// Pass a request to py. callback and convert the returned byte[] to Burp's ByteArray.
-		// When no data is returned by the callback, an empty Optional is returned.
-		return callEditorCallback(msg, msg instanceof HttpRequest, isInbound, tabName, byte[].class)
+	public Optional<ByteArray> callEditorCallback(
+		HttpMessage msg,
+		Boolean isInbound,
+		String tabName
+	) {
+		return callEditorCallback(
+			msg,
+			msg instanceof HttpRequest,
+			isInbound,
+			tabName,
+			byte[].class
+		)
 			.flatMap(bytes -> Optional.of(ByteArray.byteArray(bytes)));
+	}
+
+	/**
+	 * Convert Java signed bytes to corresponding unsigned values
+	 * Convertions issues occur when passing Java bytes to Python because Java's are signed and Python's are unsigned.
+	 * Passing an unsigned int array solves this problem.
+	 *
+	 * @param bytes the bytes to convert
+	 * @return the corresponding unsigned values as int
+	 */
+	private int[] toUnsignedBytes(byte[] bytes) {
+		final var copy = new int[bytes.length];
+		for (int i = 0; i < bytes.length; i++) {
+			copy[i] = ((int) bytes[i]) & 0xff;
+			TraceLogger.log(logger, bytes[i] + " -> " + copy[i]);
+		}
+		return copy;
 	}
 
 	/**
@@ -687,10 +892,8 @@ public class ScalpelExecutor {
 		Boolean isInbound,
 		String tabName
 	) {
-		// Pass a request to py. callback and convert the returned byte[] to Burp's ByteArray.
-		// When no data is returned by the callback, an empty Optional is returned.
 		return callEditorCallback(
-			new Object[] { msg, byteArray.getBytes() },
+			new Object[] { msg, toUnsignedBytes(byteArray.getBytes()) },
 			msg instanceof HttpRequest,
 			isInbound,
 			tabName,
