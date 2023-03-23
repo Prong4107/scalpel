@@ -1,8 +1,10 @@
+const { urlencoded } = require('express');
+
 const app = require('express')()
 app.use(require('body-parser').raw({ type: String }))
-
 jsonifyRequest =  (req) => ({
     url: req.url,
+    url_decoded: decodeURIComponent(req.url),
     headers: (
         () => {
             let key; return Object.assign({}, ...req.rawHeaders.map(
