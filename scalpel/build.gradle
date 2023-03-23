@@ -22,6 +22,7 @@ def jepDir = file(venvPath + '/lib/').listFiles()
 def jepJar = fileTree(dir: venvPath + '/lib', include: '**/jep/jep-*.jar').files.first().getAbsolutePath()
 
 dependencies {
+    // Check the lastest version: https://github.com/PortSwigger/burp-extensions-montoya-api#gradle:~:text=2023.3%3C/version%3E%0A%3C/dependency%3E-,Gradle,-implementation%20%27net.portswigger
     compileOnly 'net.portswigger.burp.extensions:montoya-api:2023.3'
     
     // JEP installed from pip in a venv.
