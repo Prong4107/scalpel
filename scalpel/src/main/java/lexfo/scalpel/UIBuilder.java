@@ -1,5 +1,6 @@
 package lexfo.scalpel;
 
+import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.logging.Logging;
 import java.awt.*;
 import java.awt.event.*;
@@ -10,14 +11,30 @@ import javax.swing.*;
 */
 public class UIBuilder {
 
-	// Unused configuration tab constructor
+	/**
+		Constructs the configuration Burp tab.
+	 @param executor The ScalpelExecutor object to use.
+	 @param defaultPath The default text content
+	 @return The constructed tab.
+	 */
+	public static final Component constructConfigTab(
+		MontoyaApi API,
+		ScalpelExecutor executor,
+		String defaultPath
+	) {
+		return new ConfigTab(API, executor, defaultPath).uiComponent();
+	}
+
 	/**
 		Constructs the configuration Burp tab.
 	 @param executor The ScalpelExecutor object to use.
 	 @return The constructed tab.
 	 */
-	public static final Component constructConfigTab(ScalpelExecutor executor, String defaultPath) {
-		return new ConfigTab(executor, defaultPath).uiComponent();
+	public static final Component constructConfigTab(
+		MontoyaApi API,
+		ScalpelExecutor executor
+	) {
+		return new ConfigTab(API, executor).uiComponent();
 	}
 
 	/**
@@ -26,7 +43,10 @@ public class UIBuilder {
 		@param logger The Logging object to use.
 		@return The constructed tab.
 	*/
-	public static final Component constructScalpelInterpreterTab(ScalpelExecutor executor, Logging logger) {
+	public static final Component constructScalpelInterpreterTab(
+		ScalpelExecutor executor,
+		Logging logger
+	) {
 		// Split pane
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
 		JSplitPane scriptingPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
@@ -36,9 +56,11 @@ public class UIBuilder {
 
 		button.addActionListener((ActionEvent e) -> {
 			logger.logToOutput("Clicked button");
-			String scriptContent = editorPane.getText();
+			final String scriptContent = editorPane.getText();
 			try {
-				String[] scriptOutput = executor.evalAndCaptureOutput(scriptContent);
+				final String[] scriptOutput = executor.evalAndCaptureOutput(
+					scriptContent
+				);
 
 				var txt = String.format(
 					"stdout:\n------------------\n%s\n------------------\n\nstderr:\n------------------\n%s",
@@ -53,10 +75,12 @@ public class UIBuilder {
 			logger.logToOutput("Handled action.");
 		});
 
-		editorPane.setText("""
+		editorPane.setText(
+			"""
 print('This goes in stdout')
 print('This goes in stderr', file=sys.stderr)
-""");
+"""
+		);
 		outputArea.setEditable(false);
 		scriptingPane.setLeftComponent(editorPane);
 		scriptingPane.setRightComponent(outputArea);
