@@ -1,10 +1,17 @@
 package lexfo.scalpel;
 
+import burp.api.montoya.MontoyaApi;
+import com.intellij.uiDesigner.core.GridConstraints;
+import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.uiDesigner.core.Spacer;
 import java.awt.*;
 import java.io.File;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
+/**
+ * Burp tab handling Scalpel configuration (script path)
+ */
 public class ConfigTab extends JFrame {
 
 	private JPanel panel1;
@@ -12,12 +19,22 @@ public class ConfigTab extends JFrame {
 	private JTextField textField1;
 	private JPanel browsePanel;
 	private ScalpelExecutor executor;
+	private MontoyaApi API;
 
-	public ConfigTab(ScalpelExecutor executor, String defaultPath) {
+	public ConfigTab(
+		MontoyaApi API,
+		ScalpelExecutor executor,
+		String defaultPath
+	) {
+		this.API = API;
 		this.executor = executor;
-		setContentPane(panel1);
-		setVisible(true);
-		setScriptPath(defaultPath);
+		final String storedValue = API
+			.persistence()
+			.preferences()
+			.getString("scalpelScript");
+
+		setScriptPath(storedValue != null ? storedValue : "");
+
 		// Handle browse button click.
 		browseButton.addActionListener(e -> {
 			final JFileChooser fileChooser = new JFileChooser();
@@ -36,10 +53,11 @@ public class ConfigTab extends JFrame {
 	private void setScriptPath(String path) {
 		executor.setScript(path);
 		textField1.setText(path);
+		API.persistence().preferences().setString("scalpelScript", path);
 	}
 
-	public ConfigTab(ScalpelExecutor executor) {
-		this(executor, "");
+	public ConfigTab(MontoyaApi API, ScalpelExecutor executor) {
+		this(API, executor, "");
 	}
 
 	public Component uiComponent() {
@@ -62,7 +80,9 @@ public class ConfigTab extends JFrame {
 	 */
 	private void $$$setupUI$$$() {
 		panel1 = new JPanel();
-		panel1.setLayout(new com.intellij.uiDesigner.core.GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), 10, 10));
+		panel1.setLayout(
+			new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), 10, 10)
+		);
 		panel1.setBorder(
 			BorderFactory.createTitledBorder(
 				null,
@@ -75,22 +95,22 @@ public class ConfigTab extends JFrame {
 		);
 		browsePanel = new JPanel();
 		browsePanel.setLayout(
-			new com.intellij.uiDesigner.core.GridLayoutManager(1, 3, new Insets(10, 10, 10, 10), 10, -1)
+			new GridLayoutManager(1, 3, new Insets(10, 10, 10, 10), 10, -1)
 		);
 		browsePanel.setBackground(new Color(-5198676));
 		panel1.add(
 			browsePanel,
-			new com.intellij.uiDesigner.core.GridConstraints(
+			new GridConstraints(
 				0,
 				0,
 				1,
 				1,
-				com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER,
-				com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
-				com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK |
-				com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
-				com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK |
-				com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_NONE,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_WANT_GROW,
 				null,
 				null,
 				null,
@@ -102,16 +122,16 @@ public class ConfigTab extends JFrame {
 		browseButton.setText("Browse");
 		browsePanel.add(
 			browseButton,
-			new com.intellij.uiDesigner.core.GridConstraints(
+			new GridConstraints(
 				0,
 				0,
 				1,
 				1,
-				com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER,
-				com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
-				com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_SHRINK |
-				com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_CAN_GROW,
-				com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_NONE,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_FIXED,
 				null,
 				null,
 				null,
@@ -123,15 +143,15 @@ public class ConfigTab extends JFrame {
 		textField1.setText("");
 		browsePanel.add(
 			textField1,
-			new com.intellij.uiDesigner.core.GridConstraints(
+			new GridConstraints(
 				0,
 				1,
 				1,
 				1,
-				com.intellij.uiDesigner.core.GridConstraints.ANCHOR_WEST,
-				com.intellij.uiDesigner.core.GridConstraints.FILL_NONE,
-				com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
-				com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_FIXED,
+				GridConstraints.ANCHOR_WEST,
+				GridConstraints.FILL_NONE,
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				GridConstraints.SIZEPOLICY_FIXED,
 				null,
 				new Dimension(400, -1),
 				null,
@@ -139,17 +159,17 @@ public class ConfigTab extends JFrame {
 				false
 			)
 		);
-		final com.intellij.uiDesigner.core.Spacer spacer1 = new com.intellij.uiDesigner.core.Spacer();
+		final Spacer spacer1 = new Spacer();
 		browsePanel.add(
 			spacer1,
-			new com.intellij.uiDesigner.core.GridConstraints(
+			new GridConstraints(
 				0,
 				2,
 				1,
 				1,
-				com.intellij.uiDesigner.core.GridConstraints.ANCHOR_CENTER,
-				com.intellij.uiDesigner.core.GridConstraints.FILL_HORIZONTAL,
-				com.intellij.uiDesigner.core.GridConstraints.SIZEPOLICY_WANT_GROW,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_HORIZONTAL,
+				GridConstraints.SIZEPOLICY_WANT_GROW,
 				1,
 				null,
 				null,
