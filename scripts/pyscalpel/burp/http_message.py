@@ -1,14 +1,14 @@
 from typing import Protocol
 from abc import abstractmethod
 from .byte_array import IByteArray
+from .java_object import JavaObject
 
-#!/usr/bin/env python
 #
 #  * Burp message retrieve common information shared by {@link HttpRequest} and {@link HttpResponse}.
 #
 
 
-class IHttpMessage(Protocol):
+class IHttpMessage(JavaObject):
     """ generated source for interface HttpMessage """
     #
     #      * HTTP headers contained in the message.
