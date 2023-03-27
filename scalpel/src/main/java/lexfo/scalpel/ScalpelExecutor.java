@@ -352,20 +352,14 @@ public class ScalpelExecutor {
 		if (result.isPresent()) {
 			try {
 				T castedResult = (T) result.get();
-				var resultClass = result.get().getClass();
-				if (resultClass != expectedClass) throw new ClassCastException(
-					"ERROR: Expected " +
-					UnObfuscator.getClassName(expectedClass) +
-					" instead of " +
-					UnObfuscator.getClassName(result.get())
-				);
 
 				TraceLogger.log(
 					logger,
 					"Successfully casted " +
-					resultClass.getSimpleName() +
+					UnObfuscator.getClassName(result) +
 					" to " +
-					expectedClass.getSimpleName()
+					// expectedClass.getSimpleName()
+					UnObfuscator.getClassName(castedResult)
 				);
 				// Ensure the result can be casted to the expected type.
 				return Optional.of(castedResult);
@@ -583,12 +577,12 @@ public class ScalpelExecutor {
 					);
 
 					// Set importable logger.
-					interp.exec(
-						"""
-    import pyscalpel._globals
-    pyscalpel._globals.logger = __logger__
-    """
-					);
+					// 				interp.exec(
+					// 					"""
+					// import pyscalpel._globals
+					// pyscalpel._globals.logger = __logger__
+					// """
+					// 				);
 
 					// Run the script.
 					interp.runScript(script.getAbsolutePath());
@@ -652,7 +646,7 @@ public class ScalpelExecutor {
 		// Update the script path.
 		this.script = Optional.ofNullable(new File(path));
 
-		API.persistence().preferences().setString("scalpelScript", path);
+		API.persistence().extensionData().setString("scalpelScript", path);
 
 		if (runner == null) script.ifPresent(script -> {
 			this.lastScriptModificationTimestamp = script.lastModified();
@@ -728,11 +722,12 @@ public class ScalpelExecutor {
 
 		// Either in_ or out_ depending on context.
 		final var directionPrefix = isInbound
-			? Constants.IN_PREFIX
-			: Constants.OUT_PREFIX;
+			? Constants.IN_SUFFIX
+			: Constants.OUT_SUFFIX;
 
 		// Concatenate the prefixes and the tab name.
-		final var cbName = editPrefix + directionPrefix + tabName;
+		// final var cbName = editPrefix + directionPrefix + tabName;
+		final var cbName = editPrefix + directionPrefix;
 
 		// Return the callback Python function name.
 		return cbName;
