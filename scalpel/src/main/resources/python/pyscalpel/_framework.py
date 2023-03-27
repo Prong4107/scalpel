@@ -16,7 +16,7 @@ try:
 
     import pyscalpel._globals
 
-    pyscalpel._globals.logger = __logger__  # type: ignore
+    pyscalpel._globals.logger = __logger__
 
     user_script = "/home/nol/Desktop/piperpp/scalpel/scalpel/src/main/resources/python/samples/editorTest.py"
 
@@ -26,7 +26,7 @@ try:
     path = user_script
 
     # create a module spec based on the script path
-    spec = importlib.util.spec_from_file_location("module_name", path)
+    spec = importlib.util.spec_from_file_location("scalpel_user_module", path)
 
     assert spec is not None
     assert spec.loader is not None
@@ -37,7 +37,7 @@ try:
     # load the user_module into memory
     spec.loader.exec_module(user_module)
 
-    from pyscalpel.utils import IHttpRequest, logger, IHttpResponse, update_header, to_bytes, new_request, new_response
+    from pyscalpel.utils import IHttpRequest, logger, IHttpResponse
 
     CallbackReturn = TypeVar(
         'CallbackReturn', IHttpRequest, IHttpResponse, bytes) | None
@@ -51,11 +51,11 @@ try:
         return _getframe(frame).f_code.co_name
 
     def _try_wrap(callback: CallbackType) -> CallbackType:
-        logger.logToOutput(f"Python: _try_wrap() called")
+        logger.logToOutput("Python: _try_wrap() called")
 
         def new_cb(*args, **kwargs):
             try:
-                logger.logToOutput(f"Python: _try_wrap_cb() called")
+                logger.logToOutput("Python: _try_wrap_cb() called")
                 return callback(*args, **kwargs)
             except Exception as ex:
                 logger.logToError(f"Python: {fun_name(2)}() error:\n\t{ex}")
