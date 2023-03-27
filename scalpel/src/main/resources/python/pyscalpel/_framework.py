@@ -44,8 +44,8 @@ try:
 
     CallbackType = Callable[..., CallbackReturn]
 
-    callable_objs: dict[str, CallbackType] = dict([(name, obj) for name, obj in inspect.getmembers(
-        user_module) if callable(obj)])
+    callable_objs = {name: obj for name,
+                     obj in inspect.getmembers(user_module) if callable(obj)}
 
     def fun_name(frame=1):
         return _getframe(frame).f_code.co_name
@@ -62,42 +62,43 @@ try:
                 logger.logToError(traceback.format_exc())
         return new_cb
 
-    def _if_present(callback: Callable[..., CallbackReturn | None]) -> Callable[..., CallbackReturn | None]:
-        logger.logToOutput(f"Python: _if_present({callback.__name__}) called")
+    def _try_if_present(callback: Callable[..., CallbackReturn | None]) -> Callable[..., CallbackReturn | None]:
+        logger.logToOutput(
+            f"Python: _try_if_present({callback.__name__}) called")
+        name = callback.__name__.removeprefix("_")
+        user_cb = callable_objs.get(name)
+        if (user_cb is not None):
+            logger.logToOutput(f"Python: {name}() is present")
 
-        def new_cb(*args, **kwargs) -> CallbackReturn | None:
-            logger.logToOutput(
-                f"Python: _if_present_cb({callback.__name__}) called")
-            name = callback.__name__.removeprefix("_")
-            user_cb = callable_objs.get(name)
-            if (user_cb is not None):
-                logger.logToOutput(f"Python: {name}() is present")
+            def new_cb(*args, **kwargs) -> CallbackReturn | None:
                 return _try_wrap(callback)(*args, **dict(kwargs, callback=user_cb))
-            logger.logToOutput(f"Python: {name}() is not present")
 
-        return new_cb
+            return new_cb
 
-    @_if_present
+        logger.logToOutput(f"Python: {name}() is not present")
+        return lambda: None
+
+    @_try_if_present
     def _request(req: IHttpRequest, callback: CallbackType = ...) -> IHttpRequest | None:
         return cast(IHttpRequest | None, callback(req))
 
-    @_if_present
+    @_try_if_present
     def _response(res: IHttpResponse, callback: CallbackType = ...) -> IHttpResponse | None:
         return cast(IHttpResponse | None, callback(res))
 
-    @_if_present
+    @_try_if_present
     def _req_edit_in(req: IHttpRequest, callback: CallbackType = ...) -> bytes | None:
         return cast(bytes | None, callback(req))
 
-    @_if_present
+    @_try_if_present
     def _req_edit_out(req: IHttpRequest, text: List[int], callback: CallbackType = ...) -> bytes | None:
         return cast(bytes | None, callback(req, bytes(text)))
 
-    @_if_present
+    @_try_if_present
     def _res_edit_in(res: IHttpResponse, callback: CallbackType = ...) -> bytes | None:
         return cast(bytes | None, callback(res))
 
-    @_if_present
+    @_try_if_present
     def _res_edit_out(res: IHttpResponse, text: List[int], callback: CallbackType = ...) -> bytes | None:
         return cast(bytes | None, callback(res, bytes(text)))
 
