@@ -41,6 +41,18 @@ public class ScalpelUnpacker {
 		return ressourcesDirectory.toString();
 	}
 
+	public String getJepNativeLibPath() {
+		return getResourcesPath() + "/libjep.so";
+	}
+
+	public String getPythonFrameworkPath() {
+		return getResourcesPath() + "/python/pyscalpel/_framework.py";
+	}
+
+	public String getDefaultScriptPath() {
+		return getResourcesPath() + "/python/samples/default.py";
+	}
+
 	// https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file#:~:text=return%20new%20File(MyClass.class.getProtectionDomain().getCodeSource().getLocation()%0A%20%20%20%20.toURI()).getPath()%3B
 	/**
     Returns the path to the Scalpel JAR file.
