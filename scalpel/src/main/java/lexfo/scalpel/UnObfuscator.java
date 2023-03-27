@@ -142,16 +142,12 @@ import burp.api.montoya.sitemap.SiteMapNode;
 import burp.api.montoya.ui.Selection;
 import burp.api.montoya.ui.Theme;
 import burp.api.montoya.ui.UserInterface;
-import burp.api.montoya.ui.contextmenu.AuditIssueContextMenuEvent;
 import burp.api.montoya.ui.contextmenu.ComponentEvent;
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent;
 import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 import burp.api.montoya.ui.contextmenu.InvocationSource;
 import burp.api.montoya.ui.contextmenu.InvocationType;
 import burp.api.montoya.ui.contextmenu.MessageEditorHttpRequestResponse;
-import burp.api.montoya.ui.contextmenu.WebSocketContextMenuEvent;
-import burp.api.montoya.ui.contextmenu.WebSocketEditorEvent;
-import burp.api.montoya.ui.contextmenu.WebSocketMessage;
 import burp.api.montoya.ui.editor.Editor;
 import burp.api.montoya.ui.editor.EditorOptions;
 import burp.api.montoya.ui.editor.HttpRequestEditor;
@@ -165,7 +161,6 @@ import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpResponseEditor;
 import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider;
 import burp.api.montoya.ui.editor.extension.HttpResponseEditorProvider;
-import burp.api.montoya.ui.menu.BasicMenuItem;
 import burp.api.montoya.ui.menu.Menu;
 import burp.api.montoya.ui.menu.MenuBar;
 import burp.api.montoya.ui.menu.MenuItem;
@@ -201,6 +196,12 @@ import burp.api.montoya.websocket.extension.ExtensionWebSocketCreation;
 import burp.api.montoya.websocket.extension.ExtensionWebSocketCreationStatus;
 import burp.api.montoya.websocket.extension.ExtensionWebSocketMessageHandler;
 
+// import burp.api.montoya.ui.contextmenu.AuditIssueContextMenuEvent;
+// import burp.api.montoya.ui.contextmenu.WebSocketMessage;
+// import burp.api.montoya.ui.contextmenu.WebSocketContextMenuEvent;
+// import burp.api.montoya.ui.contextmenu.WebSocketEditorEvent;
+// import burp.api.montoya.ui.menu.BasicMenuItem;
+
 public class UnObfuscator {
 
 	/**
@@ -214,6 +215,38 @@ public class UnObfuscator {
 		// Retrieve real type.
 		// Burp uses proxy and symbols obfuscation
 		// So cannot naively use obj.getClass(), we seem to have no choice but to use an instanceof if forest.
+
+		// Handle null object
+		if (obj == null) return "null";
+
+		if (
+			obj instanceof RequestToBeSentAction
+		) return "RequestToBeSentAction";
+		if (obj instanceof HttpRequestToBeSent) return "HttpRequestToBeSent";
+		if (obj instanceof HttpResponseReceived) return "HttpResponseReceived";
+		if (obj instanceof HttpRequest) return "HttpRequest";
+		if (obj instanceof HttpRequestResponse) return "HttpRequestResponse";
+
+		if (obj instanceof ContentType) return "ContentType";
+		if (obj instanceof HttpParameterType) return "HttpParameterType";
+		if (obj instanceof HttpParameter) return "HttpParameter";
+		if (obj instanceof ParsedHttpParameter) return "ParsedHttpParameter";
+		if (obj instanceof Cookie) return "Cookie";
+		if (
+			obj instanceof MalformedRequestException
+		) return "MalformedRequestException";
+		if (obj instanceof HttpTransformation) return "HttpTransformation";
+		if (obj instanceof Attribute) return "Attribute";
+		if (obj instanceof AttributeType) return "AttributeType";
+		if (obj instanceof HttpResponse) return "HttpResponse";
+		if (obj instanceof HttpMessage) return "HttpMessage";
+		if (obj instanceof HttpHeader) return "HttpHeader";
+		if (obj instanceof MimeType) return "MimeType";
+		if (obj instanceof HttpMode) return "HttpMode";
+		if (obj instanceof Http) return "Http";
+		if (obj instanceof HttpProtocol) return "HttpProtocol";
+		if (obj instanceof HttpService) return "HttpService";
+		if (obj instanceof KeywordCount) return "KeywordCount";
 		if (obj instanceof Decoder) return "Decoder";
 		if (obj instanceof MontoyaApi) return "MontoyaApi";
 		if (obj instanceof Utilities) return "Utilities";
@@ -265,38 +298,11 @@ public class UnObfuscator {
 			obj instanceof ResponseReceivedAction
 		) return "ResponseReceivedAction";
 		if (
-			obj instanceof RequestToBeSentAction
-		) return "RequestToBeSentAction";
-		if (obj instanceof HttpRequestToBeSent) return "HttpRequestToBeSent";
-		if (obj instanceof HttpResponseReceived) return "HttpResponseReceived";
-		if (obj instanceof ContentType) return "ContentType";
-		if (obj instanceof HttpParameterType) return "HttpParameterType";
-		if (obj instanceof HttpParameter) return "HttpParameter";
-		if (obj instanceof ParsedHttpParameter) return "ParsedHttpParameter";
-		if (obj instanceof Cookie) return "Cookie";
-		if (
-			obj instanceof MalformedRequestException
-		) return "MalformedRequestException";
-		if (obj instanceof HttpTransformation) return "HttpTransformation";
-		if (obj instanceof HttpRequest) return "HttpRequest";
-		if (obj instanceof HttpRequestResponse) return "HttpRequestResponse";
-		if (obj instanceof KeywordCount) return "KeywordCount";
-		if (
 			obj instanceof ResponseKeywordsAnalyzer
 		) return "ResponseKeywordsAnalyzer";
 		if (
 			obj instanceof ResponseVariationsAnalyzer
 		) return "ResponseVariationsAnalyzer";
-		if (obj instanceof Attribute) return "Attribute";
-		if (obj instanceof AttributeType) return "AttributeType";
-		if (obj instanceof HttpResponse) return "HttpResponse";
-		if (obj instanceof HttpMessage) return "HttpMessage";
-		if (obj instanceof HttpHeader) return "HttpHeader";
-		if (obj instanceof MimeType) return "MimeType";
-		if (obj instanceof HttpMode) return "HttpMode";
-		if (obj instanceof Http) return "Http";
-		if (obj instanceof HttpProtocol) return "HttpProtocol";
-		if (obj instanceof HttpService) return "HttpService";
 		if (obj instanceof PersistedObject) return "PersistedObject";
 		if (obj instanceof Persistence) return "Persistence";
 		if (obj instanceof PersistedList) return "PersistedList";
@@ -317,26 +323,22 @@ public class UnObfuscator {
 		if (obj instanceof Registration) return "Registration";
 		if (obj instanceof Task) return "Task";
 		if (obj instanceof UserInterface) return "UserInterface";
-		if (
-			obj instanceof AuditIssueContextMenuEvent
-		) return "AuditIssueContextMenuEvent";
 		if (obj instanceof InvocationSource) return "InvocationSource";
 		if (obj instanceof ComponentEvent) return "ComponentEvent";
-		if (obj instanceof WebSocketMessage) return "WebSocketMessage";
 		if (
 			obj instanceof ContextMenuItemsProvider
 		) return "ContextMenuItemsProvider";
 		if (obj instanceof ContextMenuEvent) return "ContextMenuEvent";
-		if (
-			obj instanceof WebSocketContextMenuEvent
-		) return "WebSocketContextMenuEvent";
+		// if (
+		// 	obj instanceof WebSocketContextMenuEvent
+		// ) return "WebSocketContextMenuEvent";
 		if (obj instanceof InvocationType) return "InvocationType";
-		if (obj instanceof WebSocketEditorEvent) return "WebSocketEditorEvent";
+		// if (obj instanceof WebSocketEditorEvent) return "WebSocketEditorEvent";
 		if (
 			obj instanceof MessageEditorHttpRequestResponse
 		) return "MessageEditorHttpRequestResponse";
 		if (obj instanceof MenuBar) return "MenuBar";
-		if (obj instanceof BasicMenuItem) return "BasicMenuItem";
+		// if (obj instanceof BasicMenuItem) return "BasicMenuItem";
 		if (obj instanceof MenuItem) return "MenuItem";
 		if (obj instanceof Menu) return "Menu";
 		if (obj instanceof Theme) return "Theme";
