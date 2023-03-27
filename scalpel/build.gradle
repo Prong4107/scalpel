@@ -1,6 +1,5 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 group 'lexfo'
@@ -10,6 +9,8 @@ repositories {
     mavenLocal()
     mavenCentral()
 }
+
+def pyscalpelDir = '../scripts/pyscalpel'
 
 def venvPath = '../.venv'
 
@@ -36,12 +37,14 @@ jar {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
     duplicatesStrategy = 'exclude'
+    
 }
 
 sourceSets {
     main {
         resources {
             srcDirs jepDir
+            exclude '**/*.pyc'
         }
     }
 }
