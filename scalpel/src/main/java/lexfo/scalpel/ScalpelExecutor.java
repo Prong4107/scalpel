@@ -218,9 +218,14 @@ public class ScalpelExecutor {
 	private final MontoyaApi API;
 
 	/**
-	 * The path of the Scalpel script to execute.
+	 * The path of the Scalpel script that will be passed to the framework.
 	 */
 	private Optional<File> script = Optional.empty();
+
+	/**
+	 * The path of the Scalpel framework that will be used to execute the script.
+	 */
+	private Optional<File> framework = Optional.empty();
 
 	/**
 	 * The task runner thread.
@@ -238,9 +243,19 @@ public class ScalpelExecutor {
 	private long lastScriptModificationTimestamp = -1;
 
 	/**
+	 * The timestamp of the last recorded modification to the framework file.
+	 */
+	private long lastFrameworkModificationTimestamp = -1;
+
+	/**
 	 * Flag indicating whether the task runner loop is running.
 	 */
 	private Boolean isRunnerAlive = false;
+
+	/**
+	 * The ScalpelUnpacker object to get the ressources paths.
+	 */
+	private ScalpelUnpacker unpacker;
 
 	/**
 	 * Constructs a new ScalpelExecutor object.
@@ -249,10 +264,17 @@ public class ScalpelExecutor {
 	 * @param logger the Logging object to use for logging messages.
 	 * @param scriptPath the path of the Scalpel script to execute.
 	 */
-
-	public ScalpelExecutor(MontoyaApi API, Logging logger, String scriptPath) {
+	public ScalpelExecutor(
+		MontoyaApi API,
+		ScalpelUnpacker unpacker,
+		Logging logger,
+		String scriptPath
+	) {
 		// Store Montoya API object
 		this.API = API;
+
+		// Store the unpacker
+		this.unpacker = unpacker;
 
 		// Keep a reference to a logger
 		this.logger = logger;
@@ -260,6 +282,7 @@ public class ScalpelExecutor {
 		// Create a File wrapper from the script path.
 		this.script = Optional.ofNullable(new File(scriptPath));
 
+		
 		this.script.ifPresent(s -> {
 				this.lastScriptModificationTimestamp = s.lastModified();
 
@@ -274,9 +297,12 @@ public class ScalpelExecutor {
 	 * @param API the MontoyaApi object to use for sending and receiving HTTP messages.
 	 * @param logger the Logging object to use for logging messages.
 	 */
-
-	public ScalpelExecutor(MontoyaApi API, Logging logger) {
-		this(API, logger, "");
+	public ScalpelExecutor(
+		MontoyaApi API,
+		ScalpelUnpacker unpacker,
+		Logging logger
+	) {
+		this(API, unpacker, logger, "");
 	}
 
 	/**
@@ -313,21 +339,6 @@ public class ScalpelExecutor {
 		// Return the queued or rejected task.
 		return task;
 	}
-
-	/* Debug method.
-		private String getClassNames(Object obj) {
-			final var cl = obj.getClass();
-
-			final var arr = new String[] {
-				cl.getName(),
-				cl.getSimpleName(),
-				cl.getCanonicalName(),
-				cl.toGenericString(),
-				cl.getTypeName(),
-			};
-			return "|\n\t" + String.join("|\n\t", arr);
-		}
-	*/
 
 	/**
 	 * Awaits the result of a task.
@@ -399,6 +410,37 @@ public class ScalpelExecutor {
 	}
 
 	/**
+	 * Checks if either the framework or user script file has been modified since the last check.
+	 *
+	 * @return true if either the framework or user script file has been modified since the last check, false otherwise.
+	 */
+	private final Boolean hasPythonChanged() {
+		return hasFrameworkChanged() && hasScriptChanged();
+	}
+
+	/**
+	 * Checks if the framework file has been modified since the last check.
+	 *
+	 * @return true if the framework file has been modified since the last check, false otherwise.
+	 */
+	private final Boolean hasFrameworkChanged() {
+		return framework
+			.map(framework -> {
+				// Check if the last modification date has changed since last record.
+				final Boolean hasChanged =
+					lastFrameworkModificationTimestamp !=
+					framework.lastModified();
+
+				// Update the last modification date record.
+				lastFrameworkModificationTimestamp = framework.lastModified();
+
+				// Return the check result.²
+				return hasChanged;
+			})
+			.orElse(false);
+	}
+
+	/**
 	 * Launches the task runner thread.
 	 *
 	 * @return the launched thread.
@@ -413,12 +455,12 @@ public class ScalpelExecutor {
 				final SubInterpreter interp = initInterpreter();
 				isRunnerAlive = true;
 				while (true) {
-					// Relaunch interpreter when file has changed (hot reload).
-					if (hasScriptChanged()) {
+					// Relaunch interpreter when files have changed (hot reload).
+					if (hasPythonChanged()) {
 						TraceLogger.log(
 							logger,
 							Level.INFO,
-							"Script has changed, reloading interpreter..."
+							"Python files have changed, reloading interpreter..."
 						);
 						break;
 					}
@@ -549,8 +591,8 @@ public class ScalpelExecutor {
 	 */
 	private final SubInterpreter initInterpreter() {
 		try {
-			return script
-				.map(script -> {
+			return framework
+				.map(framework -> {
 					// Instantiate a Python interpreter.
 					final SubInterpreter interp = new SubInterpreter(
 						new JepConfig().setClassEnquirer(new CustomEnquirer())
@@ -559,16 +601,24 @@ public class ScalpelExecutor {
 					// Make the Montoya API object accessible in Python
 					interp.set("__montoya__", API);
 
-					// Set the script's filename to corresponding Python variable
-					interp.set("__file__", script.getAbsolutePath());
+					// Set the framework's filename to corresponding Python variable
+					// This isn't set by JEP, we have to do it ourselves.
+					interp.set("__file__", framework.getAbsolutePath());
 
-					// Set the script's directory to be able to add it to Python's path.
-					interp.set("__directory__", script.getParent());
+					// Set the framework's directory to be able to add it to Python's path.
+					interp.set("__directory__", unpacker.getPythonPath());
 
-					// Add logger global
+					// Add logger global to be able to log to Burp from Python.
+					// TODO: Change this to TraceLogger.
 					interp.set("__logger__", logger);
 
-					// Add the script's directory to Python's path to allow imports of adjacent files.
+					// Set the path to the user script that will define the actual callbacks.
+					interp.set(
+						"__user_script__",
+						script.orElseThrow().getAbsolutePath()
+					);
+
+					// Add the framework's directory to Python's path to allow imports of adjacent files.
 					interp.exec(
 						"""
     from sys import path
@@ -576,16 +626,8 @@ public class ScalpelExecutor {
     """
 					);
 
-					// Set importable logger.
-					// 				interp.exec(
-					// 					"""
-					// import pyscalpel._globals
-					// pyscalpel._globals.logger = __logger__
-					// """
-					// 				);
-
-					// Run the script.
-					interp.runScript(script.getAbsolutePath());
+					// Run the framework (wraps the user script)
+					interp.runScript(framework.getAbsolutePath());
 
 					// Return the initialized interpreter.
 					return interp;
@@ -637,24 +679,50 @@ public class ScalpelExecutor {
 		}
 	}
 
+	private void reloadRunner() {
+		// Launch runner when it does not exist.
+		if (runner == null && framework.isPresent() && script.isPresent()) {
+			// Set the timestamp to prevent reloading the interpreter.
+			lastScriptModificationTimestamp = script.get().lastModified();
+
+			// Set the timestamp to prevent reloading the interpreter.
+			lastFrameworkModificationTimestamp = framework.get().lastModified();
+
+			// Launch the task runner thread.
+			runner = launchTaskRunner();
+			return;
+		}
+
+		// Reset the timestamp to reload the interpreter.
+		this.lastScriptModificationTimestamp = -1;
+		this.lastFrameworkModificationTimestamp = -1;
+	}
+
 	/**
 	 * Sets the script path.
 	 *
 	 * @param path the path to the script.
 	 */
-	public void setScript(String path) {
+	public void setUserScript(String path) {
 		// Update the script path.
 		this.script = Optional.ofNullable(new File(path));
+		// This should now be done in ConfigTab class.
+		// API.persistence().extensionData().setString("scalpelScript", path);
 
-		API.persistence().extensionData().setString("scalpelScript", path);
+		reloadRunner();
+	}
 
-		if (runner == null) script.ifPresent(script -> {
-			this.lastScriptModificationTimestamp = script.lastModified();
-			this.runner = launchTaskRunner();
-		});
+	/**
+	 * Sets the framework path and reloads the runner.
+	 *
+	 * @param path the path to the framework.
+	 */
+	public void setFramework(String path) {
+		// Update the framework path.
+		this.framework = Optional.ofNullable(new File(path));
 
-		// Reset the timestamp to reload the interpreter.
-		this.lastScriptModificationTimestamp = -1;
+		// Launch runner when it does not exist or reload it.
+		reloadRunner();
 	}
 
 	/**
@@ -686,6 +754,8 @@ public class ScalpelExecutor {
 	@SuppressWarnings({ "unchecked" })
 	public <T extends HttpMessage> Optional<T> callIntercepterCallback(T msg) {
 		// Call the corresponding Python callback and add a debug HTTP header.
+		// TODO: Only add the header in debug mode.
+		// TODO: Add a debug mode.
 		return safeJepInvoke(
 			getMessageCbName(msg),
 			msg,
@@ -859,6 +929,8 @@ public class ScalpelExecutor {
 	 * Convert Java signed bytes to corresponding unsigned values
 	 * Convertions issues occur when passing Java bytes to Python because Java's are signed and Python's are unsigned.
 	 * Passing an unsigned int array solves this problem.
+	 *
+	 *  TODO: I think Java 8 has a method to do this.
 	 *
 	 * @param bytes the bytes to convert
 	 * @return the corresponding unsigned values as int

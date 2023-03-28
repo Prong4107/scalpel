@@ -13,22 +13,40 @@ public class UIBuilder {
 
 	/**
 		Constructs the configuration Burp tab.
-	 @param executor The ScalpelExecutor object to use.
-	 @param defaultPath The default text content
-	 @return The constructed tab.
+
+		@param executor The ScalpelExecutor object to use.
+		@param defaultScriptPath The default text content
+		@return The constructed tab.
 	 */
 	public static final Component constructConfigTab(
 		MontoyaApi API,
 		ScalpelExecutor executor,
-		String defaultPath
+		String frameworkPath,
+		String defaultScriptPath
 	) {
-		return new ConfigTab(API, executor, defaultPath).uiComponent();
+		return new ConfigTab(API, executor, frameworkPath, defaultScriptPath)
+			.uiComponent();
 	}
 
 	/**
 		Constructs the configuration Burp tab.
-	 @param executor The ScalpelExecutor object to use.
-	 @return The constructed tab.
+
+		@param executor The ScalpelExecutor object to use.
+		@return The constructed tab.
+	 */
+	public static final Component constructConfigTab(
+		MontoyaApi API,
+		ScalpelExecutor executor,
+		String frameworkPath
+	) {
+		return new ConfigTab(API, executor, frameworkPath, "").uiComponent();
+	}
+
+	/**
+		Constructs the configuration Burp tab.
+
+		@param executor The ScalpelExecutor object to use.
+		@return The constructed tab.
 	 */
 	public static final Component constructConfigTab(
 		MontoyaApi API,
