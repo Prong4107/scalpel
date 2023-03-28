@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Protocol, List
 from abc import abstractmethod
 from burp.api.montoya.core import ByteArray as _BurpByteArray
 from .java_object import JavaObject
@@ -82,7 +82,7 @@ class IByteArray(JavaObject):
     #      * @return Copy of all bytes.
     #
     @abstractmethod
-    def getBytes(self) -> bytes:
+    def getBytes(self) -> List[int]:
         """ generated source for method getBytes """
 
     #

@@ -5,7 +5,8 @@ from pyscalpel.burp.byte_array import IByteArray, ByteArray
 from pyscalpel.burp.http_parameter import IHttpParameter, HttpParameter
 from lexfo.scalpel import HttpMsgUtils
 import pyscalpel._globals
-from typing import List, TypeVar
+from typing import List, TypeVar, cast
+from collections.abc import Iterable
 
 logger = pyscalpel._globals.logger
 
@@ -35,11 +36,20 @@ def byte_array(_bytes: bytes) -> IByteArray:
 
 
 def get_bytes(array: IByteArray) -> bytes:
-    return bytes(array.getBytes())
+    return to_bytes(array.getBytes())
 
 
-def to_bytes(obj: IHttpRequest | IHttpResponse) -> bytes:
-    return get_bytes(obj.toByteArray())
+BytableObject = TypeVar('BytableObject', IHttpRequest,
+                        IHttpResponse)
+
+
+def to_bytes(obj: BytableObject | Iterable[int]) -> bytes:
+    # Handle java signed bytes
+    if isinstance(obj, Iterable):
+        # Convert java signed bytes to python unsigned bytes
+        return bytes([b & 0xff for b in cast(Iterable[int], obj)])
+
+    return get_bytes(cast(BytableObject, obj).toByteArray())
 
 
 def urlencode_all(bytestring: bytes) -> bytes:
