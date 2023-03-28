@@ -61,5 +61,5 @@ javadoc {
     classpath += configurations.javadocImplementation
     options.links("https://portswigger.github.io/burp-extensions-montoya-api/javadoc/")
     options.memberLevel = JavadocMemberLevel.PRIVATE
-    options.addStringOption('Xdoclint:none', null)
+    options.addStringOption('Xdoclint:none', '-quiet')
 }
