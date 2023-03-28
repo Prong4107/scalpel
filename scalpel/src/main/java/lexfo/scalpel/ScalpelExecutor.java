@@ -282,7 +282,6 @@ public class ScalpelExecutor {
 		// Create a File wrapper from the script path.
 		this.script = Optional.ofNullable(new File(scriptPath));
 
-		
 		this.script.ifPresent(s -> {
 				this.lastScriptModificationTimestamp = s.lastModified();
 
@@ -766,7 +765,9 @@ public class ScalpelExecutor {
 					HttpMsgUtils.updateHeader(
 						r,
 						"X-Scalpel-" + HttpMsgUtils.getClassName(msg),
-						"true"
+						Thread
+							.currentThread()
+							.getStackTrace()[1].getMethodName()
 					)
 				)
 			);
