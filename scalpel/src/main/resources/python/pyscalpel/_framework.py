@@ -5,12 +5,23 @@ from typing import Callable, TypeVar, cast, List
 import sys
 
 
-# Debug logger to use if for some reason the logger is not initialized
 class DebugLogger:
+    """Debug logger to use if for some reason the logger is not initialized"""
+
     def logToOutput(self, msg: str):
+        """Prints the message to the standard output
+
+        Args:
+            msg (str): The message to print
+        """
         print(msg)
 
     def logToError(self, msg: str):
+        """Prints the message to the standard error
+
+        Args:
+            msg (str): The message to print
+        """
         print(msg, file=sys.stderr)
 
 
@@ -21,7 +32,7 @@ except NameError:
     # Initialize the logger
     __logger__ = DebugLogger()
     __logger__.logToOutput(
-        "Python: Initializing logger ...\nWARN: Logger not initialized, using DebugLogger")
+        "Python: Initializing logger ...\nWARNING: Logger not initialized, using DebugLogger")
 
 try:
     # Import the globals module to set the logger
@@ -64,12 +75,23 @@ try:
     callable_objs = {name: obj for name,
                      obj in inspect.getmembers(user_module) if callable(obj)}
 
-    # Utility function to get the name of the caller function
     def fun_name(frame=1):
+        """Returns the name of the caller function
+
+            Args:
+                frame (int, optional): The frame to get the name from. Defaults to 1.
+        """
         return _getframe(frame).f_code.co_name
 
-    # Utility function to wrap a callback in a try catch block and add some debug logs.
     def _try_wrap(callback: CallbackType) -> CallbackType:
+        """Wraps a callback in a try catch block and add some debug logs.
+
+            Args:
+                callback (CallbackType): The callback to wrap
+
+            Returns:
+                CallbackType: The wrapped callback
+        """
         logger.logToOutput("Python: _try_wrap() called")
 
         def new_cb(*args, **kwargs):
@@ -77,12 +99,19 @@ try:
                 logger.logToOutput("Python: _try_wrap_cb() called")
                 return callback(*args, **kwargs)
             except Exception as ex:
-                logger.logToError(f"Python: {fun_name(2)}() error:\n\t{ex}")
+                logger.logToError(f"Python: {fun_name(1)}() error:\n\t{ex}")
                 logger.logToError(traceback.format_exc())
         return new_cb
 
-    # Decorator to return a  None lambda when the callback is not present in the user script.
     def _try_if_present(callback: Callable[..., CallbackReturn | None]) -> Callable[..., CallbackReturn | None]:
+        """Decorator to return a  None lambda when the callback is not present in the user script.
+
+            Args:
+                callback (Callable[..., CallbackReturn | None]): The callback to wrap
+
+            Returns:
+                Callable[..., CallbackReturn | None]: The wrapped callback
+        """
         logger.logToOutput(
             f"Python: _try_if_present({callback.__name__}) called")
 
@@ -110,26 +139,85 @@ try:
 
     @_try_if_present
     def _request(req: IHttpRequest, callback: CallbackType = ...) -> IHttpRequest | None:
+        """Wrapper for the request callback
+
+                Args:
+                    req (IHttpRequest): The request object
+                    callback (CallbackType, optional): The user callback.
+
+                Returns:
+                    IHttpRequest | None: The modified request object or None for an unmodified request
+        """
         return cast(IHttpRequest | None, callback(req))
 
     @_try_if_present
     def _response(res: IHttpResponse, callback: CallbackType = ...) -> IHttpResponse | None:
+        """Wrapper for the response callback
+
+                Args:
+                    res (IHttpResponse): The response object
+                    callback (CallbackType, optional): The user callback.
+
+                Returns:
+                    IHttpResponse | None: The modified response object or None for an unmodified response
+        """
         return cast(IHttpResponse | None, callback(res))
 
     @_try_if_present
     def _req_edit_in(req: IHttpRequest, callback: CallbackType = ...) -> bytes | None:
+        """Wrapper for the request edit callback
+
+                Args:
+                    req (IHttpRequest): The request object
+                    callback (CallbackType, optional): The user callback. Defaults to None.
+
+                Returns:
+                    bytes | None: The bytes to display in the editor or None for a disabled editor
+        """
         return cast(bytes | None, callback(req))
 
     @_try_if_present
     def _req_edit_out(req: IHttpRequest, text: List[int], callback: CallbackType = ...) -> bytes | None:
+        """Wrapper for the request edit callback
+
+                    Args:
+                        req (IHttpRequest): The request object
+                        text (List[int]): The editor content
+                        callback (CallbackType, optional): The user callback.
+
+                    Returns:
+                        bytes | None: The bytes to construct the new request from 
+                            or None for an unmodified request
+            """
+
         return cast(bytes | None, callback(req, bytes(text)))
 
     @_try_if_present
     def _res_edit_in(res: IHttpResponse, callback: CallbackType = ...) -> bytes | None:
+        """Wrapper for the response edit callback
+
+                    Args:
+                        res (IHttpResponse): The response object
+                        callback (CallbackType, optional): The user callback.
+
+                    Returns:
+                        bytes | None: The bytes to display in the editor or None for a disabled editor
+        """
         return cast(bytes | None, callback(res))
 
     @_try_if_present
     def _res_edit_out(res: IHttpResponse, text: List[int], callback: CallbackType = ...) -> bytes | None:
+        """Wrapper for the response edit callback
+
+                    Args:
+                        res (IHttpResponse): The response object
+                        text (List[int]): The editor content
+                        callback (CallbackType, optional): The user callback.
+
+                    Returns:
+                        bytes | None: The bytes to construct the new response from 
+                            or None for an unmodified response
+        """
         return cast(bytes | None, callback(res, bytes(text)))
 
     logger.logToOutput("Python: Loaded _framework.py")
