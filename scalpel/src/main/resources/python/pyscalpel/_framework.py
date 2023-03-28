@@ -106,7 +106,7 @@ try:
 
         logger.logToOutput(f"Python: {name}() is not present")
         # Ignore the callback.
-        return lambda: None
+        return lambda *_, **__: None
 
     @_try_if_present
     def _request(req: IHttpRequest, callback: CallbackType = ...) -> IHttpRequest | None:
