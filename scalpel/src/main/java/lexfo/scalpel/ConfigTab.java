@@ -53,37 +53,37 @@ public class ConfigTab extends JFrame {
 		setUserScriptPath(defaultValue);
 		setFrameworkPath(frameworkPath);
 
-		// Handle browse button click.
+		// Open file browser to select the script to execute.
 		scriptBrowseButton.addActionListener(e ->
 			handleBrowseButtonClick(
-				this::setUserScriptPath,
-				() -> scriptPathField.getText()
+				() -> scriptPathField.getText(),
+				this::setUserScriptPath
 			)
 		);
 
 		// Same as above for framework path.
 		frameworkBrowseButton.addActionListener(e ->
 			handleBrowseButtonClick(
-				this::setFrameworkPath,
-				() -> frameworkPathField.getText()
+				() -> frameworkPathField.getText(),
+				this::setFrameworkPath
 			)
 		);
 	}
 
 	private void handleBrowseButtonClick(
-		Consumer<String> callback,
-		Supplier<String> getDefaultPath
+		Supplier<String> getter,
+		Consumer<String> setter
 	) {
 		final JFileChooser fileChooser = new JFileChooser();
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
 		// Set default path to the path in the text field.
-		fileChooser.setCurrentDirectory(new File(getDefaultPath.get()));
+		fileChooser.setCurrentDirectory(new File(getter.get()));
 
 		int result = fileChooser.showOpenDialog(this);
 		if (result == JFileChooser.APPROVE_OPTION) {
 			// callback.apply(fileChooser.getSelectedFile().getAbsolutePath());
-			callback.accept(fileChooser.getSelectedFile().getAbsolutePath());
+			setter.accept(fileChooser.getSelectedFile().getAbsolutePath());
 		}
 	}
 
