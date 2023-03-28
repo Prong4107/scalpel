@@ -348,6 +348,7 @@ public class ScalpelProvidedEditor
 			);
 
 			// When new bytes are returned, use them to create a new http message from the original one.
+			// TODO: The callback should NOT return bytes but instead a HttpRequest or HttpResponse.
 			if (result.isPresent()) return Optional.of(
 				cloneHttpMessageAndReplaceBytes(msg, result.get())
 			);
