@@ -41,10 +41,11 @@ public class Scalpel implements BurpExtension {
 		// Init API member.
 		this.API = API;
 
-		// Set extension name.
+		// Set displayed extension name.
 		API.extension().setName("Lexfo Scalpel extension");
 
-		// Init logger member.
+		// Create a logger that will display messages in Burp extension logs.
+		// TODO: Replace with TraceLogger that also logs to standard output streams.
 		logger = API.logging();
 
 		try {
@@ -62,15 +63,21 @@ public class Scalpel implements BurpExtension {
 				// Extract the ressources to a new unique temporary directory.
 				unpacker.initializeResourcesDirectory();
 
-				// Set Jep path.
+				// Register the Jep native library path.
 				MainInterpreter.setJepLibraryPath(
 					unpacker.getJepNativeLibPath()
 				);
 
 				// Instantiate the executor (handles Python execution)
-				executor = new ScalpelExecutor(API, logger, unpacker.getPythonFrameworkPath());
+				executor =
+					new ScalpelExecutor(
+						API,
+						unpacker,
+						logger,
+						unpacker.getPythonFrameworkPath()
+					);
 
-				// Add the scripting editor tab.
+				// Add the scripting editor tab to Burp UI.
 				API
 					.userInterface()
 					.registerSuiteTab(
@@ -81,14 +88,19 @@ public class Scalpel implements BurpExtension {
 						)
 					);
 
+				// Add the configuration tab to Burp UI.
 				API
 					.userInterface()
 					.registerSuiteTab(
 						"Scalpel Config",
-						UIBuilder.constructConfigTab(API, executor)
+						UIBuilder.constructConfigTab(
+							API,
+							executor,
+							unpacker.getPythonFrameworkPath()
+						)
 					);
 
-				// Add request editor tab
+				// Create the provider responsible for creating the request/response editors for Burp.
 				final var provider = new ScalpelEditorProvider(API, executor);
 
 				// Add the request editor to Burp.

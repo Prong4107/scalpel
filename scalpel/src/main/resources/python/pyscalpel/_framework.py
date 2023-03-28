@@ -4,22 +4,36 @@ import inspect
 from typing import Callable, TypeVar, cast, List
 import sys
 
-__logger__.logToOutput("Python: Loading _framework.py ...")
+
+# Debug logger to use if for some reason the logger is not initialized
+class DebugLogger:
+    def logToOutput(self, msg: str):
+        print(msg)
+
+    def logToError(self, msg: str):
+        print(msg, file=sys.stderr)
+
+
+# Try to use the logger a first time to ensure it is initialized
+try:
+    __logger__.logToOutput("Python: Loading _framework.py ...")
+except NameError:
+    # Initialize the logger
+    __logger__ = DebugLogger()
+    __logger__.logToOutput(
+        "Python: Initializing logger ...\nWARN: Logger not initialized, using DebugLogger")
 
 try:
-    # TODO: Dont hardcode this
-    PATH_TO_ADD = "/home/nol/Desktop/piperpp/scalpel/scalpel/src/main/resources/python"
-
-    # add to path
-    if PATH_TO_ADD not in sys.path:
-        sys.path.append(PATH_TO_ADD)
-
+    # Import the globals module to set the logger
     import pyscalpel._globals
 
+    # Set the logger in the globals module
     pyscalpel._globals.logger = __logger__
 
-    user_script = "/home/nol/Desktop/piperpp/scalpel/scalpel/src/main/resources/python/samples/editorTest.py"
+    # Get the user script path from the JEP initialized variable
+    user_script = __user_script__
 
+    # Get utils to dynamically import the user script in a convinient way
     import importlib.util
 
     # specify the absolute path of the script you want to import
@@ -28,6 +42,7 @@ try:
     # create a module spec based on the script path
     spec = importlib.util.spec_from_file_location("scalpel_user_module", path)
 
+    # Assert that the provided path can be loaded
     assert spec is not None
     assert spec.loader is not None
 
@@ -37,6 +52,7 @@ try:
     # load the user_module into memory
     spec.loader.exec_module(user_module)
 
+    # Declare convenient types for the callbacks
     from pyscalpel.utils import IHttpRequest, logger, IHttpResponse
 
     CallbackReturn = TypeVar(
@@ -44,12 +60,15 @@ try:
 
     CallbackType = Callable[..., CallbackReturn]
 
+    # Get all the callable objects from the user module
     callable_objs = {name: obj for name,
                      obj in inspect.getmembers(user_module) if callable(obj)}
 
+    # Utility function to get the name of the caller function
     def fun_name(frame=1):
         return _getframe(frame).f_code.co_name
 
+    # Utility function to wrap a callback in a try catch block and add some debug logs.
     def _try_wrap(callback: CallbackType) -> CallbackType:
         logger.logToOutput("Python: _try_wrap() called")
 
@@ -62,20 +81,31 @@ try:
                 logger.logToError(traceback.format_exc())
         return new_cb
 
+    # Decorator to return a  None lambda when the callback is not present in the user script.
     def _try_if_present(callback: Callable[..., CallbackReturn | None]) -> Callable[..., CallbackReturn | None]:
         logger.logToOutput(
             f"Python: _try_if_present({callback.__name__}) called")
+
+        # Remove the leading underscore from the callback name
         name = callback.__name__.removeprefix("_")
+
+        # Get the user callback from the user script's callable objects
         user_cb = callable_objs.get(name)
+
+        # Ensure the user callback is present
         if (user_cb is not None):
             logger.logToOutput(f"Python: {name}() is present")
 
+            # Wrap the user callback in a try catch block and return it
+            @_try_wrap
             def new_cb(*args, **kwargs) -> CallbackReturn | None:
-                return _try_wrap(callback)(*args, **dict(kwargs, callback=user_cb))
+                return callback(*args, **dict(kwargs, callback=user_cb))
 
+            # Return the wrapped callback
             return new_cb
 
         logger.logToOutput(f"Python: {name}() is not present")
+        # Ignore the callback.
         return lambda: None
 
     @_try_if_present
@@ -105,6 +135,7 @@ try:
     logger.logToOutput("Python: Loaded _framework.py")
 
 except Exception as global_ex:
+    # Global generic exception handler to ensure the error is logged and visible to the user.
     __logger__.logToOutput("Python: Failed loading _framework.py")
     __logger__.logToError("Couldn't load script:")
     __logger__.logToError(global_ex)
