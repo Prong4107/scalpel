@@ -17,7 +17,7 @@ def req_edit_in(req: IHttpRequest) -> bytes:
     return new_bytes
 
 
-def req_edit_out(req: IHttpRequest, text: bytes) -> bytes:
+def req_edit_out(_: IHttpRequest, text: bytes) -> bytes:
     req = new_request(bytes(text))
     body_bytes = b64encode(get_bytes(req.body()))
     new_body = byte_array(body_bytes)
@@ -34,7 +34,7 @@ def res_edit_in(res: IHttpResponse) -> bytes:
     return new_bytes
 
 
-def res_edit_out(res: IHttpResponse, text: bytes) -> bytes:
+def res_edit_out(_: IHttpResponse, text: bytes) -> bytes:
     res = new_response(bytes(text))
     body_bytes = b64encode(get_bytes(res.body()))
     new_body = byte_array(body_bytes)
