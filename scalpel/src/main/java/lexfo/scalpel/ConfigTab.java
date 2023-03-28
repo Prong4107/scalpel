@@ -9,6 +9,8 @@ import com.intellij.uiDesigner.core.Spacer;
 import java.awt.*;
 import java.io.File;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 
@@ -52,23 +54,37 @@ public class ConfigTab extends JFrame {
 		setFrameworkPath(frameworkPath);
 
 		// Handle browse button click.
-		scriptBrowseButton.addActionListener(e -> {
-			final JFileChooser fileChooser = new JFileChooser();
-			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		scriptBrowseButton.addActionListener(e ->
+			handleBrowseButtonClick(
+				this::setUserScriptPath,
+				() -> scriptPathField.getText()
+			)
+		);
 
-			// Set default path to the path in the text field.
-			fileChooser.setCurrentDirectory(
-				new File(scriptPathField.getText())
-			);
+		// Same as above for framework path.
+		frameworkBrowseButton.addActionListener(e ->
+			handleBrowseButtonClick(
+				this::setFrameworkPath,
+				() -> frameworkPathField.getText()
+			)
+		);
+	}
 
-			int result = fileChooser.showOpenDialog(this);
-			if (result == JFileChooser.APPROVE_OPTION) {
-				setUserScriptPath(
-					fileChooser.getSelectedFile().getAbsolutePath()
-				);
-			}
-		});
-		// TODO: Same as above for framework path.
+	private void handleBrowseButtonClick(
+		Consumer<String> callback,
+		Supplier<String> getDefaultPath
+	) {
+		final JFileChooser fileChooser = new JFileChooser();
+		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+		// Set default path to the path in the text field.
+		fileChooser.setCurrentDirectory(new File(getDefaultPath.get()));
+
+		int result = fileChooser.showOpenDialog(this);
+		if (result == JFileChooser.APPROVE_OPTION) {
+			// callback.apply(fileChooser.getSelectedFile().getAbsolutePath());
+			callback.accept(fileChooser.getSelectedFile().getAbsolutePath());
+		}
 	}
 
 	/**
