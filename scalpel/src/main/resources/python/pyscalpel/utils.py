@@ -89,7 +89,7 @@ def update_header(msg: HttpRequestOrResponse, name: str, value: str) -> HttpRequ
 
 def get_param(msg: IHttpRequest, name: str) -> IHttpParameter | None:
     params = msg.parameters()
-    param = next(filter(lambda p: p.name() == name, params), None)
+    param = next((p for p in params if p.name() == name), None)
     return param
 
 
