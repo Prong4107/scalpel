@@ -3,12 +3,12 @@ from pyscalpel.java.burp.http_request import IHttpRequest, HttpRequest
 from pyscalpel.java.burp.http_response import IHttpResponse, HttpResponse
 from pyscalpel.java.burp.byte_array import IByteArray, ByteArray
 from pyscalpel.java.burp.http_parameter import IHttpParameter, HttpParameter
-from lexfo.scalpel import PythonUtils
 import pyscalpel._globals
 from pyscalpel.java.burp.java_bytes import JavaBytes
 from typing import List, TypeVar, cast
 from collections.abc import Iterable
-# from pyscalpel.java.scalpel_types import PythonUtils
+from pyscalpel.java.scalpel_types.utils import PythonUtils
+from functools import singledispatch
 
 logger = pyscalpel._globals.logger
 
@@ -19,42 +19,45 @@ ByteArraySerialisable = TypeVar(
     'ByteArraySerialisable', IHttpRequest, IHttpResponse)
 
 ByteArrayConvertible = TypeVar(
-    'ByteArrayConvertible', bytes, JavaBytes, list[int], str)
+    'ByteArrayConvertible', bytes, JavaBytes, list[int], str, bytearray)
 
 
-def new_response(obj: IHttpResponse | IByteArray | ByteArrayConvertible) -> IHttpResponse:
-    # https://stackoverflow.com/a/34870210
-    # TODO: Single dispatch generic functions
-    try:
-        obj = byte_array(obj)  # type: ignore
-    except TypeError:
-        pass
+@singledispatch
+def new_response(obj: ByteArrayConvertible) -> IHttpResponse:
+    return HttpResponse.httpResponse(byte_array(obj))
 
+
+@new_response.register
+def _new_response(obj: IByteArray) -> IHttpResponse:
     return HttpResponse.httpResponse(obj)
 
 
-def new_request(obj: IHttpRequest | IByteArray | bytes | JavaBytes) -> IHttpRequest:
-    try:
-        obj = byte_array(obj)  # type: ignore
-    except TypeError:
-        pass
+@singledispatch
+def new_request(obj: ByteArrayConvertible) -> IHttpRequest:
+    return HttpRequest.httpRequest(byte_array(obj))
 
+
+@new_request.register
+def _new_request(obj: IByteArray) -> IHttpRequest:
     return HttpRequest.httpRequest(obj)
 
 
-def byte_array(_bytes: ByteArrayConvertible) -> IByteArray:
+@singledispatch
+def byte_array(_bytes: bytes | JavaBytes | list[int] | bytearray) -> IByteArray:
     # Handle buggy bytes casting
-    if isinstance(_bytes, (bytes)):
-        # This is needed because Python will _sometimes_ try
-        #   to interpret bytes as a an integer when passing to ByteArray.byteArray() and crash like this:
-        #       TypeError: Error converting parameter 1: 'bytes' object cannot be interpreted as an integer
-        #
-        # Restarting Burp fixes the issue when it happens, so to avoid unstable behaviour
-        #   we explcitely convert the bytes to a PyJArray of Java byte
-        cast_value = cast(JavaBytes, PythonUtils.toJavaBytes(_bytes))
-        return ByteArray.byteArray(cast_value)
+    # This is needed because Python will _sometimes_ try
+    #   to interpret bytes as a an integer when passing to ByteArray.byteArray() and crash like this:
+    #       TypeError: Error converting parameter 1: 'bytes' object cannot be interpreted as an integer
+    #
+    # Restarting Burp fixes the issue when it happens, so to avoid unstable behaviour
+    #   we explcitely convert the bytes to a PyJArray of Java byte
+    cast_value = cast(JavaBytes, PythonUtils.toJavaBytes(bytes(_bytes)))
+    return ByteArray.byteArray(cast_value)
 
-    return ByteArray.byteArray(_bytes)
+
+@byte_array.register
+def _byte_array_str(string: str) -> IByteArray:
+    return ByteArray.byteArray(string)
 
 
 def get_bytes(array: IByteArray) -> bytes:
