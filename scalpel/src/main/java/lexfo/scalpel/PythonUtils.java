@@ -7,6 +7,7 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.proxy.http.InterceptedRequest;
 import burp.api.montoya.proxy.http.InterceptedResponse;
+import java.util.stream.IntStream;
 
 /**
   Utility class for Python scripts.
@@ -23,12 +24,10 @@ public class PythonUtils {
 	 * @return the corresponding unsigned values as int
 	 */
 	public static int[] toPythonBytes(byte[] javaBytes) {
-		final var copy = new int[javaBytes.length];
-		for (int i = 0; i < javaBytes.length; i++) {
-			// copy[i] = ((int) bytes[i]) & 0xff;
-			copy[i] = Byte.toUnsignedInt(javaBytes[i]);
-		}
-		return copy;
+		return IntStream
+			.range(0, javaBytes.length)
+			.map(i -> Byte.toUnsignedInt(javaBytes[i]))
+			.toArray();
 	}
 
 	/**
