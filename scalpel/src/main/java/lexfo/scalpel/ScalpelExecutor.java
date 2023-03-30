@@ -764,10 +764,10 @@ public class ScalpelExecutor {
 				Optional.of(
 					PythonUtils.updateHeader(
 						r,
-						"X-Scalpel-" + PythonUtils.getClassName(msg),
+						"X-Scalpel-" + UnObfuscator.getClassName(msg),
 						Thread
 							.currentThread()
-							.getStackTrace()[1].getMethodName()
+							.getStackTrace()[3].getMethodName()
 					)
 				)
 			);

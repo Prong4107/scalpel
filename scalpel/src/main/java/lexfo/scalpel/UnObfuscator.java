@@ -214,7 +214,7 @@ public class UnObfuscator {
 	public static String getClassName(Object obj) {
 		// Retrieve real type.
 		// Burp uses proxy and symbols obfuscation
-		// So cannot naively use obj.getClass(), we seem to have no choice but to use an instanceof if forest.
+		// So we cannot naively use obj.getClass(), we seem to have no choice but to use an instanceof if forest.
 
 		// Handle null object
 		if (obj == null) return "null";
