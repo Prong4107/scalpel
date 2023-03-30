@@ -75,7 +75,7 @@ def to_bytes(obj: ByteArraySerialisable | JavaBytes) -> bytes:
 
 def urlencode_all(bytestring: bytes) -> bytes:
     """URL Encode all bytes in the given bytes object"""
-    return "".join(['%{:02X}'.format(b) for b in bytestring]).encode()
+    return "".join(f'%{b:02X}' for b in bytestring).encode()
 
 
 def urldecode(bytestring: bytes) -> bytes:
