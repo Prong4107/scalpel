@@ -98,7 +98,7 @@ try:
         @wraps(callback)
         def _wrapped_cb(*args, **kwargs):
             try:
-                logger.logToOutput("Python: _try_wrap_cb() called")
+                logger.logToOutput("Python: _wrapped_cb() called")
                 return callback(*args, **kwargs)
             except Exception as ex:
                 logger.logToError(f"Python: {fun_name(1)}() error:\n\t{ex}")
