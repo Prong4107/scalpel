@@ -3,6 +3,7 @@ from sys import _getframe
 import inspect
 from typing import Callable, TypeVar, cast, List
 import sys
+from functools import wraps
 
 
 class DebugLogger:
@@ -63,9 +64,9 @@ try:
     # load the user_module into memory
     spec.loader.exec_module(user_module)
 
-    # Declare convenient types for the callbacks
     from pyscalpel.utils import IHttpRequest, logger, IHttpResponse
 
+    # Declare convenient types for the callbacks
     CallbackReturn = TypeVar(
         'CallbackReturn', IHttpRequest, IHttpResponse, bytes) | None
 
@@ -94,6 +95,7 @@ try:
         """
         logger.logToOutput("Python: _try_wrap() called")
 
+        @wraps(callback)
         def _wrapped_cb(*args, **kwargs):
             try:
                 logger.logToOutput("Python: _try_wrap_cb() called")
@@ -103,14 +105,14 @@ try:
                 logger.logToError(traceback.format_exc())
         return _wrapped_cb
 
-    def _try_if_present(callback: Callable[..., CallbackReturn | None]) -> Callable[..., CallbackReturn | None]:
+    def _try_if_present(callback: Callable[..., CallbackReturn]) -> Callable[..., CallbackReturn]:
         """Decorator to return a  None lambda when the callback is not present in the user script.
 
             Args:
-                callback (Callable[..., CallbackReturn | None]): The callback to wrap
+                callback (Callable[..., CallbackReturn]): The callback to wrap
 
             Returns:
-                Callable[..., CallbackReturn | None]: The wrapped callback
+                Callable[..., CallbackReturn]: The wrapped callback
         """
         logger.logToOutput(
             f"Python: _try_if_present({callback.__name__}) called")
@@ -122,13 +124,14 @@ try:
         user_cb = callable_objs.get(name)
 
         # Ensure the user callback is present
-        if (user_cb is not None):
+        if user_cb is not None:
             logger.logToOutput(f"Python: {name}() is present")
 
             # Wrap the user callback in a try catch block and return it
             @_try_wrap
-            def new_cb(*args, **kwargs) -> CallbackReturn | None:
-                return callback(*args, **dict(kwargs, callback=user_cb))
+            @wraps(user_cb)
+            def new_cb(*args, **kwargs) -> CallbackReturn:
+                return callback(*args, **kwargs, callback=user_cb)
 
             # Return the wrapped callback
             return new_cb
@@ -177,12 +180,12 @@ try:
         return cast(bytes | None, callback(req))
 
     @_try_if_present
-    def _req_edit_out(req: IHttpRequest, text: List[int], callback: CallbackType = ...) -> bytes | None:
+    def _req_edit_out(req: IHttpRequest, text: list[int], callback: CallbackType = ...) -> bytes | None:
         """Wrapper for the request edit callback
 
                     Args:
                         req (IHttpRequest): The request object
-                        text (List[int]): The editor content
+                        text (list[int]): The editor content
                         callback (CallbackType, optional): The user callback.
 
                     Returns:
@@ -206,12 +209,12 @@ try:
         return cast(bytes | None, callback(res))
 
     @_try_if_present
-    def _res_edit_out(res: IHttpResponse, text: List[int], callback: CallbackType = ...) -> bytes | None:
+    def _res_edit_out(res: IHttpResponse, text: list[int], callback: CallbackType = ...) -> bytes | None:
         """Wrapper for the response edit callback
 
                     Args:
                         res (IHttpResponse): The response object
-                        text (List[int]): The editor content
+                        text (list[int]): The editor content
                         callback (CallbackType, optional): The user callback.
 
                     Returns:
