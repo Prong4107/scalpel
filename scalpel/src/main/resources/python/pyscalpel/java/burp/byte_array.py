@@ -1,10 +1,14 @@
-from typing import Protocol, List
-from abc import abstractmethod
+from typing import Protocol, List, Iterable
+from abc import abstractmethod, ABCMeta
 from burp.api.montoya.core import ByteArray as _BurpByteArray
 from .java_object import JavaObject
+from .java_bytes import JavaBytes
 
 
 class IByteArray(JavaObject):
+
+    __metaclass__ = ABCMeta
+
     """ generated source for interface ByteArray """
     #
     #      * Access the byte stored at the provided index.
@@ -82,7 +86,7 @@ class IByteArray(JavaObject):
     #      * @return Copy of all bytes.
     #
     @abstractmethod
-    def getBytes(self) -> List[int]:
+    def getBytes(self) -> JavaBytes:
         """ generated source for method getBytes """
 
     #
@@ -325,7 +329,7 @@ class IByteArray(JavaObject):
     #
     # @abstractmethod
     @abstractmethod
-    def byteArray(self, data: bytes | str | int) -> 'IByteArray':
+    def byteArray(self, data: bytes | JavaBytes | list[int] | str) -> 'IByteArray':
         """ generated source for method byteArray """
     #
     #      * Create a new {@code ByteArray} with the provided integers after a narrowing primitive conversion to bytes.<br>

@@ -9,9 +9,46 @@ import burp.api.montoya.proxy.http.InterceptedRequest;
 import burp.api.montoya.proxy.http.InterceptedResponse;
 
 /**
-  Utility class for HttpMessage objects.
+  Utility class for Python scripts.
 */
-public class HttpMsgUtils {
+public class PythonUtils {
+
+	/**
+	 * Convert Java signed bytes to corresponding unsigned values
+	 * Convertions issues occur when passing Java bytes to Python because Java's are signed and Python's are unsigned.
+	 * Passing an unsigned int array solves this problem.
+	 *
+	 *
+	 * @param javaBytes the bytes to convert
+	 * @return the corresponding unsigned values as int
+	 */
+	public static int[] toPythonBytes(byte[] javaBytes) {
+		final var copy = new int[javaBytes.length];
+		for (int i = 0; i < javaBytes.length; i++) {
+			// copy[i] = ((int) bytes[i]) & 0xff;
+			copy[i] = Byte.toUnsignedInt(javaBytes[i]);
+		}
+		return copy;
+	}
+
+	/**
+	 * Convert Python bytes to Java bytes
+	 *
+	 * It is not possible to convert to Java bytes Python side without a Java helper like this one,
+	 * 	because Jep doesn't natively support the convertion:
+	 * 	https://github.com/ninia/jep/wiki/How-Jep-Works#objects
+	 *
+	 * When passing byte[],
+	 * 	Python receives a PyJArray of integer-like objects which will be mapped back to byte[] by Jep.
+	 *
+	 * This can be used to avoid type errors by avoding Jep's conversion by passing a native Java object.
+	 *
+	 * @param pythonBytes the unsigned values to convert
+	 * @return the corresponding signed bytes
+	 */
+	public static byte[] toJavaBytes(byte[] pythonBytes) {
+		return pythonBytes;
+	}
 
 	/**
     Returns the real class name of the specified HttpMessage object.
