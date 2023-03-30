@@ -1,3 +1,3 @@
-from pyscalpel.burp.logging import Logging
+from pyscalpel.java.burp.logging import Logging
 
 logger: Logging

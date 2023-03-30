@@ -927,25 +927,6 @@ public class ScalpelExecutor {
 	}
 
 	/**
-	 * Convert Java signed bytes to corresponding unsigned values
-	 * Convertions issues occur when passing Java bytes to Python because Java's are signed and Python's are unsigned.
-	 * Passing an unsigned int array solves this problem.
-	 *
-	 *  TODO: I think Java 8 has a method to do this.
-	 *
-	 * @param bytes the bytes to convert
-	 * @return the corresponding unsigned values as int
-	 */
-	private int[] toUnsignedBytes(byte[] bytes) {
-		final var copy = new int[bytes.length];
-		for (int i = 0; i < bytes.length; i++) {
-			copy[i] = ((int) bytes[i]) & 0xff;
-			TraceLogger.log(logger, bytes[i] + " -> " + copy[i]);
-		}
-		return copy;
-	}
-
-	/**
 	 * Calls the corresponding Python callback for the given tab.
 	 *
 	 * @param msg the message to pass to the callback.
@@ -961,7 +942,10 @@ public class ScalpelExecutor {
 		String tabName
 	) {
 		return callEditorCallback(
-			new Object[] { msg, toUnsignedBytes(byteArray.getBytes()) },
+			new Object[] {
+				msg,
+				PythonUtils.toPythonBytes(byteArray.getBytes()),
+			},
 			msg instanceof HttpRequest,
 			isInbound,
 			tabName,

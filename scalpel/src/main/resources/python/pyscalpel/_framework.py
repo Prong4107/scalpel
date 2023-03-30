@@ -94,14 +94,14 @@ try:
         """
         logger.logToOutput("Python: _try_wrap() called")
 
-        def new_cb(*args, **kwargs):
+        def _wrapped_cb(*args, **kwargs):
             try:
                 logger.logToOutput("Python: _try_wrap_cb() called")
                 return callback(*args, **kwargs)
             except Exception as ex:
                 logger.logToError(f"Python: {fun_name(1)}() error:\n\t{ex}")
                 logger.logToError(traceback.format_exc())
-        return new_cb
+        return _wrapped_cb
 
     def _try_if_present(callback: Callable[..., CallbackReturn | None]) -> Callable[..., CallbackReturn | None]:
         """Decorator to return a  None lambda when the callback is not present in the user script.
