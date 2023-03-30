@@ -361,18 +361,18 @@ public class ScalpelExecutor {
 
 		if (result.isPresent()) {
 			try {
-				T castedResult = (T) result.get();
+				T castResult = (T) result.get();
 
 				TraceLogger.log(
 					logger,
-					"Successfully casted " +
+					"Successfully cast " +
 					UnObfuscator.getClassName(result) +
 					" to " +
 					// expectedClass.getSimpleName()
-					UnObfuscator.getClassName(castedResult)
+					UnObfuscator.getClassName(castResult)
 				);
-				// Ensure the result can be casted to the expected type.
-				return Optional.of(castedResult);
+				// Ensure the result can be cast to the expected type.
+				return Optional.of(castResult);
 			} catch (ClassCastException e) {
 				TraceLogger.logError(
 					logger,
@@ -762,9 +762,9 @@ public class ScalpelExecutor {
 		)
 			.flatMap(r ->
 				Optional.of(
-					HttpMsgUtils.updateHeader(
+					PythonUtils.updateHeader(
 						r,
-						"X-Scalpel-" + HttpMsgUtils.getClassName(msg),
+						"X-Scalpel-" + PythonUtils.getClassName(msg),
 						Thread
 							.currentThread()
 							.getStackTrace()[1].getMethodName()
