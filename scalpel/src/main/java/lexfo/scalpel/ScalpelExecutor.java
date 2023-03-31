@@ -361,12 +361,13 @@ public class ScalpelExecutor {
 
 		if (result.isPresent()) {
 			try {
-				T castResult = (T) result.get();
+				Object rawResult = result.get();
+				T castResult = (T) rawResult;
 
 				TraceLogger.log(
 					logger,
 					"Successfully cast " +
-					UnObfuscator.getClassName(result) +
+					UnObfuscator.getClassName(rawResult) +
 					" to " +
 					// expectedClass.getSimpleName()
 					UnObfuscator.getClassName(castResult)
