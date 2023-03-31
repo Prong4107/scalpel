@@ -18,14 +18,16 @@ class IHttpHeader(JavaObject):
     #
 
     @abstractmethod
-    def name(self):
+    @staticmethod
+    def name() -> str:
         """ generated source for method name """
 
     #
     #      * @return The value of the header.
     #
     @abstractmethod
-    def value(self):
+    @staticmethod
+    def value() -> str:
         """ generated source for method value """
 
     #
@@ -45,7 +47,7 @@ class IHttpHeader(JavaObject):
     #
     @abstractmethod
     @singledispatch
-    def httpHeader(self, name, value):
+    def httpHeader(self, name: str, value: str) -> 'IHttpHeader':
         """ generated source for method httpHeader """
 
     #
@@ -58,8 +60,8 @@ class IHttpHeader(JavaObject):
     #
     @abstractmethod
     @httpHeader.register(str)
-    def httpHeader_0(self, header):
-        """ generated source for method httpHeader_0 """
+    def httpHeader_0(self, header: str) -> 'IHttpHeader':
+        """ generated source for method httpHeader_0 """):
 
 
-HttpHeader: IHttpHeader = _BurpHttpHeader
+HttpHeader: IHttpHeader=_BurpHttpHeader

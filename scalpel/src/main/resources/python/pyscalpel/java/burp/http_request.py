@@ -3,7 +3,7 @@ from .http_message import IHttpMessage
 from .byte_array import IByteArray
 from burp.api.montoya.http.message.requests import HttpRequest as _BurpHttpRequest
 from .http_parameter import IHttpParameter
-
+from abc import ABCMeta
 #  * Burp HTTP request able to retrieve and modify details of an HTTP request.
 #
 
@@ -15,6 +15,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return An {@link HttpService} object containing details of the HTTP service.
     #
+
     @abstractmethod
     def httpService(self):
         """ generated source for method httpService """
@@ -26,6 +27,7 @@ class IHttpRequest(IHttpMessage):
     #      * @return The URL in the request.
     #      * @throws MalformedRequestException if request is malformed.
     #
+
     @abstractmethod
     def url(self) -> str:
         """ generated source for method url """
@@ -37,6 +39,7 @@ class IHttpRequest(IHttpMessage):
     #      * @return The HTTP method used in the request.
     #      * @throws MalformedRequestException if request is malformed.
     #
+
     @abstractmethod
     def method(self) -> str:
         """ generated source for method method """
@@ -48,6 +51,7 @@ class IHttpRequest(IHttpMessage):
     #      * @return the path and file in the request
     #      * @throws MalformedRequestException if request is malformed.
     #
+
     @abstractmethod
     def path(self) -> str:
         """ generated source for method path """
@@ -58,6 +62,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return Version string
     #
+
     @abstractmethod
     def httpVersion(self) -> str:
         """ generated source for method httpVersion """
@@ -65,6 +70,7 @@ class IHttpRequest(IHttpMessage):
     #
     #      * {@inheritDoc}
     #
+
     @abstractmethod
     def headers(self):
         """ generated source for method headers """
@@ -72,6 +78,7 @@ class IHttpRequest(IHttpMessage):
     #
     #      * @return The detected content type of the request.
     #
+
     @abstractmethod
     def contentType(self):
         """ generated source for method contentType """
@@ -79,6 +86,7 @@ class IHttpRequest(IHttpMessage):
     #
     #      * @return The parameters contained in the request.
     #
+
     @abstractmethod
     def parameters(self) -> list[IHttpParameter]:
         """ generated source for method parameters """
@@ -86,6 +94,7 @@ class IHttpRequest(IHttpMessage):
     #
     #      * {@inheritDoc}
     #
+
     @abstractmethod
     def body(self) -> IByteArray:
         """ generated source for method body """
@@ -93,6 +102,7 @@ class IHttpRequest(IHttpMessage):
     #
     #      * {@inheritDoc}
     #
+
     @abstractmethod
     def bodyToString(self) -> str:
         """ generated source for method bodyToString """
@@ -100,6 +110,7 @@ class IHttpRequest(IHttpMessage):
     #
     #      * {@inheritDoc}
     #
+
     @abstractmethod
     def bodyOffset(self) -> int:
         """ generated source for method bodyOffset """
@@ -107,6 +118,7 @@ class IHttpRequest(IHttpMessage):
     #
     #      * {@inheritDoc}
     #
+
     @abstractmethod
     def markers(self):
         """ generated source for method markers """
@@ -114,6 +126,7 @@ class IHttpRequest(IHttpMessage):
     #
     #      * {@inheritDoc}
     #
+
     @abstractmethod
     def toByteArray(self) -> IByteArray:
         """ generated source for method toByteArray """
@@ -121,6 +134,7 @@ class IHttpRequest(IHttpMessage):
     #
     #      * {@inheritDoc}
     #
+
     @abstractmethod
     def __str__(self):
         """ generated source for method toString """
@@ -133,6 +147,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code ByteArray} instance stored in temporary file.
     #
+
     @abstractmethod
     def copyToTempFile(self) -> 'IHttpRequest':
         """ generated source for method copyToTempFile """
@@ -144,6 +159,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code HttpRequest} instance.
     #
+
     @abstractmethod
     def withService(self, service) -> 'IHttpRequest':
         """ generated source for method withService """
@@ -155,6 +171,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code HttpRequest} instance with updated path.
     #
+
     @abstractmethod
     def withPath(self, path) -> 'IHttpRequest':
         """ generated source for method withPath """
@@ -166,6 +183,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return a new {@code HttpRequest} instance with updated method.
     #
+
     @abstractmethod
     def withMethod(self, method) -> 'IHttpRequest':
         """ generated source for method withMethod """
@@ -177,6 +195,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code HttpRequest} instance.
     #
+
     @abstractmethod
     def withAddedParameters(self, parameters) -> 'IHttpRequest':
         """ generated source for method withAddedParameters """
@@ -188,6 +207,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code HttpRequest} instance.
     #
+
     @abstractmethod
     def withAddedParameters_0(self, *parameters) -> 'IHttpRequest':
         """ generated source for method withAddedParameters_0 """
@@ -199,6 +219,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code HttpRequest} instance.
     #
+
     @abstractmethod
     def withRemovedParameters(self, parameters) -> 'IHttpRequest':
         """ generated source for method withRemovedParameters """
@@ -210,6 +231,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code HttpRequest} instance.
     #
+
     @abstractmethod
     def withRemovedParameters_0(self, *parameters) -> 'IHttpRequest':
         """ generated source for method withRemovedParameters_0 """
@@ -222,6 +244,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code HttpRequest} instance.
     #
+
     @abstractmethod
     def withUpdatedParameters(self, parameters: list[IHttpParameter]) -> 'IHttpRequest':
         """ generated source for method withUpdatedParameters """
@@ -234,6 +257,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code HttpRequest} instance.
     #
+
     @abstractmethod
     def withUpdatedParameters_0(self, *parameters) -> 'IHttpRequest':
         """ generated source for method withUpdatedParameters_0 """
@@ -245,6 +269,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code HttpRequest} instance.
     #
+
     @abstractmethod
     def withTransformationApplied(self, transformation) -> 'IHttpRequest':
         """ generated source for method withTransformationApplied """
@@ -257,6 +282,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code HttpRequest} instance.
     #
+
     @abstractmethod
     def withBody(self, body) -> 'IHttpRequest':
         """ generated source for method withBody """
@@ -269,6 +295,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code HttpRequest} instance.
     #
+
     @abstractmethod
     def withBody_0(self, body) -> 'IHttpRequest':
         """ generated source for method withBody_0 """
@@ -281,6 +308,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return The updated HTTP request with the added header.
     #
+
     @abstractmethod
     def withAddedHeader(self, name, value) -> 'IHttpRequest':
         """ generated source for method withAddedHeader """
@@ -292,6 +320,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return The updated HTTP request with the added header.
     #
+
     @abstractmethod
     def withAddedHeader_0(self, header) -> 'IHttpRequest':
         """ generated source for method withAddedHeader_0 """
@@ -304,6 +333,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return The updated request containing the updated header.
     #
+
     @abstractmethod
     def withUpdatedHeader(self, name, value) -> 'IHttpRequest':
         """ generated source for method withUpdatedHeader """
@@ -315,6 +345,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return The updated request containing the updated header.
     #
+
     @abstractmethod
     def withUpdatedHeader_0(self, header) -> 'IHttpRequest':
         """ generated source for method withUpdatedHeader_0 """
@@ -326,6 +357,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return The updated request containing the removed header.
     #
+
     @abstractmethod
     def withRemovedHeader(self, name) -> 'IHttpRequest':
         """ generated source for method withRemovedHeader """
@@ -337,6 +369,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return The updated request containing the removed header.
     #
+
     @abstractmethod
     def withRemovedHeader_0(self, header) -> 'IHttpRequest':
         """ generated source for method withRemovedHeader_0 """
@@ -348,6 +381,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code MarkedHttpRequestResponse} instance.
     #
+
     @abstractmethod
     def withMarkers(self, markers) -> 'IHttpRequest':
         """ generated source for method withMarkers """
@@ -359,6 +393,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return A new {@code MarkedHttpRequestResponse} instance.
     #
+
     @abstractmethod
     def withMarkers_0(self, *markers) -> 'IHttpRequest':
         """ generated source for method withMarkers_0 """
@@ -368,6 +403,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @return a new (@code HttpRequest) with added default headers
     #
+
     @abstractmethod
     def withDefaultHeaders(self) -> 'IHttpRequest':
         """ generated source for method withDefaultHeaders """
@@ -377,8 +413,9 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @².
     #
+
     @abstractmethod
-    def httpRequest(self, service=None, request=None) -> 'IHttpRequest':
+    def httpRequest(service, request) -> 'IHttpRequest':
         """ generated source for method httpRequest """
 
     #
@@ -389,6 +426,7 @@ class IHttpRequest(IHttpMessage):
     #      * @².
     #
     #
+
     @abstractmethod
     def httpRequestFromUrl(self, url) -> 'IHttpRequest':
         """ generated source for method httpRequestFromUrl """
@@ -402,6 +440,7 @@ class IHttpRequest(IHttpMessage):
     #      *
     #      * @².
     #
+
     @abstractmethod
     def http2Request(self, service, headers, body) -> 'IHttpRequest':
         """ generated source for method http2Request """
