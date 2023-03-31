@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-from abc import abstractmethod, ABCMeta
+from abc import abstractmethod, ABCMeta, ABC
 from functools import singledispatch
 
 
-class JavaObject(object):
-
-    __metaclass__ = ABCMeta
+class JavaObject(ABC):
 
     """ generated source for class Object """
     @abstractmethod
