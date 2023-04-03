@@ -1,4 +1,4 @@
-from pyscalpel.utils import IHttpRequest, IHttpResponse, update_header, to_bytes, new_request, new_response
+from pyscalpel.burp_utils import IHttpRequest, IHttpResponse, update_header, to_bytes, new_request, new_response
 
 # Test script that adds debug headers
     
