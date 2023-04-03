@@ -1,6 +1,6 @@
 from pyscalpel.java.burp.http_request import IHttpRequest
 from pyscalpel.java.burp.http_response import IHttpResponse
-from pyscalpel.utils import byte_array, to_bytes, get_bytes, new_request, new_response
+from pyscalpel.burp_utils import byte_array, to_bytes, get_bytes, new_request, new_response
 from base64 import b64decode, b64encode
 import binascii
 
