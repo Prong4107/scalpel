@@ -64,10 +64,9 @@ try:
     spec.loader.exec_module(user_module)
 
     from pyscalpel.burp_utils import IHttpRequest, logger, IHttpResponse
-    from pyscalpel.http import Request, Response
 
     # Declare convenient types for the callbacks
-    CallbackReturn = TypeVar("CallbackReturn", Request, Response, bytes) | None
+    CallbackReturn = TypeVar("CallbackReturn", IHttpRequest, IHttpResponse, bytes) | None
 
     CallbackType = Callable[..., CallbackReturn]
 
@@ -149,9 +148,7 @@ try:
         Returns:
             IHttpRequest | None: The modified request object or None for an unmodified request
         """
-        mitmproxy_req = cast(Request | None, callback(Request.from_burp(req)))
-
-        return mitmproxy_req.to_burp() if mitmproxy_req is not None else None
+        return cast(IHttpRequest | None, callback(req))
 
     @_try_if_present
     def _response(res: IHttpResponse, callback: CallbackType = ...) -> IHttpResponse | None:
@@ -164,9 +161,7 @@ try:
         Returns:
             IHttpResponse | None: The modified response object or None for an unmodified response
         """
-        mitmproxy_res = cast(Response | None, callback(Response.from_burp(res)))
-
-        return mitmproxy_res.to_burp() if mitmproxy_res is not None else None
+        return cast(IHttpResponse | None, callback(res))
 
     @_try_if_present
     def _req_edit_in(req: IHttpRequest, callback: CallbackType = ...) -> bytes | None:
@@ -179,7 +174,7 @@ try:
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
-        return cast(bytes | None, callback(Request.from_burp(req)))
+        return cast(bytes | None, callback(req))
 
     @_try_if_present
     def _req_edit_out(req: IHttpRequest, text: list[int], callback: CallbackType = ...) -> bytes | None:
@@ -195,7 +190,7 @@ try:
                 or None for an unmodified request
         """
 
-        return cast(bytes | None, callback(Request.from_burp(req), bytes(text)))
+        return cast(bytes | None, callback(req, bytes(text)))
 
     @_try_if_present
     def _res_edit_in(res: IHttpResponse, callback: CallbackType = ...) -> bytes | None:
@@ -208,7 +203,7 @@ try:
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
-        return cast(bytes | None, callback(Response.from_burp(res)))
+        return cast(bytes | None, callback(res))
 
     @_try_if_present
     def _res_edit_out(res: IHttpResponse, text: list[int], callback: CallbackType = ...) -> bytes | None:
@@ -223,7 +218,7 @@ try:
             bytes | None: The bytes to construct the new response from
                 or None for an unmodified response
         """
-        return cast(bytes | None, callback(Response.from_burp(res), bytes(text)))
+        return cast(bytes | None, callback(res, bytes(text)))
 
     logger.logToOutput("Python: Loaded _framework.py")
 

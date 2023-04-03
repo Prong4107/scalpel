@@ -1,47 +1,37 @@
-from pyscalpel.java.burp.http_request import IHttpRequest
-from pyscalpel.java.burp.http_response import IHttpResponse
-from pyscalpel.utils import byte_array, to_bytes, get_bytes, new_request, new_response
 from base64 import b64decode, b64encode
 import binascii
+from pyscalpel.http import Request, Response
+from typing import cast
 
 
-def req_edit_in(req: IHttpRequest) -> bytes:
-    try:
-        body_bytes = b64decode(get_bytes(req.body()), validate=True)
-    except binascii.Error:
-        return to_bytes(req)
+def req_edit_in(req: Request) -> bytes:
+    if req.content:
+        try:
+            req.content = b64decode(cast(bytes, req.get_content()), validate=True)
+        except binascii.Error:
+            pass
 
-    new_body = byte_array(body_bytes)
-    new_req = req.withBody(new_body)
-    new_bytes = to_bytes(new_req)
-    return new_bytes
+    return req.to_bytes()
 
 
-def req_edit_out(_: IHttpRequest, text: bytes) -> bytes:
-    req = new_request(text)
-    body_bytes = b64encode(get_bytes(req.body()))
-    new_body = byte_array(body_bytes)
-    new_req = req.withBody(new_body)
-    new_bytes = to_bytes(new_req)
-    return new_bytes
+def req_edit_out(_: Request, text: bytes) -> bytes:
+    req = Request.from_bytes(text)
+    if req.content:
+        req.content = b64encode(cast(bytes, req.get_content()))
+    return req.to_bytes()
 
 
-def res_edit_in(res: IHttpResponse) -> bytes:
-    try:
-        body_bytes = b64decode(get_bytes(res.body()), validate=True)
-    except binascii.Error:
-        return to_bytes(res)
-
-    new_body = byte_array(body_bytes)
-    new_res = res.withBody(new_body)
-    new_bytes = to_bytes(new_res)
-    return new_bytes
+def res_edit_in(res: Response) -> bytes:
+    if res.content:
+        try:
+            res.content = b64decode(cast(bytes, res.get_content()), validate=True)
+        except binascii.Error:
+            pass
+    return res.to_bytes()
 
 
-def res_edit_out(_: IHttpResponse, text: bytes) -> bytes:
-    res = new_response(text)
-    body_bytes = b64encode(get_bytes(res.body()))
-    new_body = byte_array(body_bytes)
-    new_res = res.withBody(new_body)
-    new_bytes = to_bytes(new_res)
-    return new_bytes
+def res_edit_out(_: Response, text: bytes) -> bytes:
+    res = Response.from_bytes(text)
+    if res.content:
+        res.content = b64encode(cast(bytes, res.get_content()))
+    return res.to_bytes()
