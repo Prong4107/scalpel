@@ -1,5 +1,6 @@
 package lexfo.scalpel;
 
+import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.handler.HttpRequestToBeSent;
 import burp.api.montoya.http.handler.HttpResponseReceived;
 import burp.api.montoya.http.message.HttpMessage;
@@ -47,6 +48,16 @@ public class PythonUtils {
 	 */
 	public static byte[] toJavaBytes(byte[] pythonBytes) {
 		return pythonBytes;
+	}
+
+	/**
+	 * Convert Python bytes to a Burp ByteArray
+	 *
+	 * @param pythonBytes the unsigned values to convert
+	 * @return the corresponding Burp ByteArray
+	 */
+	public static ByteArray toByteArray(byte[] pythonBytes) {
+		return ByteArray.byteArray(pythonBytes);
 	}
 
 	/**
