@@ -2,13 +2,15 @@ from abc import abstractmethod
 from .http_message import IHttpMessage
 from .byte_array import IByteArray
 from burp.api.montoya.http.message.responses import HttpResponse as _BurpHttpResponse
+from .http_header import IHttpHeader
 
 #  * Burp HTTP response able to retrieve and modify details about an HTTP response.
 #
 
 
 class IHttpResponse(IHttpMessage):
-    """ generated source for interface HttpResponse """
+    """generated source for interface HttpResponse"""
+
     #
     #      * Obtain the HTTP status code contained in the response.
     #      *
@@ -16,7 +18,7 @@ class IHttpResponse(IHttpMessage):
     #
     @abstractmethod
     def statusCode(self) -> int:
-        """ generated source for method statusCode """
+        """generated source for method statusCode"""
 
     #
     #      * Obtain the HTTP reason phrase contained in the response for HTTP 1 messages.
@@ -26,7 +28,7 @@ class IHttpResponse(IHttpMessage):
     #
     @abstractmethod
     def reasonPhrase(self) -> str:
-        """ generated source for method reasonPhrase """
+        """generated source for method reasonPhrase"""
 
     #
     #      * Return the HTTP Version text parsed from the response line for HTTP 1 messages.
@@ -36,42 +38,42 @@ class IHttpResponse(IHttpMessage):
     #
     @abstractmethod
     def httpVersion(self) -> str:
-        """ generated source for method httpVersion """
+        """generated source for method httpVersion"""
 
     #
     #      * {@inheritDoc}
     #
     @abstractmethod
-    def headers(self):
-        """ generated source for method headers """
+    def headers(self) -> list[IHttpHeader]:
+        """generated source for method headers"""
 
     #
     #      * {@inheritDoc}
     #
     @abstractmethod
     def body(self) -> IByteArray:
-        """ generated source for method body """
+        """generated source for method body"""
 
     #
     #      * {@inheritDoc}
     #
     @abstractmethod
     def bodyToString(self) -> str:
-        """ generated source for method bodyToString """
+        """generated source for method bodyToString"""
 
     #
     #      * {@inheritDoc}
     #
     @abstractmethod
     def bodyOffset(self) -> int:
-        """ generated source for method bodyOffset """
+        """generated source for method bodyOffset"""
 
     #
     #      * {@inheritDoc}
     #
     @abstractmethod
     def markers(self):
-        """ generated source for method markers """
+        """generated source for method markers"""
 
     #
     #      * Obtain details of the HTTP cookies set in the response.
@@ -80,7 +82,7 @@ class IHttpResponse(IHttpMessage):
     #
     @abstractmethod
     def cookies(self):
-        """ generated source for method cookies """
+        """generated source for method cookies"""
 
     #
     #      * Obtain the MIME type of the response, as stated in the HTTP headers.
@@ -89,7 +91,7 @@ class IHttpResponse(IHttpMessage):
     #
     @abstractmethod
     def statedMimeType(self):
-        """ generated source for method statedMimeType """
+        """generated source for method statedMimeType"""
 
     #
     #      * Obtain the MIME type of the response, as inferred from the contents of the HTTP message body.
@@ -98,7 +100,7 @@ class IHttpResponse(IHttpMessage):
     #
     @abstractmethod
     def inferredMimeType(self):
-        """ generated source for method inferredMimeType """
+        """generated source for method inferredMimeType"""
 
     #
     #      * Retrieve the number of types given keywords appear in the response.
@@ -109,7 +111,7 @@ class IHttpResponse(IHttpMessage):
     #
     @abstractmethod
     def keywordCounts(self, *keywords):
-        """ generated source for method keywordCounts """
+        """generated source for method keywordCounts"""
 
     #
     #      * Retrieve the values of response attributes.
@@ -120,21 +122,21 @@ class IHttpResponse(IHttpMessage):
     #
     @abstractmethod
     def attributes(self, *types):
-        """ generated source for method attributes """
+        """generated source for method attributes"""
 
     #
     #      * {@inheritDoc}
     #
     @abstractmethod
     def toByteArray(self) -> IByteArray:
-        """ generated source for method toByteArray """
+        """generated source for method toByteArray"""
 
     #
     #      * {@inheritDoc}
     #
     @abstractmethod
     def __str__(self) -> str:
-        """ generated source for method toString """
+        """generated source for method toString"""
 
     #
     #      * Create a copy of the {@code HttpResponse} in temporary file.<br>
@@ -145,8 +147,8 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code HttpResponse} instance stored in temporary file.
     #
     @abstractmethod
-    def copyToTempFile(self) -> 'IHttpResponse':
-        """ generated source for method copyToTempFile """
+    def copyToTempFile(self) -> "IHttpResponse":
+        """generated source for method copyToTempFile"""
 
     #
     #      * Create a copy of the {@code HttpResponse} with the provided status code.
@@ -156,8 +158,8 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code HttpResponse} instance.
     #
     @abstractmethod
-    def withStatusCode(self, statusCode) -> 'IHttpResponse':
-        """ generated source for method withStatusCode """
+    def withStatusCode(self, statusCode) -> "IHttpResponse":
+        """generated source for method withStatusCode"""
 
     #
     #      * Create a copy of the {@code HttpResponse} with the new reason phrase.
@@ -167,8 +169,8 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code HttpResponse} instance.
     #
     @abstractmethod
-    def withReasonPhrase(self, reasonPhrase) -> 'IHttpResponse':
-        """ generated source for method withReasonPhrase """
+    def withReasonPhrase(self, reasonPhrase) -> "IHttpResponse":
+        """generated source for method withReasonPhrase"""
 
     #
     #      * Create a copy of the {@code HttpResponse} with the new http version.
@@ -178,8 +180,8 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code HttpResponse} instance.
     #
     @abstractmethod
-    def withHttpVersion(self, httpVersion) -> 'IHttpResponse':
-        """ generated source for method withHttpVersion """
+    def withHttpVersion(self, httpVersion) -> "IHttpResponse":
+        """generated source for method withHttpVersion"""
 
     #
     #      * Create a copy of the {@code HttpResponse} with the updated body.<br>
@@ -190,8 +192,8 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code HttpResponse} instance.
     #
     @abstractmethod
-    def withBody(self, body) -> 'IHttpResponse':
-        """ generated source for method withBody """
+    def withBody(self, body) -> "IHttpResponse":
+        """generated source for method withBody"""
 
     #
     #      * Create a copy of the {@code HttpResponse} with the updated body.<br>
@@ -202,8 +204,8 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code HttpResponse} instance.
     #
     @abstractmethod
-    def withBody_0(self, body) -> 'IHttpResponse':
-        """ generated source for method withBody_0 """
+    def withBody_0(self, body) -> "IHttpResponse":
+        """generated source for method withBody_0"""
 
     #
     #      * Create a copy of the {@code HttpResponse} with the added header.
@@ -225,8 +227,8 @@ class IHttpResponse(IHttpMessage):
     # #      * @return The updated response containing the added header.
     # #
     @abstractmethod
-    def withAddedHeader(self, name, value) -> 'IHttpResponse':
-        """ generated source for method withAddedHeader_0 """
+    def withAddedHeader(self, name, value) -> "IHttpResponse":
+        """generated source for method withAddedHeader_0"""
 
     #
     #      * Create a copy of the {@code HttpResponse}  with the updated header.
@@ -248,8 +250,8 @@ class IHttpResponse(IHttpMessage):
     # #      * @return The updated response containing the updated header.
     # #
     @abstractmethod
-    def withUpdatedHeader(self, name, value) -> 'IHttpResponse':
-        """ generated source for method withUpdatedHeader_0 """
+    def withUpdatedHeader(self, name, value) -> "IHttpResponse":
+        """generated source for method withUpdatedHeader_0"""
 
     #
     #      * Create a copy of the {@code HttpResponse}  with the removed header.
@@ -270,8 +272,8 @@ class IHttpResponse(IHttpMessage):
     # #      * @return The updated response containing the removed header.
     # #
     @abstractmethod
-    def withRemovedHeader(self, name) -> 'IHttpResponse':
-        """ generated source for method withRemovedHeader_0 """
+    def withRemovedHeader(self, name) -> "IHttpResponse":
+        """generated source for method withRemovedHeader_0"""
 
     #
     #      * Create a copy of the {@code HttpResponse} with the added markers.
@@ -281,8 +283,8 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code MarkedHttpRequestResponse} instance.
     #
     @abstractmethod
-    def withMarkers(self, markers) -> 'IHttpResponse':
-        """ generated source for method withMarkers """
+    def withMarkers(self, markers) -> "IHttpResponse":
+        """generated source for method withMarkers"""
 
     #
     #      * Create a copy of the {@code HttpResponse} with the added markers.
@@ -292,8 +294,8 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code MarkedHttpRequestResponse} instance.
     #
     @abstractmethod
-    def withMarkers_0(self, *markers) -> 'IHttpResponse':
-        """ generated source for method withMarkers_0 """
+    def withMarkers_0(self, *markers) -> "IHttpResponse":
+        """generated source for method withMarkers_0"""
 
     #
     #      * Create a new empty instance of {@link HttpResponse}.<br>
@@ -301,8 +303,8 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@link HttpResponse} instance.
     #
     @abstractmethod
-    def httpResponse(self, response) -> 'IHttpResponse':
-        """ generated source for method httpResponse """
+    def httpResponse(self, response) -> "IHttpResponse":
+        """generated source for method httpResponse"""
 
 
 HttpResponse: IHttpResponse = _BurpHttpResponse

@@ -5,6 +5,7 @@ from abc import ABCMeta, abstractmethod
 from lexfo.scalpel import PythonUtils as _PythonUtils
 from ..burp.http_request import IHttpRequest
 from ..burp.http_response import IHttpResponse
+from ..burp.byte_array import IByteArray
 
 RequestOrResponse = TypeVar(
     "RequestOrResponse", bound=IHttpRequest | IHttpResponse)
@@ -19,6 +20,10 @@ class IPythonUtils(JavaObject):
 
     @abstractmethod
     def toJavaBytes(self, python_bytes: bytes | list[int] | bytearray) -> JavaBytes:
+        pass
+
+    @abstractmethod
+    def toByteArray(self, python_bytes: bytes | list[int] | bytearray) -> IByteArray:
         pass
 
     @abstractmethod

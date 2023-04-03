@@ -3,7 +3,6 @@
 #  * Burp HTTP header able to retrieve to hold details about an HTTP header.
 #
 
-from typing import Protocol
 from abc import abstractmethod, ABCMeta
 from burp.api.montoya.http.message import HttpHeader as _BurpHttpHeader
 from .java_object import JavaObject
@@ -11,31 +10,30 @@ from functools import singledispatch
 
 
 class IHttpHeader(JavaObject):
-    """ generated source for interface HttpHeader """
+    """generated source for interface HttpHeader"""
+
     __metaclass__ = ABCMeta
     #
     #      * @return The name of the header.
     #
 
     @abstractmethod
-    @staticmethod
-    def name() -> str:
-        """ generated source for method name """
+    def name(self) -> str:
+        """generated source for method name"""
 
     #
     #      * @return The value of the header.
     #
     @abstractmethod
-    @staticmethod
-    def value() -> str:
-        """ generated source for method value """
+    def value(self) -> str:
+        """generated source for method value"""
 
     #
     #      * @return The {@code String} representation of the header.
     #
     @abstractmethod
     def __str__(self):
-        """ generated source for method toString """
+        """generated source for method toString"""
 
     #
     #      * Create a new instance of {@code HttpHeader} from name and value.
@@ -47,8 +45,8 @@ class IHttpHeader(JavaObject):
     #
     @abstractmethod
     @singledispatch
-    def httpHeader(self, name: str, value: str) -> 'IHttpHeader':
-        """ generated source for method httpHeader """
+    def httpHeader(self, name: str, value: str) -> "IHttpHeader":
+        """generated source for method httpHeader"""
 
     #
     #      * Create a new instance of HttpHeader from a {@code String} header representation.
@@ -60,8 +58,8 @@ class IHttpHeader(JavaObject):
     #
     @abstractmethod
     @httpHeader.register(str)
-    def httpHeader_0(self, header: str) -> 'IHttpHeader':
-        """ generated source for method httpHeader_0 """):
+    def httpHeader_0(self, header: str) -> "IHttpHeader":
+        """generated source for method httpHeader_0"""
 
 
-HttpHeader: IHttpHeader=_BurpHttpHeader
+HttpHeader: IHttpHeader = _BurpHttpHeader
