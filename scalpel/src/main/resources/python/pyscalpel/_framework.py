@@ -64,6 +64,7 @@ try:
     spec.loader.exec_module(user_module)
 
     from pyscalpel.burp_utils import IHttpRequest, logger, IHttpResponse
+    from pyscalpel.java.burp.http_service import IHttpService
     from pyscalpel.http import Request, Response
 
     # Declare convenient types for the callbacks
@@ -93,6 +94,7 @@ try:
         """
         logger.logToOutput("Python: _try_wrap() called")
 
+        # Define the wrapper function
         @wraps(callback)
         def _wrapped_cb(*args, **kwargs):
             try:
@@ -102,6 +104,7 @@ try:
                 logger.logToError(f"Python: {fun_name(1)}() error:\n\t{ex}")
                 logger.logToError(traceback.format_exc())
 
+        # Replace the callback with the wrapped one
         return _wrapped_cb
 
     def _try_if_present(callback: Callable[..., CallbackReturn]) -> Callable[..., CallbackReturn]:
@@ -135,6 +138,7 @@ try:
             return new_cb
 
         logger.logToOutput(f"Python: {name}() is not present")
+
         # Ignore the callback.
         return lambda *_, **__: None
 
@@ -149,8 +153,10 @@ try:
         Returns:
             IHttpRequest | None: The modified request object or None for an unmodified request
         """
+        # Call the user callback
         mitmproxy_req = cast(Request | None, callback(Request.from_burp(req)))
 
+        # Convert the request to a Burp request
         return mitmproxy_req.to_burp() if mitmproxy_req is not None else None
 
     @_try_if_present
@@ -179,6 +185,7 @@ try:
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
+        # Call the user callback and return the bytes to display in the editor
         return cast(bytes | None, callback(Request.from_burp(req)))
 
     @_try_if_present
@@ -194,7 +201,8 @@ try:
             bytes | None: The bytes to construct the new request from
                 or None for an unmodified request
         """
-
+        # Call the user callback and return the bytes to construct the new request from
+        # TODO: Directly return a request object
         return cast(bytes | None, callback(Request.from_burp(req), bytes(text)))
 
     @_try_if_present
@@ -208,6 +216,7 @@ try:
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
+        # Call the user callback and return the bytes to display in the editor
         return cast(bytes | None, callback(Response.from_burp(res)))
 
     @_try_if_present
@@ -223,6 +232,8 @@ try:
             bytes | None: The bytes to construct the new response from
                 or None for an unmodified response
         """
+        # Call the user callback and return the bytes to construct the new response from
+        # TODO: Directly return a response object
         return cast(bytes | None, callback(Response.from_burp(res), bytes(text)))
 
     logger.logToOutput("Python: Loaded _framework.py")
