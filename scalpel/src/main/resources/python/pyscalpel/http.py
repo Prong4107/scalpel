@@ -45,7 +45,7 @@ class Headers(MITMProxyHeaders):
 
     def to_burp(self) -> list[IHttpHeader]:
         # Convert the list of tuples: (key, value) to a list of Burp IHttpHeader objects
-        return [HttpHeader.httpHeader(header[0], header[1]) for header in self.fields]
+        return [HttpHeader.httpHeader(_native(header[0]), _native(header[1])) for header in self.fields]
 
 
 class Request(MITMProxyRequest):
