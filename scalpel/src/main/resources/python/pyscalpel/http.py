@@ -18,6 +18,8 @@ from pyscalpel.java.burp.byte_array import IByteArray
 from pyscalpel.java.scalpel_types.utils import PythonUtils
 
 
+# str/bytes conversion helpers from mitmproxy/http.py:
+# https://github.com/mitmproxy/mitmproxy/blob/main/mitmproxy/http.py#:~:text=def-,_native,-(x%3A
 def _always_bytes(x: str | bytes) -> bytes:
     return strutils.always_bytes(x, "utf-8", "surrogateescape")
 
