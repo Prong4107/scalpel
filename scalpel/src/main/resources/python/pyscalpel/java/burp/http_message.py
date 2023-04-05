@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 from pyscalpel.java.burp.byte_array import IByteArray
-from pyscalpel.java.burp.java_object import JavaObject
+from pyscalpel.java.object import JavaObject
 
 #
 #  * Burp message retrieve common information shared by {@link HttpRequest} and {@link HttpResponse}.

@@ -6,7 +6,7 @@
 from abc import abstractmethod, ABCMeta
 from functools import singledispatch
 from burp.api.montoya.http.message import HttpHeader as _BurpHttpHeader  # pylint: disable=import-error # type: ignore
-from pyscalpel.java.burp.java_object import JavaObject
+from pyscalpel.java.object import JavaObject
 
 
 class IHttpHeader(JavaObject):

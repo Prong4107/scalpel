@@ -8,7 +8,7 @@ from pyscalpel.java.burp.http_request import IHttpRequest, HttpRequest
 from pyscalpel.java.burp.http_response import IHttpResponse, HttpResponse
 from pyscalpel.java.burp.byte_array import IByteArray, ByteArray
 from pyscalpel.java.burp.http_parameter import IHttpParameter, HttpParameter
-from pyscalpel.java.burp.java_bytes import JavaBytes
+from pyscalpel.java.bytes import JavaBytes
 from pyscalpel.java.scalpel_types.utils import PythonUtils
 
 logger = pyscalpel._globals.logger
