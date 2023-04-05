@@ -4,12 +4,12 @@
 #
 
 from abc import abstractmethod, ABCMeta
-from functools import singledispatch
+from typing import overload, Protocol
 from burp.api.montoya.http.message import HttpHeader as _BurpHttpHeader  # pylint: disable=import-error # type: ignore
 from pyscalpel.java.object import JavaObject
 
 
-class IHttpHeader(JavaObject):
+class IHttpHeader(JavaObject, Protocol, metaclass=ABCMeta):
     """generated source for interface HttpHeader"""
 
     __metaclass__ = ABCMeta
@@ -44,7 +44,7 @@ class IHttpHeader(JavaObject):
     #      * @return A new {@code HttpHeader} instance.
     #
     @abstractmethod
-    @singledispatch
+    @overload
     def httpHeader(self, name: str, value: str) -> "IHttpHeader":
         """generated source for method httpHeader"""
 
@@ -57,8 +57,8 @@ class IHttpHeader(JavaObject):
     #      * @return A new {@code HttpHeader} instance.
     #
     @abstractmethod
-    @httpHeader.register(str)
-    def httpHeader_0(self, header: str) -> "IHttpHeader":
+    @overload
+    def httpHeader(self, header: str) -> "IHttpHeader":
         """generated source for method httpHeader_0"""
 
 

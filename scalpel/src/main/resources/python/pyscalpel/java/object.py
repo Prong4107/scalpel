@@ -1,10 +1,10 @@
 # pylint: disable=invalid-name
 
-from abc import abstractmethod, ABC
-from functools import singledispatch
+from abc import abstractmethod, ABCMeta
+from typing import overload, Protocol
 
 
-class JavaObject(ABC):
+class JavaObject(Protocol, metaclass=ABCMeta):
 
     """generated source for class Object"""
 
@@ -41,19 +41,19 @@ class JavaObject(ABC):
     def notifyAll(self) -> None:
         """generated source for method notifyAll"""
 
-    @singledispatch
     @abstractmethod
+    @overload
     def wait(self) -> None:
         """generated source for method wait"""
 
     @abstractmethod
-    @wait.register(int)
-    def wait_0(self, arg0) -> None:
+    @overload
+    def wait(self, arg0: int) -> None:
         """generated source for method wait_0"""
 
     @abstractmethod
-    @wait.register(int)
-    def wait_1(self, timeoutMillis: int, nanos: int) -> None:
+    @overload
+    def wait(self, timeoutMillis: int, nanos: int) -> None:
         """generated source for method wait_1"""
 
     @abstractmethod
