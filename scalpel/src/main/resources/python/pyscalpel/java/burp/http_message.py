@@ -1,6 +1,7 @@
 # pylint: disable=invalid-name
 
 from abc import abstractmethod
+from typing import Protocol
 from pyscalpel.java.burp.byte_array import IByteArray
 from pyscalpel.java.object import JavaObject
 
@@ -9,7 +10,7 @@ from pyscalpel.java.object import JavaObject
 #
 
 
-class IHttpMessage(JavaObject):
+class IHttpMessage(JavaObject, Protocol):
     """generated source for interface HttpMessage"""
 
     #

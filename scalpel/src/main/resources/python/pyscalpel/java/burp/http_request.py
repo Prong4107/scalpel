@@ -1,8 +1,7 @@
 # pylint: disable=invalid-name
 
 from abc import abstractmethod
-from functools import singledispatch
-from typing import Iterable
+from typing import Iterable, Protocol, overload
 
 from burp.api.montoya.http.message.requests import (  # pylint: disable=import-error # type: ignore
     HttpRequest as _BurpHttpRequest,
@@ -17,7 +16,7 @@ from pyscalpel.java.burp.http_service import IHttpService
 #
 
 
-class IHttpRequest(IHttpMessage):
+class IHttpRequest(IHttpMessage, Protocol):
     """generated source for interface HttpRequest"""
 
     #      * HTTP service for the request.
@@ -424,13 +423,13 @@ class IHttpRequest(IHttpMessage):
     #
 
     @abstractmethod
-    @singledispatch
+    @overload
     def httpRequest(self, request: IByteArray) -> "IHttpRequest":
         """generated source for method httpRequest"""
 
     @abstractmethod
-    @httpRequest.register(object)
-    def httpRequest_O(self, service: IHttpService, req: IByteArray | str) -> "IHttpRequest":
+    @overload
+    def httpRequest(self, service: IHttpService, req: IByteArray | str) -> "IHttpRequest":
         """generated source for method httpRequest"""
 
     #
