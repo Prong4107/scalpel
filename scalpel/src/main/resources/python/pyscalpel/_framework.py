@@ -9,7 +9,7 @@ from functools import wraps
 class DebugLogger:
     """Debug logger to use if for some reason the logger is not initialized"""
 
-    def logToOutput(self, msg: str):
+    def logToOutput(self, msg: str):  # pylint: disable=invalid-name
         """Prints the message to the standard output
 
         Args:
@@ -17,7 +17,7 @@ class DebugLogger:
         """
         print(msg)
 
-    def logToError(self, msg: str):
+    def logToError(self, msg: str):  # pylint: disable=invalid-name
         """Prints the message to the standard error
 
         Args:
@@ -26,23 +26,24 @@ class DebugLogger:
         print(msg, file=sys.stderr)
 
 
+logger = DebugLogger()
+
 # Try to use the logger a first time to ensure it is initialized
 try:
-    __logger__.logToOutput("Python: Loading _framework.py ...")
+    logger = __logger__  # type: ignore
+    logger.logToOutput("Python: Loading _framework.py ...")
 except NameError:
-    # Initialize the logger
-    __logger__ = DebugLogger()
-    __logger__.logToOutput("Python: Initializing logger ...\nWARNING: Logger not initialized, using DebugLogger")
+    logger.logToOutput("Python: Initializing logger ...\nWARNING: Logger not initialized, using DebugLogger")
 
 try:
     # Import the globals module to set the logger
     import pyscalpel._globals
 
     # Set the logger in the globals module
-    pyscalpel._globals.logger = __logger__
+    pyscalpel._globals.logger = logger  # pylint: disable=protected-access
 
     # Get the user script path from the JEP initialized variable
-    user_script = __user_script__
+    user_script: str = __user_script__  # type: ignore # pylint: disable=undefined-variable
 
     # Get utils to dynamically import the user script in a convinient way
     import importlib.util
@@ -63,7 +64,7 @@ try:
     # load the user_module into memory
     spec.loader.exec_module(user_module)
 
-    from pyscalpel.burp_utils import IHttpRequest, logger, IHttpResponse
+    from pyscalpel.burp_utils import IHttpRequest, IHttpResponse
     from pyscalpel.http import Request, Response
 
     # Declare convenient types for the callbacks
@@ -99,7 +100,7 @@ try:
             try:
                 logger.logToOutput("Python: _wrapped_cb() called")
                 return callback(*args, **kwargs)
-            except Exception as ex:
+            except Exception as ex: # pylint: disable=broad-except
                 logger.logToError(f"Python: {fun_name(1)}() error:\n\t{ex}")
                 logger.logToError(traceback.format_exc())
 
@@ -237,9 +238,9 @@ try:
 
     logger.logToOutput("Python: Loaded _framework.py")
 
-except Exception as global_ex:
+except Exception as global_ex: # pylint: disable=broad-except
     # Global generic exception handler to ensure the error is logged and visible to the user.
-    __logger__.logToOutput("Python: Failed loading _framework.py")
-    __logger__.logToError("Couldn't load script:")
-    __logger__.logToError(global_ex)
-    __logger__.logToError(traceback.format_exc())
+    logger.logToOutput("Python: Failed loading _framework.py")
+    logger.logToError("Couldn't load script:")
+    logger.logToError(str(global_ex))
+    logger.logToError(traceback.format_exc())
