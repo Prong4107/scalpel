@@ -2,8 +2,8 @@
 
 from abc import abstractmethod, ABCMeta
 from burp.api.montoya.core import ByteArray as _BurpByteArray  # pylint: disable=import-error # type: ignore
-from pyscalpel.java.burp.java_object import JavaObject
-from pyscalpel.java.burp.java_bytes import JavaBytes
+from pyscalpel.java.object import JavaObject
+from pyscalpel.java.bytes import JavaBytes
 
 
 class IByteArray(JavaObject):

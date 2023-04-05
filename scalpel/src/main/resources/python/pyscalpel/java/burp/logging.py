@@ -1,7 +1,7 @@
 # pylint: disable=invalid-name
 
 from abc import abstractmethod
-from pyscalpel.java.burp.java_object import JavaObject
+from pyscalpel.java.object import JavaObject
 
 #
 #   * Provides access to the functionality related to logging and events.

@@ -8,7 +8,7 @@ from abc import ABCMeta, abstractmethod
 from burp.api.montoya.http.message.params import (  # pylint: disable=import-error # type: ignore
     HttpParameter as _BurpHttpParameter,
 )
-from pyscalpel.java.burp.java_object import JavaObject
+from pyscalpel.java.object import JavaObject
 
 
 class IHttpParameter(JavaObject):

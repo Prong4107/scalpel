@@ -3,8 +3,8 @@
 from typing import cast, TypeVar
 from abc import ABCMeta, abstractmethod
 from lexfo.scalpel import PythonUtils as _PythonUtils  # pylint: disable=import-error # type: ignore
-from pyscalpel.java.burp.java_object import JavaObject
-from pyscalpel.java.burp.java_bytes import JavaBytes
+from pyscalpel.java.object import JavaObject
+from pyscalpel.java.bytes import JavaBytes
 from pyscalpel.java.burp.http_request import IHttpRequest
 from pyscalpel.java.burp.http_response import IHttpResponse
 from pyscalpel.java.burp.byte_array import IByteArray
