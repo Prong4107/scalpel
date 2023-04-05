@@ -1,5 +1,5 @@
 from abc import ABCMeta
 
 
-class JavaBytes(bytes):
+class JavaBytes(list[int]):
     __metaclass__ = ABCMeta

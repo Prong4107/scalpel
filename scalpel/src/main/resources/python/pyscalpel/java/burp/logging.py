@@ -19,7 +19,7 @@ class Logging(JavaObject):
     #       * @return The extension's standard output stream.
     #
     @abstractmethod
-    def output(self):
+    def output(self) -> JavaObject:
         """generated source for method output"""
 
     #
@@ -31,7 +31,7 @@ class Logging(JavaObject):
     #       * @return The extension's standard error stream.
     #
     @abstractmethod
-    def error(self):
+    def error(self) -> JavaObject:
         """generated source for method error"""
 
     #
@@ -41,7 +41,7 @@ class Logging(JavaObject):
     #       * @param message The message to print.
     #
     @abstractmethod
-    def logToOutput(self, message):
+    def logToOutput(self, message: str) -> None:
         """generated source for method logToOutput"""
 
     #
@@ -51,7 +51,7 @@ class Logging(JavaObject):
     #       * @param message The message to print.
     #
     @abstractmethod
-    def logToError(self, message):
+    def logToError(self, message: str) -> None:
         """generated source for method logToError"""
 
     #
@@ -61,7 +61,7 @@ class Logging(JavaObject):
     #       * @param message The debug message to display.
     #
     @abstractmethod
-    def raiseDebugEvent(self, message):
+    def raiseDebugEvent(self, message: str) -> None:
         """generated source for method raiseDebugEvent"""
 
     #
@@ -71,7 +71,7 @@ class Logging(JavaObject):
     #       * @param message The informational message to display.
     #
     @abstractmethod
-    def raiseInfoEvent(self, message):
+    def raiseInfoEvent(self, message: str) -> None:
         """generated source for method raiseInfoEvent"""
 
     #
@@ -81,7 +81,7 @@ class Logging(JavaObject):
     #       * @param message The error message to display.
     #
     @abstractmethod
-    def raiseErrorEvent(self, message):
+    def raiseErrorEvent(self, message: str) -> None:
         """generated source for method raiseErrorEvent"""
 
     #
@@ -91,5 +91,5 @@ class Logging(JavaObject):
     #       * @param message The critical message to display.
     #
     @abstractmethod
-    def raiseCriticalEvent(self, message):
+    def raiseCriticalEvent(self, message: str) -> None:
         """generated source for method raiseCriticalEvent"""

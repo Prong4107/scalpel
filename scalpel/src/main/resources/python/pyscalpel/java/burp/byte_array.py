@@ -1,12 +1,13 @@
 # pylint: disable=invalid-name
 
 from abc import abstractmethod, ABCMeta
+from typing import overload, Protocol
 from burp.api.montoya.core import ByteArray as _BurpByteArray  # pylint: disable=import-error # type: ignore
 from pyscalpel.java.object import JavaObject
 from pyscalpel.java.bytes import JavaBytes
 
 
-class IByteArray(JavaObject):
+class IByteArray(JavaObject, Protocol):
 
     __metaclass__ = ABCMeta
 
@@ -19,7 +20,7 @@ class IByteArray(JavaObject):
     #      * @return The byte at the index.
     #
     @abstractmethod
-    def getByte(self, index):
+    def getByte(self, index: int) -> int:
         """generated source for method getByte"""
 
     #
@@ -29,7 +30,8 @@ class IByteArray(JavaObject):
     #      * @param value The byte to be set.
     #
     @abstractmethod
-    def setByte(self, index, value):
+    @overload
+    def setByte(self, index: int, value: int) -> None:
         """generated source for method setByte"""
 
     #
@@ -39,7 +41,8 @@ class IByteArray(JavaObject):
     #      * @param value The integer value to be set after a narrowing primitive conversion to a byte.
     #
     @abstractmethod
-    def setByte_0(self, index, value):
+    @overload
+    def setByte(self, index: int, value: int) -> None:
         """generated source for method setByte_0"""
 
     #
@@ -49,7 +52,8 @@ class IByteArray(JavaObject):
     #      * @param data  The byte[] or sequence of bytes to be set.
     #
     @abstractmethod
-    def setBytes(self, index, *data):
+    @overload
+    def setBytes(self, index: int, *data: int) -> None:
         """generated source for method setBytes"""
 
     #
@@ -58,18 +62,10 @@ class IByteArray(JavaObject):
     #      * @param index The index of the first byte to set.
     #      * @param data  The int[] or the sequence of integers to be set after a narrowing primitive conversion to bytes.
     #
-    @abstractmethod
-    def setBytes_0(self, index, *data):
-        """generated source for method setBytes_0"""
 
-    #
-    #      * Sets bytes starting at the specified index to the provided bytes.
-    #      *
-    #      * @param index     The index of the first byte to set.
-    #      * @param byteArray The {@code ByteArray} object holding the provided bytes.
-    #
     @abstractmethod
-    def setBytes_1(self, index, byteArray):
+    @overload
+    def setBytes(self, index: int, byteArray: "IByteArray") -> None:
         """generated source for method setBytes_1"""
 
     #
@@ -99,7 +95,8 @@ class IByteArray(JavaObject):
     #      * @return ByteArray containing all bytes in the specified range.
     #
     @abstractmethod
-    def subArray(self, startIndexInclusive, endIndexExclusive) -> "IByteArray":
+    @overload
+    def subArray(self, startIndexInclusive: int, endIndexExclusive: int) -> "IByteArray":
         """generated source for method subArray"""
 
     #
@@ -110,7 +107,8 @@ class IByteArray(JavaObject):
     #      * @return ByteArray containing all bytes in the specified range.
     #
     @abstractmethod
-    def subArray_0(self, _range) -> "IByteArray":
+    @overload
+    def subArray(self, _range) -> "IByteArray":
         """generated source for method subArray_0"""
 
     #
@@ -119,7 +117,7 @@ class IByteArray(JavaObject):
     #      * @return New {@code ByteArray} with a copy of the wrapped bytes.
     #
     @abstractmethod
-    def copy(self):
+    def copy(self) -> "IByteArray":
         """generated source for method copy"""
 
     #
@@ -131,7 +129,7 @@ class IByteArray(JavaObject):
     #      * @return A new {@code ByteArray} instance stored in temporary file.
     #
     @abstractmethod
-    def copyToTempFile(self):
+    def copyToTempFile(self) -> "IByteArray":
         """generated source for method copyToTempFile"""
 
     #
@@ -143,7 +141,8 @@ class IByteArray(JavaObject):
     #      * @return The offset of the first occurrence of the pattern within the specified bounds, or -1 if no match is found.
     #
     @abstractmethod
-    def indexOf(self, searchTerm):
+    @overload
+    def indexOf(self, searchTerm: "IByteArray") -> int:
         """generated source for method indexOf"""
 
     #
@@ -155,7 +154,8 @@ class IByteArray(JavaObject):
     #      * @return The offset of the first occurrence of the pattern within the specified bounds, or -1 if no match is found.
     #
     @abstractmethod
-    def indexOf_0(self, searchTerm):
+    @overload
+    def indexOf(self, searchTerm: str) -> int:
         """generated source for method indexOf_0"""
 
     #
@@ -168,7 +168,8 @@ class IByteArray(JavaObject):
     #      * @return The offset of the first occurrence of the pattern within the specified bounds, or -1 if no match is found.
     #
     @abstractmethod
-    def indexOf_1(self, searchTerm, caseSensitive):
+    @overload
+    def indexOf(self, searchTerm: "IByteArray", caseSensitive: bool) -> int:
         """generated source for method indexOf_1"""
 
     #
@@ -181,7 +182,8 @@ class IByteArray(JavaObject):
     #      * @return The offset of the first occurrence of the pattern within the specified bounds, or -1 if no match is found.
     #
     @abstractmethod
-    def indexOf_2(self, searchTerm, caseSensitive):
+    @overload
+    def indexOf(self, searchTerm: str, caseSensitive: bool) -> int:
         """generated source for method indexOf_2"""
 
     #
@@ -196,7 +198,10 @@ class IByteArray(JavaObject):
     #      * @return The offset of the first occurrence of the pattern within the specified bounds, or -1 if no match is found.
     #
     @abstractmethod
-    def indexOf_3(self, searchTerm, caseSensitive, startIndexInclusive, endIndexExclusive):
+    @overload
+    def indexOf(
+        self, searchTerm: "IByteArray", caseSensitive: bool, startIndexInclusive: int, endIndexExclusive: int
+    ) -> int:
         """generated source for method indexOf_3"""
 
     #
@@ -211,7 +216,8 @@ class IByteArray(JavaObject):
     #      * @return The offset of the first occurrence of the pattern within the specified bounds, or -1 if no match is found.
     #
     @abstractmethod
-    def indexOf_4(self, searchTerm, caseSensitive, startIndexInclusive, endIndexExclusive):
+    @overload
+    def indexOf(self, searchTerm: str, caseSensitive: bool, startIndexInclusive: int, endIndexExclusive: int) -> int:
         """generated source for method indexOf_4"""
 
     #
@@ -222,7 +228,8 @@ class IByteArray(JavaObject):
     #      * @return The count of all matches of the pattern
     #
     @abstractmethod
-    def countMatches(self, searchTerm):
+    @overload
+    def countMatches(self, searchTerm: "IByteArray") -> int:
         """generated source for method countMatches"""
 
     #
@@ -233,7 +240,8 @@ class IByteArray(JavaObject):
     #      * @return The count of all matches of the pattern
     #
     @abstractmethod
-    def countMatches_0(self, searchTerm):
+    @overload
+    def countMatches(self, searchTerm: str) -> int:
         """generated source for method countMatches_0"""
 
     #
@@ -245,7 +253,8 @@ class IByteArray(JavaObject):
     #      * @return The count of all matches of the pattern
     #
     @abstractmethod
-    def countMatches_1(self, searchTerm, caseSensitive):
+    @overload
+    def countMatches(self, searchTerm: "IByteArray", caseSensitive: bool) -> int:
         """generated source for method countMatches_1"""
 
     #
@@ -257,7 +266,8 @@ class IByteArray(JavaObject):
     #      * @return The count of all matches of the pattern
     #
     @abstractmethod
-    def countMatches_2(self, searchTerm, caseSensitive):
+    @overload
+    def countMatches(self, searchTerm: str, caseSensitive: bool) -> int:
         """generated source for method countMatches_2"""
 
     #
@@ -271,7 +281,10 @@ class IByteArray(JavaObject):
     #      * @return The count of all matches of the pattern within the specified bounds
     #
     @abstractmethod
-    def countMatches_3(self, searchTerm, caseSensitive, startIndexInclusive, endIndexExclusive):
+    @overload
+    def countMatches(
+        self, searchTerm: "IByteArray", caseSensitive: bool, startIndexInclusive: int, endIndexExclusive: int
+    ) -> int:
         """generated source for method countMatches_3"""
 
     #
@@ -285,7 +298,10 @@ class IByteArray(JavaObject):
     #      * @return The count of all matches of the pattern within the specified bounds
     #
     @abstractmethod
-    def countMatches_4(self, searchTerm, caseSensitive, startIndexInclusive, endIndexExclusive):
+    @overload
+    def countMatches(
+        self, searchTerm: str, caseSensitive: bool, startIndexInclusive: int, endIndexExclusive: int
+    ) -> int:
         """generated source for method countMatches_4"""
 
     #
@@ -294,7 +310,7 @@ class IByteArray(JavaObject):
     #      * @return The converted data in String form.
     #
     @abstractmethod
-    def __str__(self):
+    def __str__(self) -> str:
         """generated source for method toString"""
 
     #
@@ -303,7 +319,7 @@ class IByteArray(JavaObject):
     #      * @param data The byte[] or sequence of bytes to append.
     #
     @abstractmethod
-    def withAppended(self, *data) -> "IByteArray":
+    def withAppended(self, *data: int) -> "IByteArray":
         """generated source for method withAppended"""
 
     #
@@ -314,7 +330,7 @@ class IByteArray(JavaObject):
 
     #
     @abstractmethod
-    def byteArrayOfLength(self, length) -> "IByteArray":
+    def byteArrayOfLength(self, length: int) -> "IByteArray":
         """generated source for method byteArrayOfLength"""
 
     #
