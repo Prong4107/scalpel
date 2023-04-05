@@ -1,6 +1,7 @@
-from typing import Protocol
+# pylint: disable=invalid-name
+
 from abc import abstractmethod
-from .java_object import JavaObject
+from pyscalpel.java.burp.java_object import JavaObject
 
 #
 #   * Provides access to the functionality related to logging and events.
@@ -8,7 +9,8 @@ from .java_object import JavaObject
 
 
 class Logging(JavaObject):
-    """ generated source for interface Logging """
+    """generated source for interface Logging"""
+
     #
     #       * Obtain the current extension's standard output
     #       * stream. Extensions should write all output to this stream, allowing the
@@ -18,7 +20,7 @@ class Logging(JavaObject):
     #
     @abstractmethod
     def output(self):
-        """ generated source for method output """
+        """generated source for method output"""
 
     #
     #       * Obtain the current extension's standard error
@@ -30,7 +32,7 @@ class Logging(JavaObject):
     #
     @abstractmethod
     def error(self):
-        """ generated source for method error """
+        """generated source for method error"""
 
     #
     #       * This method prints a line of output to the current extension's standard
@@ -40,7 +42,7 @@ class Logging(JavaObject):
     #
     @abstractmethod
     def logToOutput(self, message):
-        """ generated source for method logToOutput """
+        """generated source for method logToOutput"""
 
     #
     #       * This method prints a line of output to the current extension's standard
@@ -50,7 +52,7 @@ class Logging(JavaObject):
     #
     @abstractmethod
     def logToError(self, message):
-        """ generated source for method logToError """
+        """generated source for method logToError"""
 
     #
     #       * This method can be used to display a debug event in the Burp Suite
@@ -60,7 +62,7 @@ class Logging(JavaObject):
     #
     @abstractmethod
     def raiseDebugEvent(self, message):
-        """ generated source for method raiseDebugEvent """
+        """generated source for method raiseDebugEvent"""
 
     #
     #       * This method can be used to display an informational event in the Burp
@@ -70,7 +72,7 @@ class Logging(JavaObject):
     #
     @abstractmethod
     def raiseInfoEvent(self, message):
-        """ generated source for method raiseInfoEvent """
+        """generated source for method raiseInfoEvent"""
 
     #
     #       * This method can be used to display an error event in the Burp Suite
@@ -80,7 +82,7 @@ class Logging(JavaObject):
     #
     @abstractmethod
     def raiseErrorEvent(self, message):
-        """ generated source for method raiseErrorEvent """
+        """generated source for method raiseErrorEvent"""
 
     #
     #       * This method can be used to display a critical event in the Burp Suite
@@ -90,4 +92,4 @@ class Logging(JavaObject):
     #
     @abstractmethod
     def raiseCriticalEvent(self, message):
-        """ generated source for method raiseCriticalEvent """
+        """generated source for method raiseCriticalEvent"""

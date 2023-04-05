@@ -1,12 +1,12 @@
-#!/usr/bin/env python
+# pylint: disable=invalid-name
 #
 #  * Burp HTTP header able to retrieve to hold details about an HTTP header.
 #
 
 from abc import abstractmethod, ABCMeta
-from burp.api.montoya.http.message import HttpHeader as _BurpHttpHeader
-from .java_object import JavaObject
 from functools import singledispatch
+from burp.api.montoya.http.message import HttpHeader as _BurpHttpHeader  # pylint: disable=import-error # type: ignore
+from pyscalpel.java.burp.java_object import JavaObject
 
 
 class IHttpHeader(JavaObject):

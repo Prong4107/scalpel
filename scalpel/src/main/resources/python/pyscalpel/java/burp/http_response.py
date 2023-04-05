@@ -1,8 +1,12 @@
+# pylint: disable=invalid-name
+
 from abc import abstractmethod
-from .http_message import IHttpMessage
-from .byte_array import IByteArray
-from burp.api.montoya.http.message.responses import HttpResponse as _BurpHttpResponse
-from .http_header import IHttpHeader
+from burp.api.montoya.http.message.responses import (  # pylint: disable=import-error # type: ignore
+    HttpResponse as _BurpHttpResponse,
+)
+from pyscalpel.java.burp.http_message import IHttpMessage
+from pyscalpel.java.burp.byte_array import IByteArray
+from pyscalpel.java.burp.http_header import IHttpHeader
 
 #  * Burp HTTP response able to retrieve and modify details about an HTTP response.
 #

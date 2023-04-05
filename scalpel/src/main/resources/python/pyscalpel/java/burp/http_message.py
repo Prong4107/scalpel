@@ -1,7 +1,8 @@
-from typing import Protocol
+# pylint: disable=invalid-name
+
 from abc import abstractmethod
-from .byte_array import IByteArray
-from .java_object import JavaObject
+from pyscalpel.java.burp.byte_array import IByteArray
+from pyscalpel.java.burp.java_object import JavaObject
 
 #
 #  * Burp message retrieve common information shared by {@link HttpRequest} and {@link HttpResponse}.
@@ -9,7 +10,8 @@ from .java_object import JavaObject
 
 
 class IHttpMessage(JavaObject):
-    """ generated source for interface HttpMessage """
+    """generated source for interface HttpMessage"""
+
     #
     #      * HTTP headers contained in the message.
     #      *
@@ -17,7 +19,7 @@ class IHttpMessage(JavaObject):
     #
     @abstractmethod
     def headers(self):
-        """ generated source for method headers """
+        """generated source for method headers"""
 
     #
     #      * Offset within the message where the message body begins.
@@ -26,7 +28,7 @@ class IHttpMessage(JavaObject):
     #
     @abstractmethod
     def bodyOffset(self) -> int:
-        """ generated source for method bodyOffset """
+        """generated source for method bodyOffset"""
 
     #
     #      * Body of a message as a byte array.
@@ -35,7 +37,7 @@ class IHttpMessage(JavaObject):
     #
     @abstractmethod
     def body(self) -> IByteArray:
-        """ generated source for method body """
+        """generated source for method body"""
 
     #
     #      * Body of a message as a {@code String}.
@@ -44,7 +46,7 @@ class IHttpMessage(JavaObject):
     #
     @abstractmethod
     def bodyToString(self) -> str:
-        """ generated source for method bodyToString """
+        """generated source for method bodyToString"""
 
     #
     #      * Markers for the message.
@@ -53,7 +55,7 @@ class IHttpMessage(JavaObject):
     #
     @abstractmethod
     def markers(self):
-        """ generated source for method markers """
+        """generated source for method markers"""
 
     #
     #      * Message as a byte array.
@@ -62,7 +64,7 @@ class IHttpMessage(JavaObject):
     #
     @abstractmethod
     def toByteArray(self) -> IByteArray:
-        """ generated source for method toByteArray """
+        """generated source for method toByteArray"""
 
     #
     #      * Message as a {@code String}.
@@ -71,4 +73,4 @@ class IHttpMessage(JavaObject):
     #
     @abstractmethod
     def __str__(self):
-        """ generated source for method toString """
+        """generated source for method toString"""

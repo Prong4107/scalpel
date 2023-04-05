@@ -1,22 +1,21 @@
-from typing import Iterable
 import time
-from collections.abc import Iterable
+
+from typing import Iterable, NoReturn, Literal
+
 from mitmproxy.utils import strutils
-from pyscalpel.java.burp.http_header import IHttpHeader, HttpHeader
-from pyscalpel.java.burp.http_request import IHttpRequest, HttpRequest
-from pyscalpel.java.burp.http_response import IHttpResponse, HttpResponse
 from mitmproxy.http import (
     Headers as MITMProxyHeaders,
     Request as MITMProxyRequest,
     Response as MITMProxyResponse,
 )
-from functools import singledispatchmethod
-from .java.burp.http_service import IHttpService, HttpService
-from .burp_utils import get_bytes
-from .java.burp.byte_array import IByteArray
-from .java.scalpel_types.utils import PythonUtils
-from typing import NoReturn, Literal
-import time
+
+from pyscalpel.java.burp.http_header import IHttpHeader, HttpHeader
+from pyscalpel.java.burp.http_request import IHttpRequest, HttpRequest
+from pyscalpel.java.burp.http_response import IHttpResponse, HttpResponse
+from pyscalpel.java.burp.http_service import IHttpService, HttpService
+from pyscalpel.burp_utils import get_bytes
+from pyscalpel.java.burp.byte_array import IByteArray
+from pyscalpel.java.scalpel_types.utils import PythonUtils
 
 
 def _always_bytes(x: str | bytes) -> bytes:
@@ -231,14 +230,12 @@ class Response(MITMProxyResponse):
             timestamp_end=time.time(),
         )
 
-    @singledispatchmethod
     @classmethod
     def from_any(cls, none: NoReturn) -> "Response":
         # This should never be called because the call should be dispatched to the correct implementation.
         raise TypeError(f"Unsupported type {type(none)}")
 
     @classmethod
-    @from_any.register(MITMProxyResponse)
     def from_mitmproxy(cls, response: MITMProxyResponse) -> "Response":
         return cls(
             _always_bytes(response.http_version),
@@ -250,7 +247,6 @@ class Response(MITMProxyResponse):
         )
 
     @classmethod
-    @from_any.register(IHttpResponse)
     def from_burp(cls, response: IHttpResponse) -> "Response":
         body = get_bytes(response.body())
         return cls(
@@ -287,7 +283,6 @@ class Response(MITMProxyResponse):
         return HttpResponse.httpResponse(response_byte_array)
 
     @classmethod
-    @from_any.register(bytes)
     def from_bytes(cls, data: bytes) -> "Response":
         # Use the Burp API to trivialize the parsing of the response from raw bytes.
         # Convert the raw bytes to a Burp ByteArray.

@@ -1,12 +1,10 @@
-from burp.api.montoya.http import HttpService as _BurpHttpService
-from abc import abstractmethod, ABCMeta
-from .http_message import IHttpMessage
-from .byte_array import IByteArray
-from .http_parameter import IHttpParameter
-from .http_header import IHttpHeader
-from .java_object import JavaObject
-from functools import singledispatchmethod
-from typing import overload, NoReturn
+# pylint: disable=invalid-name
+
+from abc import ABCMeta, abstractmethod
+from typing import overload
+
+from burp.api.montoya.http import HttpService as _BurpHttpService  # pylint: disable=import-error # type: ignore
+from pyscalpel.java.burp.java_object import JavaObject
 
 
 class IHttpService(JavaObject, metaclass=ABCMeta):
@@ -18,24 +16,20 @@ class IHttpService(JavaObject, metaclass=ABCMeta):
     @overload
     def httpService(self, baseUrl: str) -> "IHttpService":
         """Create a new instance of {@code HttpService} from a base URL."""
-        ...
 
     @abstractmethod
     @overload
     def httpService(self, baseUrl: str, secure: bool) -> "IHttpService":
         """Create a new instance of {@code HttpService} from a base URL and a protocol."""
-        ...
 
     @abstractmethod
     @overload
     def httpService(self, host: str, port: int, secure: bool) -> "IHttpService":
         """Create a new instance of {@code HttpService} from a host, a port and a protocol."""
-        ...
 
     @abstractmethod
     def httpService(self, *args, **kwargs) -> "IHttpService":
         """Create a new instance of {@code HttpService} from a host, a port and a protocol."""
-        ...
 
     @abstractmethod
     def port(self) -> int:

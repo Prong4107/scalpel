@@ -1,14 +1,17 @@
+# pylint: disable=invalid-name
+
 from abc import abstractmethod
-from .http_message import IHttpMessage
-from .byte_array import IByteArray
-from burp.api.montoya.http.message.requests import HttpRequest as _BurpHttpRequest
-from .http_parameter import IHttpParameter
-from .http_header import IHttpHeader
-from .http_service import IHttpService
-from .byte_array import IByteArray
-from abc import ABCMeta
-from typing import Iterable
 from functools import singledispatch
+from typing import Iterable
+
+from burp.api.montoya.http.message.requests import (  # pylint: disable=import-error # type: ignore
+    HttpRequest as _BurpHttpRequest,
+)
+from pyscalpel.java.burp.byte_array import IByteArray
+from pyscalpel.java.burp.http_header import IHttpHeader
+from pyscalpel.java.burp.http_message import IHttpMessage
+from pyscalpel.java.burp.http_parameter import IHttpParameter
+from pyscalpel.java.burp.http_service import IHttpService
 
 #  * Burp HTTP request able to retrieve and modify details of an HTTP request.
 #

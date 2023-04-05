@@ -1,18 +1,19 @@
-#!/usr/bin/env python
+# pylint: disable=invalid-name
 #
 #  * Burp HTTP parameter able to retrieve to hold details about an HTTP request parameter.
 #
 
 
-from typing import Protocol
-from abc import abstractmethod, ABCMeta
-from burp.api.montoya.http.message.params import HttpParameter as _BurpHttpParameter
-
-from .java_object import JavaObject
+from abc import ABCMeta, abstractmethod
+from burp.api.montoya.http.message.params import (  # pylint: disable=import-error # type: ignore
+    HttpParameter as _BurpHttpParameter,
+)
+from pyscalpel.java.burp.java_object import JavaObject
 
 
 class IHttpParameter(JavaObject):
-    """ generated source for interface HttpParameter """
+    """generated source for interface HttpParameter"""
+
     __metaclass__ = ABCMeta
     #
     #      * @return The parameter type.
@@ -20,21 +21,21 @@ class IHttpParameter(JavaObject):
 
     @abstractmethod
     def type_(self):
-        """ generated source for method type_ """
+        """generated source for method type_"""
 
     #
     #      * @return The parameter name.
     #
     @abstractmethod
     def name(self) -> str:
-        """ generated source for method name """
+        """generated source for method name"""
 
     #
     #      * @return The parameter value.
     #
     @abstractmethod
     def value(self) -> str:
-        """ generated source for method value """
+        """generated source for method value"""
 
     #
     #      * Create a new Instance of {@code HttpParameter} with {@link HttpParameterType#URL} type.
@@ -45,8 +46,8 @@ class IHttpParameter(JavaObject):
     #      * @return A new {@code HttpParameter} instance.
     #
     @abstractmethod
-    def urlParameter(self, name: str, value: str) -> 'IHttpParameter':
-        """ generated source for method urlParameter """
+    def urlParameter(self, name: str, value: str) -> "IHttpParameter":
+        """generated source for method urlParameter"""
 
     #
     #      * Create a new Instance of {@code HttpParameter} with {@link HttpParameterType#BODY} type.
@@ -58,7 +59,7 @@ class IHttpParameter(JavaObject):
     #
     @abstractmethod
     def bodyParameter(self, name, value):
-        """ generated source for method bodyParameter """
+        """generated source for method bodyParameter"""
 
     #
     #      * Create a new Instance of {@code HttpParameter} with {@link HttpParameterType#COOKIE} type.
@@ -70,7 +71,7 @@ class IHttpParameter(JavaObject):
     #
     @abstractmethod
     def cookieParameter(self, name, value):
-        """ generated source for method cookieParameter """
+        """generated source for method cookieParameter"""
 
     #
     #      * Create a new Instance of {@code HttpParameter} with the specified type.
@@ -83,7 +84,7 @@ class IHttpParameter(JavaObject):
     #
     @abstractmethod
     def parameter(self, name, value, type_):
-        """ generated source for method parameter """
+        """generated source for method parameter"""
 
 
 HttpParameter: IHttpParameter = _BurpHttpParameter

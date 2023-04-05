@@ -1,7 +1,7 @@
 import traceback
 from sys import _getframe
 import inspect
-from typing import Callable, TypeVar, cast, List
+from typing import Callable, TypeVar, cast
 import sys
 from functools import wraps
 
@@ -64,7 +64,6 @@ try:
     spec.loader.exec_module(user_module)
 
     from pyscalpel.burp_utils import IHttpRequest, logger, IHttpResponse
-    from pyscalpel.java.burp.http_service import IHttpService
     from pyscalpel.http import Request, Response
 
     # Declare convenient types for the callbacks

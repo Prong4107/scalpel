@@ -1,20 +1,11 @@
-from .burp_utils import (
+from typing import TypeVar
+from pyscalpel.burp_utils import (
     IHttpParameter,
     IHttpRequest,
-    HttpParameter,
-    urldecode,
-    urlencode_all,
     get_param as burp_get_param,
     new_param,
-    update_param as burp_update_param,
-    to_bytes,
-    get_bytes,
-    logger,
 )
-
-from typing import TypeVar
-from functools import singledispatch
-from .http import Request
+from pyscalpel.http import Request
 
 
 def get_param(msg: Request, name: str) -> IHttpParameter | None:
