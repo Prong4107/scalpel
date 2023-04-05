@@ -1,18 +1,20 @@
 # pylint: disable=invalid-name
 
 from abc import abstractmethod
+from typing import overload, Protocol
 from burp.api.montoya.http.message.responses import (  # pylint: disable=import-error # type: ignore
     HttpResponse as _BurpHttpResponse,
 )
 from pyscalpel.java.burp.http_message import IHttpMessage
 from pyscalpel.java.burp.byte_array import IByteArray
 from pyscalpel.java.burp.http_header import IHttpHeader
+from pyscalpel.java.object import JavaObject
 
 #  * Burp HTTP response able to retrieve and modify details about an HTTP response.
 #
 
 
-class IHttpResponse(IHttpMessage):
+class IHttpResponse(IHttpMessage, Protocol):
     """generated source for interface HttpResponse"""
 
     #
@@ -76,7 +78,7 @@ class IHttpResponse(IHttpMessage):
     #      * {@inheritDoc}
     #
     @abstractmethod
-    def markers(self):
+    def markers(self) -> JavaObject:
         """generated source for method markers"""
 
     #
@@ -85,7 +87,7 @@ class IHttpResponse(IHttpMessage):
     #      * @return A list of {@link Cookie} objects representing the cookies set in the response, if any.
     #
     @abstractmethod
-    def cookies(self):
+    def cookies(self) -> JavaObject:
         """generated source for method cookies"""
 
     #
@@ -94,7 +96,7 @@ class IHttpResponse(IHttpMessage):
     #      * @return The stated MIME type.
     #
     @abstractmethod
-    def statedMimeType(self):
+    def statedMimeType(self) -> JavaObject:
         """generated source for method statedMimeType"""
 
     #
@@ -103,7 +105,7 @@ class IHttpResponse(IHttpMessage):
     #      * @return The inferred MIME type.
     #
     @abstractmethod
-    def inferredMimeType(self):
+    def inferredMimeType(self) -> JavaObject:
         """generated source for method inferredMimeType"""
 
     #
@@ -114,7 +116,7 @@ class IHttpResponse(IHttpMessage):
     #      * @return List of keyword counts in the order they were provided.
     #
     @abstractmethod
-    def keywordCounts(self, *keywords):
+    def keywordCounts(self, *keywords) -> int:
         """generated source for method keywordCounts"""
 
     #
@@ -125,7 +127,7 @@ class IHttpResponse(IHttpMessage):
     #      * @return List of {@link Attribute} objects.
     #
     @abstractmethod
-    def attributes(self, *types):
+    def attributes(self, *types) -> JavaObject:
         """generated source for method attributes"""
 
     #
@@ -162,7 +164,7 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code HttpResponse} instance.
     #
     @abstractmethod
-    def withStatusCode(self, statusCode) -> "IHttpResponse":
+    def withStatusCode(self, statusCode: int) -> "IHttpResponse":
         """generated source for method withStatusCode"""
 
     #
@@ -173,7 +175,7 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code HttpResponse} instance.
     #
     @abstractmethod
-    def withReasonPhrase(self, reasonPhrase) -> "IHttpResponse":
+    def withReasonPhrase(self, reasonPhrase: str) -> "IHttpResponse":
         """generated source for method withReasonPhrase"""
 
     #
@@ -184,7 +186,7 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code HttpResponse} instance.
     #
     @abstractmethod
-    def withHttpVersion(self, httpVersion) -> "IHttpResponse":
+    def withHttpVersion(self, httpVersion: str) -> "IHttpResponse":
         """generated source for method withHttpVersion"""
 
     #
@@ -196,20 +198,8 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code HttpResponse} instance.
     #
     @abstractmethod
-    def withBody(self, body) -> "IHttpResponse":
+    def withBody(self, body: IByteArray | str) -> "IHttpResponse":
         """generated source for method withBody"""
-
-    #
-    #      * Create a copy of the {@code HttpResponse} with the updated body.<br>
-    #      * Updates Content-Length header.
-    #      *
-    #      * @param body the new body for the response
-    #      *
-    #      * @return A new {@code HttpResponse} instance.
-    #
-    @abstractmethod
-    def withBody_0(self, body) -> "IHttpResponse":
-        """generated source for method withBody_0"""
 
     #
     #      * Create a copy of the {@code HttpResponse} with the added header.
@@ -231,7 +221,7 @@ class IHttpResponse(IHttpMessage):
     # #      * @return The updated response containing the added header.
     # #
     @abstractmethod
-    def withAddedHeader(self, name, value) -> "IHttpResponse":
+    def withAddedHeader(self, name: str, value: str) -> "IHttpResponse":
         """generated source for method withAddedHeader_0"""
 
     #
@@ -254,7 +244,7 @@ class IHttpResponse(IHttpMessage):
     # #      * @return The updated response containing the updated header.
     # #
     @abstractmethod
-    def withUpdatedHeader(self, name, value) -> "IHttpResponse":
+    def withUpdatedHeader(self, name: str, value: str) -> "IHttpResponse":
         """generated source for method withUpdatedHeader_0"""
 
     #
@@ -276,7 +266,7 @@ class IHttpResponse(IHttpMessage):
     # #      * @return The updated response containing the removed header.
     # #
     @abstractmethod
-    def withRemovedHeader(self, name) -> "IHttpResponse":
+    def withRemovedHeader(self, name: str) -> "IHttpResponse":
         """generated source for method withRemovedHeader_0"""
 
     #
@@ -287,7 +277,8 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code MarkedHttpRequestResponse} instance.
     #
     @abstractmethod
-    def withMarkers(self, markers) -> "IHttpResponse":
+    @overload
+    def withMarkers(self, markers: JavaObject) -> "IHttpResponse":
         """generated source for method withMarkers"""
 
     #
@@ -298,7 +289,8 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@code MarkedHttpRequestResponse} instance.
     #
     @abstractmethod
-    def withMarkers_0(self, *markers) -> "IHttpResponse":
+    @overload
+    def withMarkers(self, *markers: JavaObject) -> "IHttpResponse":
         """generated source for method withMarkers_0"""
 
     #
@@ -307,7 +299,7 @@ class IHttpResponse(IHttpMessage):
     #      * @return A new {@link HttpResponse} instance.
     #
     @abstractmethod
-    def httpResponse(self, response) -> "IHttpResponse":
+    def httpResponse(self, response: IByteArray | str) -> "IHttpResponse":
         """generated source for method httpResponse"""
 
 

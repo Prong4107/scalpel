@@ -3,6 +3,7 @@
 from abc import abstractmethod
 from typing import Protocol
 from pyscalpel.java.burp.byte_array import IByteArray
+from pyscalpel.java.burp.http_header import IHttpHeader
 from pyscalpel.java.object import JavaObject
 
 #
@@ -19,7 +20,7 @@ class IHttpMessage(JavaObject, Protocol):
     #      * @return A list of HTTP headers.
     #
     @abstractmethod
-    def headers(self):
+    def headers(self) -> IHttpHeader:
         """generated source for method headers"""
 
     #
@@ -55,7 +56,7 @@ class IHttpMessage(JavaObject, Protocol):
     #      * @return A list of markers.
     #
     @abstractmethod
-    def markers(self):
+    def markers(self) -> JavaObject:
         """generated source for method markers"""
 
     #
@@ -73,5 +74,5 @@ class IHttpMessage(JavaObject, Protocol):
     #      * @return The message as a {@code String}.
     #
     @abstractmethod
-    def __str__(self):
+    def __str__(self) -> str:
         """generated source for method toString"""

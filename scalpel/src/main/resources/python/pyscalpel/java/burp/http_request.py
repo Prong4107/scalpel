@@ -11,6 +11,7 @@ from pyscalpel.java.burp.http_header import IHttpHeader
 from pyscalpel.java.burp.http_message import IHttpMessage
 from pyscalpel.java.burp.http_parameter import IHttpParameter
 from pyscalpel.java.burp.http_service import IHttpService
+from pyscalpel.java.object import JavaObject
 
 #  * Burp HTTP request able to retrieve and modify details of an HTTP request.
 #
@@ -88,7 +89,7 @@ class IHttpRequest(IHttpMessage, Protocol):
     #
 
     @abstractmethod
-    def contentType(self):
+    def contentType(self) -> JavaObject:
         """generated source for method contentType"""
 
     #

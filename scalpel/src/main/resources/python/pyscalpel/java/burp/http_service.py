@@ -2,7 +2,6 @@
 
 from abc import ABCMeta, abstractmethod
 from typing import overload
-
 from burp.api.montoya.http import HttpService as _BurpHttpService  # pylint: disable=import-error # type: ignore
 from pyscalpel.java.object import JavaObject
 

@@ -20,7 +20,7 @@ class IHttpParameter(JavaObject):
     #
 
     @abstractmethod
-    def type_(self):
+    def type_(self) -> JavaObject:
         """generated source for method type_"""
 
     #
@@ -58,7 +58,7 @@ class IHttpParameter(JavaObject):
     #      * @return A new {@code HttpParameter} instance.
     #
     @abstractmethod
-    def bodyParameter(self, name, value):
+    def bodyParameter(self, name: str, value: str) -> "IHttpParameter":
         """generated source for method bodyParameter"""
 
     #
@@ -70,7 +70,7 @@ class IHttpParameter(JavaObject):
     #      * @return A new {@code HttpParameter} instance.
     #
     @abstractmethod
-    def cookieParameter(self, name, value):
+    def cookieParameter(self, name: str, value: str) -> "IHttpParameter":
         """generated source for method cookieParameter"""
 
     #
@@ -83,7 +83,7 @@ class IHttpParameter(JavaObject):
     #      * @return A new {@code HttpParameter} instance.
     #
     @abstractmethod
-    def parameter(self, name, value, type_):
+    def parameter(self, name: str, value: str, type_: JavaObject) -> "IHttpParameter":
         """generated source for method parameter"""
 
 
