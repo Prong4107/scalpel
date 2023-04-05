@@ -1,15 +1,15 @@
 from urllib.parse import unquote_to_bytes as urllibdecode
+from typing import TypeVar, cast
+from functools import singledispatch
+from collections.abc import Iterable
+
+import pyscalpel._globals
 from pyscalpel.java.burp.http_request import IHttpRequest, HttpRequest
 from pyscalpel.java.burp.http_response import IHttpResponse, HttpResponse
 from pyscalpel.java.burp.byte_array import IByteArray, ByteArray
 from pyscalpel.java.burp.http_parameter import IHttpParameter, HttpParameter
-import pyscalpel._globals
 from pyscalpel.java.burp.java_bytes import JavaBytes
-from typing import List, TypeVar, cast
-from collections.abc import Iterable
 from pyscalpel.java.scalpel_types.utils import PythonUtils
-from functools import singledispatch
-from functools import singledispatch
 
 logger = pyscalpel._globals.logger
 

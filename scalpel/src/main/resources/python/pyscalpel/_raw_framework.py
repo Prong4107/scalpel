@@ -1,9 +1,9 @@
-import traceback
-from sys import _getframe
 import inspect
-from typing import Callable, TypeVar, cast, List
 import sys
+import traceback
 from functools import wraps
+from sys import _getframe
+from typing import Callable, TypeVar, cast
 
 
 class DebugLogger:
@@ -63,7 +63,7 @@ try:
     # load the user_module into memory
     spec.loader.exec_module(user_module)
 
-    from pyscalpel.burp_utils import IHttpRequest, logger, IHttpResponse
+    from pyscalpel.burp_utils import IHttpRequest, IHttpResponse, logger
 
     # Declare convenient types for the callbacks
     CallbackReturn = TypeVar("CallbackReturn", IHttpRequest, IHttpResponse, bytes) | None
