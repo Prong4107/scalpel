@@ -10,7 +10,7 @@ from pyscalpel.java.burp.byte_array import IByteArray, ByteArray
 from pyscalpel.java.burp.http_parameter import IHttpParameter, HttpParameter
 from pyscalpel.java.bytes import JavaBytes
 from pyscalpel.java.scalpel_types.utils import PythonUtils
-
+from pyscalpel.encoding import always_bytes
 logger = pyscalpel._globals.logger
 
 HttpRequestOrResponse = TypeVar("HttpRequestOrResponse", IHttpRequest, IHttpResponse)
@@ -22,6 +22,7 @@ ByteArrayConvertible = TypeVar("ByteArrayConvertible", bytes, JavaBytes, list[in
 
 @singledispatch
 def new_response(obj: ByteArrayConvertible) -> IHttpResponse:
+    """Create a new HttpResponse from the given bytes"""
     return HttpResponse.httpResponse(byte_array(obj))
 
 
@@ -32,6 +33,7 @@ def _new_response(obj: IByteArray) -> IHttpResponse:
 
 @singledispatch
 def new_request(obj: ByteArrayConvertible) -> IHttpRequest:
+    """Create a new HttpRequest from the given bytes"""
     return HttpRequest.httpRequest(byte_array(obj))
 
 
@@ -42,6 +44,7 @@ def _new_request(obj: IByteArray) -> IHttpRequest:
 
 @singledispatch
 def byte_array(_bytes: bytes | JavaBytes | list[int] | bytearray) -> IByteArray:
+    """Create a new :class:`IByteArray` from the given bytes-like obbject"""
     # Handle buggy bytes casting
     # This is needed because Python will _sometimes_ try
     #   to interpret bytes as a an integer when passing to ByteArray.byteArray() and crash like this:
@@ -71,14 +74,14 @@ def to_bytes(obj: ByteArraySerialisable | JavaBytes) -> bytes:
     return get_bytes(cast(ByteArraySerialisable, obj).toByteArray())
 
 
-def urlencode_all(bytestring: bytes) -> bytes:
+def urlencode_all(data: bytes | str) -> bytes:
     """URL Encode all bytes in the given bytes object"""
-    return "".join(f"%{b:02X}" for b in bytestring).encode()
+    return "".join(f"%{b:02X}" for b in always_bytes(data)).encode()
 
 
-def urldecode(bytestring: bytes) -> bytes:
+def urldecode(data: bytes | str) -> bytes:
     """URL Decode all bytes in the given bytes object"""
-    return urllibdecode(bytestring)
+    return urllibdecode(always_bytes(data))
 
 
 def update_header(msg: HttpRequestOrResponse, name: str, value: str) -> HttpRequestOrResponse:

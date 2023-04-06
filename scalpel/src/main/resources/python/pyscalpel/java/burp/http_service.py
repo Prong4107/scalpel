@@ -2,9 +2,8 @@
 
 from abc import ABCMeta, abstractmethod
 from typing import overload
-from burp.api.montoya.http import HttpService as _BurpHttpService  # pylint: disable=import-error # type: ignore
 from pyscalpel.java.object import JavaObject
-
+from pyscalpel.java.import_java import import_java
 
 class IHttpService(JavaObject, metaclass=ABCMeta):
     @abstractmethod
@@ -43,4 +42,10 @@ class IHttpService(JavaObject, metaclass=ABCMeta):
         """The {@code String} representation of the service."""
 
 
-HttpService: IHttpService = _BurpHttpService
+# from burp.api.montoya.http import HttpService as _BurpHttpService  # pylint: disable=import-error # type: ignore
+
+# HttpService: IHttpService = _BurpHttpService
+
+HttpService: IHttpService = import_java("burp.api.montoya.http",
+                                        "HttpService",
+                                        IHttpService)

@@ -1,13 +1,13 @@
 # pylint: disable=invalid-name
 
-from typing import cast, TypeVar
+from typing import TypeVar
 from abc import ABCMeta, abstractmethod
-from lexfo.scalpel import PythonUtils as _PythonUtils  # pylint: disable=import-error # type: ignore
 from pyscalpel.java.object import JavaObject
 from pyscalpel.java.bytes import JavaBytes
 from pyscalpel.java.burp.http_request import IHttpRequest
 from pyscalpel.java.burp.http_response import IHttpResponse
 from pyscalpel.java.burp.byte_array import IByteArray
+from pyscalpel.java.import_java import import_java
 
 RequestOrResponse = TypeVar("RequestOrResponse", bound=IHttpRequest | IHttpResponse)
 
@@ -36,4 +36,7 @@ class IPythonUtils(JavaObject):
         pass
 
 
-PythonUtils: IPythonUtils = cast(IPythonUtils, _PythonUtils)
+# from lexfo.scalpel import PythonUtils as _PythonUtils  # pylint: disable=import-error # type: ignore
+
+# PythonUtils: IPythonUtils = cast(IPythonUtils, _PythonUtils)
+PythonUtils: IPythonUtils = import_java("lexfo.scalpel", "PythonUtils", IPythonUtils)
