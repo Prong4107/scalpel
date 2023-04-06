@@ -6,6 +6,10 @@ import sys
 from functools import wraps
 
 
+# Define a debug logger to be able to debug cases where the logger is not initialized
+#   or the path isn't well set
+#
+# Output will be printed to the terminal
 class DebugLogger:
     """Debug logger to use if for some reason the logger is not initialized"""
 

@@ -2,7 +2,8 @@ import time
 
 from typing import Iterable, NoReturn, Literal
 
-from mitmproxy.utils import strutils
+from functools import lru_cache
+
 from mitmproxy.http import (
     Headers as MITMProxyHeaders,
     Request as MITMProxyRequest,
@@ -16,41 +17,60 @@ from pyscalpel.java.burp.http_service import IHttpService, HttpService
 from pyscalpel.burp_utils import get_bytes
 from pyscalpel.java.burp.byte_array import IByteArray
 from pyscalpel.java.scalpel_types.utils import PythonUtils
-
-
-# str/bytes conversion helpers from mitmproxy/http.py:
-# https://github.com/mitmproxy/mitmproxy/blob/main/mitmproxy/http.py#:~:text=def-,_native,-(x%3A
-def _always_bytes(x: str | bytes) -> bytes:
-    return strutils.always_bytes(x, "utf-8", "surrogateescape")
-
-
-def _native(x: bytes) -> str:
-    # While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
-    return x.decode("utf-8", "surrogateescape")
-
+from pyscalpel.encoding import always_bytes, native
 
 class Headers(MITMProxyHeaders):
+    """A wrapper around the MITMProxy Headers.
+    
+    This class provides additional methods for converting headers between Burp suite and MITMProxy formats.
+    """
     def __init__(self, fields: Iterable[tuple[bytes, bytes]] = ..., **headers):
-        # Construct the base/inherited MITMProxy headers object.
+        """
+        :param fields: The headers to construct the from.
+        :param headers: The headers to construct the from.
+        """
+
+        # Construct the base/inherited MITMProxy headers.
         super().__init__(fields, **headers)
 
     @classmethod
     def from_mitmproxy(cls, headers: MITMProxyHeaders) -> "Headers":
+        """
+        Creates a `Headers` from a `mitmproxy.http.Headers`.
+
+        :param headers: The `mitmproxy.http.Headers` to convert.
+        :type headers: :class Headers <https://docs.mitmproxy.org/stable/api/mitmproxy/http.html#Headers>`
+        :return: A `Headers` with the same headers as the `mitmproxy.http.Headers`.
+        """
+
         # Construct from the raw MITMProxy headers data.
         return cls(headers.fields)
-        # return cls(((_always_bytes(header[0]), _always_bytes(header[1])) for header in headers.fields))
 
     @classmethod
     def from_burp(cls, headers: list[IHttpHeader]) -> "Headers":
-        # Convert the list of Burp IHttpHeader objects to a list of tuples: (key, value)
-        return cls(((_always_bytes(header.name()), _always_bytes(header.value())) for header in headers))
+        """Construct an instance of the Headers class from a Burp suite HttpHeader array.
+            :param headers: The Burp suite HttpHeader array to convert.
+            :return: A Headers with the same headers as the Burp suite HttpHeader array.
+        """
+
+        # Convert the list of Burp IHttpHeaders to a list of tuples: (key, value)
+        return cls(((always_bytes(header.name()), always_bytes(header.value())) for header in headers))
 
     def to_burp(self) -> list[IHttpHeader]:
-        # Convert the list of tuples: (key, value) to a list of Burp IHttpHeader objects
-        return [HttpHeader.httpHeader(_native(header[0]), _native(header[1])) for header in self.fields]
+        """Convert the headers to a Burp suite HttpHeader array.
+            :return: A Burp suite HttpHeader array with the same headers as the Headers.
+        """
+
+        # Convert the list of tuples: (key, value) to a list of Burp IHttpHeaders
+        return [HttpHeader.httpHeader(native(header[0]), native(header[1])) for header in self.fields]
 
 
 class Request(MITMProxyRequest):
+    """A wrapper class for `mitmproxy.http.Request`.
+
+    This class provides additional methods for converting requests between Burp suite and MITMProxy formats.
+    """
+
     def __init__(
         self,
         host: str,
@@ -64,7 +84,7 @@ class Request(MITMProxyRequest):
         content: bytes | None,
         trailers: Headers | tuple[tuple[bytes, bytes], ...] | None,
     ):
-        # Construct the base/inherited MITMProxy request object.
+        # Construct the base/inherited MITMProxy request.
         # Burp does not provide timestamps for requests, so we set them to the current time as a default value like mitmproxy when using Request.make()
         super().__init__(
             host,
@@ -89,20 +109,24 @@ class Request(MITMProxyRequest):
         content: bytes | str = "",
         headers: Headers | dict[str | bytes, str | bytes] | Iterable[tuple[bytes, bytes]] = (),
     ) -> "Request":
-        # Simply call the inherited make() method and then construct from the resulting MITMProxy request object.
+        # Simply call the inherited make() method and then construct from the resulting MITMProxy request.
         return cls.from_mitmproxy(super().make(method, url, content, headers))
 
     @classmethod
     def from_mitmproxy(cls, request: MITMProxyRequest) -> "Request":
+        """Construct an instance of the Request class from a MITMProxy request.
+            :param request: The MITMProxy request to convert.
+            :return: A Request with the same data as the MITMProxy request.
+        """
         # Convert every field to the required type.
         return cls(
             request.host,
             request.port,
-            _always_bytes(request.method),
-            _always_bytes(request.scheme),
-            _always_bytes(request.authority),
-            _always_bytes(request.path),
-            _always_bytes(request.http_version),
+            always_bytes(request.method),
+            always_bytes(request.scheme),
+            always_bytes(request.authority),
+            always_bytes(request.path),
+            always_bytes(request.http_version),
             Headers.from_mitmproxy(request.headers),
             request.content,
             Headers.from_mitmproxy(request.trailers) if request.trailers else None,
@@ -110,6 +134,10 @@ class Request(MITMProxyRequest):
 
     @classmethod
     def from_burp(cls, request: IHttpRequest) -> "Request":
+        """Construct an instance of the Request class from a Burp suite HttpRequest.
+            :param request: The Burp suite HttpRequest to convert.
+            :return: A Request with the same data as the Burp suite HttpRequest.
+        """
         srv: IHttpService = request.httpService()
         body = get_bytes(request.body())
         # Burp will give you lowercased and pseudo headers when using HTTP/2.
@@ -124,11 +152,11 @@ class Request(MITMProxyRequest):
             req = cls(
                 "",
                 0,
-                _always_bytes(request.method()),
+                always_bytes(request.method()),
                 b"",
                 b"",
-                _always_bytes(request.path()),
-                _always_bytes(request.httpVersion()),
+                always_bytes(request.path()),
+                always_bytes(request.httpVersion()),
                 headers,
                 body,
                 None,
@@ -138,11 +166,11 @@ class Request(MITMProxyRequest):
             req = cls(
                 srv.host(),
                 srv.port(),
-                _always_bytes(request.method()),
+                always_bytes(request.method()),
                 b"https" if srv.secure() else b"http",
-                _always_bytes(srv.host()),
-                _always_bytes(request.path()),
-                _always_bytes(request.httpVersion()),
+                always_bytes(srv.host()),
+                always_bytes(request.path()),
+                always_bytes(request.httpVersion()),
                 headers,
                 body,
                 None,
@@ -150,9 +178,13 @@ class Request(MITMProxyRequest):
 
         return req
 
+    @lru_cache
     def to_bytes(self) -> bytes:
+        """Convert the request to bytes
+            :return: The request as bytes.
+        """
         # Reserialize the request to bytes.
-        first_line = b" ".join(_always_bytes(s) for s in (self.method, self.path, self.http_version)) + b"\r\n"
+        first_line = b" ".join(always_bytes(s) for s in (self.method, self.path, self.http_version)) + b"\r\n"
 
         # Strip HTTP/2 pseudo headers.
         # https://portswigger.net/burp/documentation/desktop/http2/http2-basics-for-burp-users#:~:text=HTTP/2%20specification.-,Pseudo%2Dheaders,-In%20HTTP/2
@@ -162,7 +194,7 @@ class Request(MITMProxyRequest):
             # Host header is not present in HTTP/2, but is required by Burp message editor.
             # So we have to add it back from the :authority pseudo-header.
             # https://portswigger.net/burp/documentation/desktop/http2/http2-normalization-in-the-message-editor#sending-requests-without-any-normalization:~:text=pseudo%2Dheaders%20and-,derives,-the%20%3Aauthority%20from
-            mapped_headers = ((b"host", _always_bytes(self.headers[":authority"])),) + tuple(mapped_headers)
+            mapped_headers = ((b"host", always_bytes(self.headers[":authority"])),) + tuple(mapped_headers)
 
         # Construct the request's headers part.
         headers_lines = b"".join(b"%s: %s\r\n" % (key, val) for key, val in mapped_headers)
@@ -173,7 +205,11 @@ class Request(MITMProxyRequest):
         # Construct the whole request and return it.
         return first_line + headers_lines + b"\r\n" + body
 
+    @lru_cache
     def to_burp(self) -> IHttpRequest:
+        """Convert the request to a Burp suite :class:`IHttpRequest`.
+            :return: The request as a Burp suite :class:`IHttpRequest`.
+        """
         # Build the Burp HTTP networking service.
         service: IHttpService = HttpService.httpService(self.host, self.port, self.scheme == "https")
 
@@ -191,6 +227,13 @@ class Request(MITMProxyRequest):
         port: int = 0,
         scheme: Literal["http"] | Literal["https"] | str = "http",
     ) -> "Request":
+        """Construct an instance of the Request class from raw bytes.
+            :param data: The raw bytes to convert.
+            :param real_host: The real host to connect to.
+            :param port: The port of the request.
+            :param scheme: The scheme of the request.
+            :return: A :class:`Request` with the same data as the raw bytes.
+        """
         # Convert the raw bytes to a Burp ByteArray.
         # We use the Burp API to trivialize the parsing of the request from raw bytes.
         req_byte_array: IByteArray = PythonUtils.toByteArray(data)
@@ -206,8 +249,9 @@ class Request(MITMProxyRequest):
             # Instantiate a new Burp HTTP request with networking informations.
             burp_request: IHttpRequest = HttpRequest.httpRequest(service, req_byte_array)
 
-        # Construct the request from the Burp object.
+        # Construct the request from the Burp.
         return cls.from_burp(burp_request)
+    
 
 
 class Response(MITMProxyResponse):
@@ -220,7 +264,7 @@ class Response(MITMProxyResponse):
         content: bytes | None,
         trailers: Headers | tuple[tuple[bytes, bytes], ...] | None,
     ):
-        # Construct the base/inherited MITMProxy response object.
+        # Construct the base/inherited MITMProxy response.
         super().__init__(
             http_version,
             status_code,
@@ -233,16 +277,17 @@ class Response(MITMProxyResponse):
         )
 
     @classmethod
-    def from_any(cls, none: NoReturn) -> "Response":
-        # This should never be called because the call should be dispatched to the correct implementation.
-        raise TypeError(f"Unsupported type {type(none)}")
-
-    @classmethod
+    #https://docs.mitmproxy.org/stable/api/mitmproxy/http.html#Response
+    # link to mitmproxy documentation
     def from_mitmproxy(cls, response: MITMProxyResponse) -> "Response":
+        """Construct an instance of the Response class from a [mitmproxy.http.HTTPResponse](https://docs.mitmproxy.org/stable/api/mitmproxy/http.html#Response).
+            :param response: The [mitmproxy.http.HTTPResponse](https://docs.mitmproxy.org/stable/api/mitmproxy/http.html#Response) to convert.
+            :return: A :class:`Response` with the same data as the [mitmproxy.http.HTTPResponse](https://docs.mitmproxy.org/stable/api/mitmproxy/http.html#Response).
+        """
         return cls(
-            _always_bytes(response.http_version),
+            always_bytes(response.http_version),
             response.status_code,
-            _always_bytes(response.reason),
+            always_bytes(response.reason),
             Headers.from_mitmproxy(response.headers),
             response.content,
             Headers.from_mitmproxy(response.trailers) if response.trailers else None,
@@ -250,22 +295,25 @@ class Response(MITMProxyResponse):
 
     @classmethod
     def from_burp(cls, response: IHttpResponse) -> "Response":
+        """Construct an instance of the Response class from a Burp suite :class:`IHttpResponse`."""
         body = get_bytes(response.body())
         return cls(
-            _always_bytes(response.httpVersion()),
+            always_bytes(response.httpVersion()),
             response.statusCode(),
-            _always_bytes(response.reasonPhrase()),
+            always_bytes(response.reasonPhrase()),
             Headers.from_burp(response.headers()),
             body,
             None,
         )
 
+    @lru_cache
     def to_bytes(self) -> bytes:
+        """Convert the response to raw bytes."""
         # Reserialize the response to bytes.
 
         # Format the first line of the response. (e.g. "HTTP/1.1 200 OK\r\n")
         first_line = (
-            b" ".join(_always_bytes(s) for s in (self.http_version, str(self.status_code), self.reason)) + b"\r\n"
+            b" ".join(always_bytes(s) for s in (self.http_version, str(self.status_code), self.reason)) + b"\r\n"
         )
 
         # Format the response's headers part.
@@ -277,7 +325,9 @@ class Response(MITMProxyResponse):
         # Build the whole response and return it.
         return first_line + headers_lines + b"\r\n" + body
 
+    @lru_cache
     def to_burp(self) -> IHttpResponse:
+        """Convert the response to a Burp suite :class:`IHttpResponse`."""
         # Convert the response to a Burp ByteArray.
         response_byte_array: IByteArray = PythonUtils.toByteArray(self.to_bytes())
 
@@ -286,6 +336,10 @@ class Response(MITMProxyResponse):
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "Response":
+        """Construct an instance of the Response class from raw bytes.
+            :param data: The raw bytes to convert.
+            :return: A :class:`Response` parsed from the raw bytes.
+        """
         # Use the Burp API to trivialize the parsing of the response from raw bytes.
         # Convert the raw bytes to a Burp ByteArray.
         resp_byte_array: IByteArray = PythonUtils.toByteArray(data)

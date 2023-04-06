@@ -2,13 +2,11 @@
 
 from abc import abstractmethod
 from typing import overload, Protocol
-from burp.api.montoya.http.message.responses import (  # pylint: disable=import-error # type: ignore
-    HttpResponse as _BurpHttpResponse,
-)
 from pyscalpel.java.burp.http_message import IHttpMessage
 from pyscalpel.java.burp.byte_array import IByteArray
 from pyscalpel.java.burp.http_header import IHttpHeader
 from pyscalpel.java.object import JavaObject
+from pyscalpel.java.import_java import import_java
 
 #  * Burp HTTP response able to retrieve and modify details about an HTTP response.
 #
@@ -303,4 +301,11 @@ class IHttpResponse(IHttpMessage, Protocol):
         """generated source for method httpResponse"""
 
 
-HttpResponse: IHttpResponse = _BurpHttpResponse
+
+# from burp.api.montoya.http.message.responses import (  # pylint: disable=import-error # type: ignore
+#     HttpResponse as _BurpHttpResponse,
+# )
+# HttpResponse: IHttpResponse = _BurpHttpResponse
+HttpResponse: IHttpResponse = import_java("burp.api.montoya.http.message.responses",
+                                            "HttpResponse",
+                                            IHttpResponse)

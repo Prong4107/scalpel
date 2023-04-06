@@ -1,17 +1,14 @@
 # pylint: disable=invalid-name
 
 from abc import abstractmethod
-from typing import Iterable, Protocol, overload
-
-from burp.api.montoya.http.message.requests import (  # pylint: disable=import-error # type: ignore
-    HttpRequest as _BurpHttpRequest,
-)
+from typing import Iterable, Protocol, overload, cast
 from pyscalpel.java.burp.byte_array import IByteArray
 from pyscalpel.java.burp.http_header import IHttpHeader
 from pyscalpel.java.burp.http_message import IHttpMessage
 from pyscalpel.java.burp.http_parameter import IHttpParameter
 from pyscalpel.java.burp.http_service import IHttpService
 from pyscalpel.java.object import JavaObject
+from pyscalpel.java.import_java import import_java
 
 #  * Burp HTTP request able to retrieve and modify details of an HTTP request.
 #
@@ -470,4 +467,17 @@ class IHttpRequest(IHttpMessage, Protocol):
     #
 
 
-HttpRequest: IHttpRequest = _BurpHttpRequest
+# if "pdoc" in modules:
+#     _BurpHttpRequest = cast(IHttpRequest, None)
+# else:
+#     try:
+#         from burp.api.montoya.http.message.requests import (  # pylint: disable=import-error # type: ignore
+#             HttpRequest as _BurpHttpRequest,
+#         )
+#     except ImportError as exc:
+#         raise ImportError("Could not import Java class HttpRequest") from exc
+
+# HttpRequest = _BurpHttpRequest
+HttpRequest: IHttpRequest = import_java("burp.api.montoya.http.message.requests",
+                                        "HttpRequest",
+                                        IHttpRequest)

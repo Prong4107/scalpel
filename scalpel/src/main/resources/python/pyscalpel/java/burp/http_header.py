@@ -3,11 +3,11 @@
 #  * Burp HTTP header able to retrieve to hold details about an HTTP header.
 #
 
+
 from abc import abstractmethod, ABCMeta
 from typing import overload, Protocol
-from burp.api.montoya.http.message import HttpHeader as _BurpHttpHeader  # pylint: disable=import-error # type: ignore
 from pyscalpel.java.object import JavaObject
-
+from pyscalpel.java.import_java import import_java
 
 class IHttpHeader(JavaObject, Protocol, metaclass=ABCMeta):
     """generated source for interface HttpHeader"""
@@ -62,4 +62,19 @@ class IHttpHeader(JavaObject, Protocol, metaclass=ABCMeta):
         """generated source for method httpHeader_0"""
 
 
-HttpHeader: IHttpHeader = _BurpHttpHeader
+# if "pdoc" in modules:
+#     _BurpHttpHeader = cast(IHttpHeader, None)
+# else:
+#     try:
+#         from burp.api.montoya.http.message import (  # pylint: disable=import-error # type: ignore
+#             HttpHeader as _BurpHttpHeader,
+#         )
+
+#     except ImportError as exc:
+#         raise ImportError("Could not import Java class HttpHeader") from exc
+
+# HttpHeader: IHttpHeader = _BurpHttpHeader
+
+HttpHeader: IHttpHeader = import_java("burp.api.montoya.http.message",
+                                        "HttpHeader",
+                                        IHttpHeader)
