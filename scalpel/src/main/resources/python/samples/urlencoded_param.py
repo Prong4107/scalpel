@@ -1,20 +1,16 @@
-from pyscalpel.http import Request, Response
-from pyscalpel.utils import to_bytes, get_param, urldecode, urlencode_all, update_param
+from pyscalpel.http import Request
+from pyscalpel.utils import get_param, urldecode, urlencode_all, update_param
 
 # POC script to edit a fully URL encoded parameter
 
-param_name = "username"
+PARAM_NAME = "filename"
 
 
 def req_edit_in(req: Request) -> bytes | None:
-    param = get_param(req, param_name)
+    param = get_param(req, PARAM_NAME)
     if param is not None:
-        text_bytes = str.encode(param.value())
-        return urldecode(text_bytes)
+        return urldecode(str.encode(param.value()))
 
 
 def req_edit_out(req: Request, text: bytes) -> bytes | None:
-    encoded = urlencode_all(text)
-    str_encoded = str(encoded, "ascii")
-    new_req = update_param(req, param_name, str_encoded)
-    return new_req.to_bytes()
+    return update_param(req, PARAM_NAME, urlencode_all(text)).to_bytes()
