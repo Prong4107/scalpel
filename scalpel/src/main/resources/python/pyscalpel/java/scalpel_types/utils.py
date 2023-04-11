@@ -32,7 +32,9 @@ class IPythonUtils(JavaObject):
         pass
 
     @abstractmethod
-    def updateHeader(self, msg: RequestOrResponse, name: str, value: str) -> RequestOrResponse:
+    def updateHeader(
+        self, msg: RequestOrResponse, name: str, value: str
+    ) -> RequestOrResponse:
         pass
 
 

@@ -11,13 +11,16 @@ from pyscalpel.java.burp.http_parameter import IHttpParameter, HttpParameter
 from pyscalpel.java.bytes import JavaBytes
 from pyscalpel.java.scalpel_types.utils import PythonUtils
 from pyscalpel.encoding import always_bytes
+
 logger = pyscalpel._globals.logger
 
 HttpRequestOrResponse = TypeVar("HttpRequestOrResponse", IHttpRequest, IHttpResponse)
 
 ByteArraySerialisable = TypeVar("ByteArraySerialisable", IHttpRequest, IHttpResponse)
 
-ByteArrayConvertible = TypeVar("ByteArrayConvertible", bytes, JavaBytes, list[int], str, bytearray)
+ByteArrayConvertible = TypeVar(
+    "ByteArrayConvertible", bytes, JavaBytes, list[int], str, bytearray
+)
 
 
 @singledispatch
@@ -84,7 +87,9 @@ def urldecode(data: bytes | str) -> bytes:
     return urllibdecode(always_bytes(data))
 
 
-def update_header(msg: HttpRequestOrResponse, name: str, value: str) -> HttpRequestOrResponse:
+def update_header(
+    msg: HttpRequestOrResponse, name: str, value: str
+) -> HttpRequestOrResponse:
     return PythonUtils.updateHeader(msg, name, value)
 
 

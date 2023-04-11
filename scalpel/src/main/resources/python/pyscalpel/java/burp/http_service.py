@@ -5,6 +5,7 @@ from typing import overload
 from pyscalpel.java.object import JavaObject
 from pyscalpel.java.import_java import import_java
 
+
 class IHttpService(JavaObject, metaclass=ABCMeta):
     @abstractmethod
     def host(self) -> str:
@@ -42,10 +43,6 @@ class IHttpService(JavaObject, metaclass=ABCMeta):
         """The {@code String} representation of the service."""
 
 
-# from burp.api.montoya.http import HttpService as _BurpHttpService  # pylint: disable=import-error # type: ignore
-
-# HttpService: IHttpService = _BurpHttpService
-
-HttpService: IHttpService = import_java("burp.api.montoya.http",
-                                        "HttpService",
-                                        IHttpService)
+HttpService: IHttpService = import_java(
+    "burp.api.montoya.http", "HttpService", IHttpService
+)

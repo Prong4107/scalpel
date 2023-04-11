@@ -6,11 +6,12 @@ from pyscalpel.java.object import JavaObject
 from pyscalpel.java.bytes import JavaBytes
 from pyscalpel.java.import_java import import_java
 
-class IByteArray(JavaObject, Protocol):
 
+class IByteArray(JavaObject, Protocol):
     __metaclass__ = ABCMeta
 
     """ generated source for interface ByteArray """
+
     #
     #      * Access the byte stored at the provided index.
     #      *
@@ -95,7 +96,9 @@ class IByteArray(JavaObject, Protocol):
     #
     @abstractmethod
     @overload
-    def subArray(self, startIndexInclusive: int, endIndexExclusive: int) -> "IByteArray":
+    def subArray(
+        self, startIndexInclusive: int, endIndexExclusive: int
+    ) -> "IByteArray":
         """generated source for method subArray"""
 
     #
@@ -199,7 +202,11 @@ class IByteArray(JavaObject, Protocol):
     @abstractmethod
     @overload
     def indexOf(
-        self, searchTerm: "IByteArray", caseSensitive: bool, startIndexInclusive: int, endIndexExclusive: int
+        self,
+        searchTerm: "IByteArray",
+        caseSensitive: bool,
+        startIndexInclusive: int,
+        endIndexExclusive: int,
     ) -> int:
         """generated source for method indexOf_3"""
 
@@ -216,7 +223,13 @@ class IByteArray(JavaObject, Protocol):
     #
     @abstractmethod
     @overload
-    def indexOf(self, searchTerm: str, caseSensitive: bool, startIndexInclusive: int, endIndexExclusive: int) -> int:
+    def indexOf(
+        self,
+        searchTerm: str,
+        caseSensitive: bool,
+        startIndexInclusive: int,
+        endIndexExclusive: int,
+    ) -> int:
         """generated source for method indexOf_4"""
 
     #
@@ -282,7 +295,11 @@ class IByteArray(JavaObject, Protocol):
     @abstractmethod
     @overload
     def countMatches(
-        self, searchTerm: "IByteArray", caseSensitive: bool, startIndexInclusive: int, endIndexExclusive: int
+        self,
+        searchTerm: "IByteArray",
+        caseSensitive: bool,
+        startIndexInclusive: int,
+        endIndexExclusive: int,
     ) -> int:
         """generated source for method countMatches_3"""
 
@@ -299,7 +316,11 @@ class IByteArray(JavaObject, Protocol):
     @abstractmethod
     @overload
     def countMatches(
-        self, searchTerm: str, caseSensitive: bool, startIndexInclusive: int, endIndexExclusive: int
+        self,
+        searchTerm: str,
+        caseSensitive: bool,
+        startIndexInclusive: int,
+        endIndexExclusive: int,
     ) -> int:
         """generated source for method countMatches_4"""
 
@@ -353,11 +374,4 @@ class IByteArray(JavaObject, Protocol):
     #
 
 
-
-# from burp.api.montoya.core import ByteArray as _BurpByteArray  # pylint: disable=import-error # type: ignore
-
-# ByteArray: IByteArray = _BurpByteArray
-
-ByteArray: IByteArray = import_java("burp.api.montoya.core",
-                                    "ByteArray",
-                                    IByteArray)
+ByteArray: IByteArray = import_java("burp.api.montoya.core", "ByteArray", IByteArray)

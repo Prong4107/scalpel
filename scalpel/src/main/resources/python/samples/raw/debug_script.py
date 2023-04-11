@@ -1,4 +1,11 @@
-from pyscalpel.burp_utils import IHttpRequest, IHttpResponse, update_header, to_bytes, new_request, new_response
+from pyscalpel.burp_utils import (
+    IHttpRequest,
+    IHttpResponse,
+    update_header,
+    to_bytes,
+    new_request,
+    new_response,
+)
 
 # Test script that adds debug headers
 
@@ -16,7 +23,9 @@ def req_edit_in(req: IHttpRequest) -> bytes | None:
 
 
 def req_edit_out(_: IHttpRequest, text: bytes) -> bytes | None:
-    return to_bytes(update_header(new_request(text), "X-Python-Out-Request-Editor", __name__))
+    return to_bytes(
+        update_header(new_request(text), "X-Python-Out-Request-Editor", __name__)
+    )
 
 
 def res_edit_in(res: IHttpResponse) -> bytes | None:
@@ -24,4 +33,6 @@ def res_edit_in(res: IHttpResponse) -> bytes | None:
 
 
 def res_edit_out(_: IHttpResponse, text: bytes) -> bytes | None:
-    return to_bytes(update_header(new_response(text), "X-Python-Out-Response-Editor", __name__))
+    return to_bytes(
+        update_header(new_response(text), "X-Python-Out-Response-Editor", __name__)
+    )

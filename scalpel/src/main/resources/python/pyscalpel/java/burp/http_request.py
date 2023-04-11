@@ -1,7 +1,7 @@
 # pylint: disable=invalid-name
 
 from abc import abstractmethod
-from typing import Iterable, Protocol, overload, cast
+from typing import Iterable, Protocol, overload
 from pyscalpel.java.burp.byte_array import IByteArray
 from pyscalpel.java.burp.http_header import IHttpHeader
 from pyscalpel.java.burp.http_message import IHttpMessage
@@ -203,7 +203,9 @@ class IHttpRequest(IHttpMessage, Protocol):
     #
 
     @abstractmethod
-    def withAddedParameters(self, parameters: Iterable[IHttpParameter]) -> "IHttpRequest":
+    def withAddedParameters(
+        self, parameters: Iterable[IHttpParameter]
+    ) -> "IHttpRequest":
         """generated source for method withAddedParameters"""
 
     #
@@ -227,7 +229,9 @@ class IHttpRequest(IHttpMessage, Protocol):
     #
 
     @abstractmethod
-    def withRemovedParameters(self, parameters: Iterable[IHttpParameter]) -> "IHttpRequest":
+    def withRemovedParameters(
+        self, parameters: Iterable[IHttpParameter]
+    ) -> "IHttpRequest":
         """generated source for method withRemovedParameters"""
 
     #
@@ -427,7 +431,9 @@ class IHttpRequest(IHttpMessage, Protocol):
 
     @abstractmethod
     @overload
-    def httpRequest(self, service: IHttpService, req: IByteArray | str) -> "IHttpRequest":
+    def httpRequest(
+        self, service: IHttpService, req: IByteArray | str
+    ) -> "IHttpRequest":
         """generated source for method httpRequest"""
 
     #
@@ -453,7 +459,9 @@ class IHttpRequest(IHttpMessage, Protocol):
     #
 
     @abstractmethod
-    def http2Request(self, service: IHttpService, headers: Iterable[IHttpHeader], body: IByteArray) -> "IHttpRequest":
+    def http2Request(
+        self, service: IHttpService, headers: Iterable[IHttpHeader], body: IByteArray
+    ) -> "IHttpRequest":
         """generated source for method http2Request"""
 
     #
@@ -478,6 +486,6 @@ class IHttpRequest(IHttpMessage, Protocol):
 #         raise ImportError("Could not import Java class HttpRequest") from exc
 
 # HttpRequest = _BurpHttpRequest
-HttpRequest: IHttpRequest = import_java("burp.api.montoya.http.message.requests",
-                                        "HttpRequest",
-                                        IHttpRequest)
+HttpRequest: IHttpRequest = import_java(
+    "burp.api.montoya.http.message.requests", "HttpRequest", IHttpRequest
+)

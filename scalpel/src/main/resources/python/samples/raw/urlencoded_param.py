@@ -1,7 +1,13 @@
 from pyscalpel.java.burp.http_request import IHttpRequest
 
 # from pyscalpel.java.burp.http_response import IHttpResponse
-from pyscalpel.burp_utils import to_bytes, get_param, urldecode, urlencode_all, update_param
+from pyscalpel.burp_utils import (
+    to_bytes,
+    get_param,
+    urldecode,
+    urlencode_all,
+    update_param,
+)
 
 # POC script to edit a fully URL encoded parameter
 

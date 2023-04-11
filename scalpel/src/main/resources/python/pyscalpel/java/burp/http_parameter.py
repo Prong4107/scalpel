@@ -8,6 +8,7 @@ from abc import ABCMeta, abstractmethod
 from pyscalpel.java.object import JavaObject
 from pyscalpel.java.import_java import import_java
 
+
 class IHttpParameter(JavaObject):
     """generated source for interface HttpParameter"""
 
@@ -84,13 +85,12 @@ class IHttpParameter(JavaObject):
         """generated source for method parameter"""
 
 
-
 # from burp.api.montoya.http.message.params import (  # pylint: disable=import-error # type: ignore
 #     HttpParameter as _BurpHttpParameter,
 # )
 
 # HttpParameter: IHttpParameter = _BurpHttpParameter
 
-HttpParameter: IHttpParameter = import_java("burp.api.montoya.http.message.params",
-                                             "HttpParameter",
-                                             IHttpParameter)
+HttpParameter: IHttpParameter = import_java(
+    "burp.api.montoya.http.message.params", "HttpParameter", IHttpParameter
+)

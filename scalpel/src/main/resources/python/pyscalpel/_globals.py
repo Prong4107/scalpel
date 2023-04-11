@@ -1,6 +1,7 @@
 from pyscalpel.java.burp.logging import Logging
 import sys
 
+
 # Define a default logger to use if for some reason the logger is not initialized
 # (e.g. running the script from pdoc)
 class DefaultLogger:
