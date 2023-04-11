@@ -68,7 +68,6 @@ public class ScalpelExecutor {
 		 * @return an array of the names of the classes in the package.
 		 */
 		public String[] getClassNames(String pkg) {
-			TraceLogger.log(logger, "getClassNames called with |" + pkg + "|");
 			return base.getClassNames(pkg);
 		}
 
@@ -79,7 +78,6 @@ public class ScalpelExecutor {
 		 * @return an array of the names of the sub-packages of the package.
 		 */
 		public String[] getSubPackages(String p) {
-			TraceLogger.log(logger, "getSubPackages called with |" + p + "|");
 			return base.getSubPackages(p);
 		}
 
@@ -90,8 +88,6 @@ public class ScalpelExecutor {
 		 * @return true if the string represents a valid Java package, false otherwise.
 		 */
 		public boolean isJavaPackage(String s) {
-			TraceLogger.log(logger, "isJavaPackage called with |" + s + "|");
-
 			// https://github.com/ninia/jep/issues/347
 			if (s.equals("lexfo") || s.equals("lexfo.scalpel")) {
 				TraceLogger.log(logger, "Returning true");
@@ -568,7 +564,7 @@ public class ScalpelExecutor {
 			}
 
 			try {
-				Thread.sleep(300);
+				Thread.sleep(20000);
 			} catch (InterruptedException e) {
 				TraceLogger.logStackTrace(logger, e);
 			}
@@ -623,6 +619,7 @@ public class ScalpelExecutor {
 						"""
     from sys import path
     path.append(__directory__)
+    del path
     """
 					);
 
