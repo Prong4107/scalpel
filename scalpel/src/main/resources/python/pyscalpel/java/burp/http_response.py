@@ -301,11 +301,6 @@ class IHttpResponse(IHttpMessage, Protocol):
         """generated source for method httpResponse"""
 
 
-
-# from burp.api.montoya.http.message.responses import (  # pylint: disable=import-error # type: ignore
-#     HttpResponse as _BurpHttpResponse,
-# )
-# HttpResponse: IHttpResponse = _BurpHttpResponse
-HttpResponse: IHttpResponse = import_java("burp.api.montoya.http.message.responses",
-                                            "HttpResponse",
-                                            IHttpResponse)
+HttpResponse: IHttpResponse = import_java(
+    "burp.api.montoya.http.message.responses", "HttpResponse", IHttpResponse
+)

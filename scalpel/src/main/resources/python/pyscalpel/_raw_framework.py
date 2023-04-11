@@ -33,7 +33,9 @@ try:
     logger = __logger__  # type: ignore
     logger.logToOutput("Python: Loading _framework.py ...")
 except NameError:
-    logger.logToOutput("Python: Initializing logger ...\nWARNING: Logger not initialized, using DebugLogger")
+    logger.logToOutput(
+        "Python: Initializing logger ...\nWARNING: Logger not initialized, using DebugLogger"
+    )
 
 try:
     # Import the globals module to set the logger
@@ -67,12 +69,16 @@ try:
     from pyscalpel.burp_utils import IHttpRequest, IHttpResponse
 
     # Declare convenient types for the callbacks
-    CallbackReturn = TypeVar("CallbackReturn", IHttpRequest, IHttpResponse, bytes) | None
+    CallbackReturn = (
+        TypeVar("CallbackReturn", IHttpRequest, IHttpResponse, bytes) | None
+    )
 
     CallbackType = Callable[..., CallbackReturn]
 
     # Get all the callable objects from the user module
-    callable_objs = {name: obj for name, obj in inspect.getmembers(user_module) if callable(obj)}
+    callable_objs = {
+        name: obj for name, obj in inspect.getmembers(user_module) if callable(obj)
+    }
 
     def fun_name(frame=1):
         """Returns the name of the caller function
@@ -104,7 +110,9 @@ try:
 
         return _wrapped_cb
 
-    def _try_if_present(callback: Callable[..., CallbackReturn]) -> Callable[..., CallbackReturn]:
+    def _try_if_present(
+        callback: Callable[..., CallbackReturn]
+    ) -> Callable[..., CallbackReturn]:
         """Decorator to return a  None lambda when the callback is not present in the user script.
 
         Args:
@@ -139,7 +147,9 @@ try:
         return lambda *_, **__: None
 
     @_try_if_present
-    def _request(req: IHttpRequest, callback: CallbackType = ...) -> IHttpRequest | None:
+    def _request(
+        req: IHttpRequest, callback: CallbackType = ...
+    ) -> IHttpRequest | None:
         """Wrapper for the request callback
 
         Args:
@@ -152,7 +162,9 @@ try:
         return cast(IHttpRequest | None, callback(req))
 
     @_try_if_present
-    def _response(res: IHttpResponse, callback: CallbackType = ...) -> IHttpResponse | None:
+    def _response(
+        res: IHttpResponse, callback: CallbackType = ...
+    ) -> IHttpResponse | None:
         """Wrapper for the response callback
 
         Args:
@@ -178,7 +190,9 @@ try:
         return cast(bytes | None, callback(req))
 
     @_try_if_present
-    def _req_edit_out(req: IHttpRequest, text: list[int], callback: CallbackType = ...) -> bytes | None:
+    def _req_edit_out(
+        req: IHttpRequest, text: list[int], callback: CallbackType = ...
+    ) -> bytes | None:
         """Wrapper for the request edit callback
 
         Args:
@@ -207,7 +221,9 @@ try:
         return cast(bytes | None, callback(res))
 
     @_try_if_present
-    def _res_edit_out(res: IHttpResponse, text: list[int], callback: CallbackType = ...) -> bytes | None:
+    def _res_edit_out(
+        res: IHttpResponse, text: list[int], callback: CallbackType = ...
+    ) -> bytes | None:
         """Wrapper for the response edit callback
 
         Args:
