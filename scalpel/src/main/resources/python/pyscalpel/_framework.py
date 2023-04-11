@@ -8,6 +8,7 @@ from functools import wraps
 
 # Define a debug logger to be able to debug cases where the logger is not initialized
 #   or the path isn't well set
+#   or the _framework is invoked by pdoc or other tools
 #
 # Output will be printed to the terminal
 class DebugLogger:
