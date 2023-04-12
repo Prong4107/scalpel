@@ -36,7 +36,7 @@ public class TraceLogger {
 	 * Configured log level
 	 * TODO: Add to configuration.
 	 */
-	private static Level loggerLevel = Level.TRACE;
+	private static Level loggerLevel = Level.DEBUG;
 
 	/**
     Logs the specified message to the Burp Suite output and standard output.
