@@ -1,5 +1,5 @@
-from pyscalpel.http import Request, Response
-from pyscalpel.utils import to_bytes, get_param, urldecode, urlencode_all, update_param
+from pyscalpel.http import Request
+from pyscalpel.utils import get_param, urldecode, urlencode_all, update_param
 
 # POC script for path traversal exploitation
 # -> https://portswigger.net/web-security/file-path-traversal/lab-sequences-stripped-non-recursively
