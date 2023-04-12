@@ -32,6 +32,8 @@ public class Scalpel implements BurpExtension {
 	 */
 	private MontoyaApi API;
 
+	private Config config;
+
 	/**
      * Initializes the extension.
     @param API The MontoyaApi object to use.
@@ -52,72 +54,59 @@ public class Scalpel implements BurpExtension {
 			// Show that the extension is loading.
 			TraceLogger.log(logger, "Initializing...");
 
-			// Change this to stop Python from being initialized (for JEP debugging purposes)
-			final Boolean initPython = true;
-
 			// Init JEP stuff.
-			if (initPython) {
-				// Instantiate unpacker
-				unpacker = new ScalpelUnpacker(logger);
 
-				// Extract the ressources to a new unique temporary directory.
-				unpacker.initializeResourcesDirectory();
+			// Instantiate unpacker
+			unpacker = new ScalpelUnpacker(logger);
 
-				// Register the Jep native library path.
-				MainInterpreter.setJepLibraryPath(
-					unpacker.getJepNativeLibPath()
+			// Extract the ressources to a new unique temporary directory.
+			unpacker.initializeResourcesDirectory();
+
+			config = new Config(API, unpacker);
+
+			// Register the Jep native library path.
+			MainInterpreter.setJepLibraryPath(unpacker.getJepNativeLibPath());
+
+			// Instantiate the executor (handles Python execution)
+			executor =
+				new ScalpelExecutor(
+					API,
+					unpacker,
+					logger,
+					unpacker.getPythonFrameworkPath()
 				);
 
-				// Instantiate the executor (handles Python execution)
-				executor =
-					new ScalpelExecutor(
-						API,
-						unpacker,
-						logger,
-						unpacker.getPythonFrameworkPath()
-					);
+			// Add the scripting editor tab to Burp UI.
+			API
+				.userInterface()
+				.registerSuiteTab(
+					"Scalpel Interpreter",
+					UIBuilder.constructScalpelInterpreterTab(executor, logger)
+				);
 
-				// Add the scripting editor tab to Burp UI.
-				API
-					.userInterface()
-					.registerSuiteTab(
-						"Scalpel Interpreter",
-						UIBuilder.constructScalpelInterpreterTab(
-							executor,
-							logger
-						)
-					);
+			// Add the configuration tab to Burp UI.
+			API
+				.userInterface()
+				.registerSuiteTab(
+					"Scalpel Config",
+					UIBuilder.constructConfigTab(executor, config)
+				);
 
-				// Add the configuration tab to Burp UI.
-				API
-					.userInterface()
-					.registerSuiteTab(
-						"Scalpel Config",
-						UIBuilder.constructConfigTab(
-							API,
-							executor,
-							unpacker.getPythonFrameworkPath()
-						)
-					);
+			// Create the provider responsible for creating the request/response editors for Burp.
+			final var provider = new ScalpelEditorProvider(API, executor);
 
-				// Create the provider responsible for creating the request/response editors for Burp.
-				final var provider = new ScalpelEditorProvider(API, executor);
+			// Add the request editor to Burp.
+			API.userInterface().registerHttpRequestEditorProvider(provider);
 
-				// Add the request editor to Burp.
-				API.userInterface().registerHttpRequestEditorProvider(provider);
+			// Add the response editor to Burp.
+			API.userInterface().registerHttpResponseEditorProvider(provider);
 
-				// Add the response editor to Burp.
-				API
-					.userInterface()
-					.registerHttpResponseEditorProvider(provider);
-
-				// Add an HTTP intercepter to Burp.
-				API
-					.http()
-					.registerHttpHandler(
-						new ScalpelHttpRequestHandler(API, provider, executor)
-					);
-			}
+			// Add an HTTP intercepter to Burp.
+			API
+				.http()
+				.registerHttpHandler(
+					new ScalpelHttpRequestHandler(API, provider, executor)
+				);
 
 			// Log that the extension has finished loading.
 			TraceLogger.log(logger, "Initialized scalpel successfully.");

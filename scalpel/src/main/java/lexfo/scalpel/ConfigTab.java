@@ -1,15 +1,11 @@
 package lexfo.scalpel;
 
-import burp.api.montoya.MontoyaApi;
-import burp.api.montoya.persistence.PersistedObject;
-import burp.api.montoya.persistence.Preferences;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import com.jediterm.terminal.ui.JediTermWidget;
 import java.awt.*;
 import java.io.File;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.swing.*;
@@ -33,33 +29,21 @@ public class ConfigTab extends JFrame {
 	private JTextField scriptPathField;
 	private JediTermWidget jediTermWidget1;
 	private final ScalpelExecutor executor;
-	private final MontoyaApi API;
-	private final PersistedObject extensionData;
-	private final Preferences preferences;
-	private static final String scriptKey = Constants.PERSISTED_SCRIPT;
+	private final Config config;
 
-	public ConfigTab(
-		MontoyaApi API,
-		ScalpelExecutor executor,
-		String frameworkPath,
-		String defaultScriptPath
-	) {
-		this.API = API;
+	public ConfigTab(ScalpelExecutor executor, Config config) {
+		this.config = config;
 		this.executor = executor;
-		this.extensionData = API.persistence().extensionData();
-		this.preferences = API.persistence().preferences();
 
-		final String defaultValue = defaultScriptPath == ""
-			? getStoredScriptPath()
-			: defaultScriptPath;
-		setUserScriptPath(defaultValue);
-		setFrameworkPath(frameworkPath);
+		$$$setupUI$$$();
+		setUserScriptPath(config.getUserScriptPath());
+		setFrameworkPath(config.getFrameworkPath());
 
 		// Open file browser to select the script to execute.
 		scriptBrowseButton.addActionListener(e ->
 			handleBrowseButtonClick(
 				() -> scriptPathField.getText(),
-				this::setUserScriptPath
+				this::setAndStoreScriptPath
 			)
 		);
 
@@ -67,7 +51,7 @@ public class ConfigTab extends JFrame {
 		frameworkBrowseButton.addActionListener(e ->
 			handleBrowseButtonClick(
 				() -> frameworkPathField.getText(),
-				this::setFrameworkPath
+				this::setAndStoreFrameworkPath
 			)
 		);
 	}
@@ -89,47 +73,8 @@ public class ConfigTab extends JFrame {
 		}
 	}
 
-	/**
-	 * Returns the value of the given key from the extension data or from the
-	 * preferences. If none of them is set, returns an empty Optional.
-	 * <p>
-	 * Extension data is used to store data that is specific to the current project
-	 * Preferences is global storage and is used to provide a previously used default value for new projects
-	 *
-	 * @param key the key to look for
-	 * @return the value of the given key
-	 */
-	private Optional<String> getStoredDefaultString(String key) {
-		return Optional
-			.ofNullable(extensionData.getString(key))
-			.or(() -> Optional.ofNullable(preferences.getString(key)));
-	}
-
-	/**
-	 * Returns the path to the script stored in the extension data or in the
-	 * preferences. If none of them is set, returns an empty String.
-	 *
-	 * @return the path to the script
-	 */
-	private String getStoredScriptPath() {
-		return getStoredDefaultString(scriptKey).orElse("");
-	}
-
-	/**
-	 * Sets the given value for the given key in the extension data and in the
-	 * preferences.
-	 * <p>
-	 * Extension data is used to store data that is specific to the current project
-	 * Preferences is global storage and is used to provide a previously used default value for new projects
-	 * <p>
-	 *
-	 * @param key   the key to set
-	 * @param value the value to set
-	 * @see #getStoredDefaultString(String)
-	 */
-	private void setStoredDefaultString(String key, String value) {
-		extensionData.setString(key, value);
-		preferences.setString(key, value);
+	private static void scrollToRight(JTextField textField) {
+		textField.setCaretPosition(textField.getText().length());
 	}
 
 	/**
@@ -144,8 +89,18 @@ public class ConfigTab extends JFrame {
 		// Update the path selection text field.
 		scriptPathField.setText(path);
 
-		// Store the path in the extension and preferences data.
-		setStoredDefaultString(scriptKey, path);
+		// Scroll to the right
+		scrollToRight(scriptPathField);
+	}
+
+	private void setAndStoreFrameworkPath(String path) {
+		setFrameworkPath(path);
+		config.setFrameworkPath(path);
+	}
+
+	private void setAndStoreScriptPath(String path) {
+		setUserScriptPath(path);
+		config.setUserScriptPath(path);
 	}
 
 	/**
@@ -159,10 +114,9 @@ public class ConfigTab extends JFrame {
 
 		// Update the path selection text field.
 		frameworkPathField.setText(path);
-	}
 
-	public ConfigTab(MontoyaApi API, ScalpelExecutor executor) {
-		this(API, executor, "", "");
+		// Scroll to the right
+		scrollToRight(frameworkPathField);
 	}
 
 	/**
