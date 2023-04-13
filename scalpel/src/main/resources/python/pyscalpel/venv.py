@@ -60,11 +60,13 @@ def create(path: str) -> int:
 
 
 def create_default() -> str:
-    root = f"{os.environ['HOME']}/Scalpel" if os.environ.get("HOME") else "/tmp/Scalpel"
-    scalpel_dir = f"{root}/Scalpel"
-    scalpel_venv = f"{scalpel_dir}/venv_default"
-    os.makedirs(scalpel_dir, exist_ok=True)
-    create(scalpel_venv)
+    root = (
+        f"{os.environ['HOME']}/.scalpel" if os.environ.get("HOME") else "/tmp/.scalpel"
+    )
+    scalpel_venv = f"{root}/venv_default"
+    if not os.path.exists(scalpel_venv):
+        os.makedirs(scalpel_venv, exist_ok=True)
+        create(scalpel_venv)
     return scalpel_venv
 
 
