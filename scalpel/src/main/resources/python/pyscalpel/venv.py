@@ -25,9 +25,12 @@ def deactivate() -> None:
     sys.exec_prefix = old_exec_prefix
 
 
-def activate(path: str) -> None:
+def activate(path: str | None) -> None:
     """Activates the virtual environment at the given path."""
     deactivate()
+
+    if path is None:
+        return
 
     virtual_env = os.path.abspath(path)
     os.environ["_OLD_VIRTUAL_PATH"] = os.environ.get("PATH", "")
