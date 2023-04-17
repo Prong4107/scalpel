@@ -7,34 +7,31 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Optional;
 
-//TODO: File saving/loading
-
-/*
-	By default, the project configuration file is located in the $HOME/.scalpel directory.
-
-	The file name is the project id with the .json extension.
-	The project ID is an UUID stored in the extension data:
-	https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/persistence/Persistence.html#extensionData()
-
-	The configuration file looks something like this:
-	{
-		"venvPaths": [
-			"/path/to/venv1",
-			"/path/to/venv2"
-		],
-		"scriptPath": "/path/to/script.py",
-		"frameworkPath": "/path/to/framework"
-	}
-
-	The file is not really designed to be directly edited by the user, but rather by the extension itself.
-
-	A configuration file is needed because we need to store global persistent data arrays. (e.g. venvPaths)
-	Which can't be done with the Java Preferences API.
-	Furthermore, it's simply more convenient to store as JSON and we already have a scalpel directory to store 'ad-hoc' python venvs.
-*/
-
 /**
  * Scalpel configuration.
+ *
+ *
+ * 	By default, the project configuration file is located in the $HOME/.scalpel directory.
+ *
+ *	The file name is the project id with the .json extension.
+ *	The project ID is an UUID stored in the extension data:
+ *	https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/persistence/Persistence.html#extensionData()
+ *
+ *	The configuration file looks something like this:
+ *	{
+ *		"venvPaths": [
+ *			"/path/to/venv1",
+ *			"/path/to/venv2"
+ *		],
+ *		"scriptPath": "/path/to/script.py",
+ *		"frameworkPath": "/path/to/framework"
+ *	}
+ *
+ *	The file is not really designed to be directly edited by the user, but rather by the extension itself.
+ *
+ *	A configuration file is needed because we need to store global persistent data arrays. (e.g. venvPaths)
+ *	Which can't be done with the Java Preferences API.
+ *	Furthermore, it's simply more convenient to store as JSON and we already have a scalpel directory to store 'ad-hoc' python venvs.
  */
 public class Config {
 
@@ -226,9 +223,14 @@ public class Config {
 	 * This is the venv that will be used when the project is created.
 	 * If the default venv does not exist, it will be created.
 	 * If the default venv cannot be created, an exception will be thrown.
+	 *
+	 * @return The default venv path.
 	 */
 	private static String getOrCreateDefaultVenv() {
-		final File defaultPath = new File(getScalpelDir(), DEFAULT_VENV_NAME);
+		final File defaultPath = new File(
+			getDefaultVenvsDir(),
+			DEFAULT_VENV_NAME
+		);
 		final String path = defaultPath.getAbsolutePath();
 
 		if (!defaultPath.exists()) {
@@ -283,6 +285,8 @@ public class Config {
 
 	/*
 	 * Get the venv paths list.
+	 *
+	 * @return The venv paths list.
 	 */
 	public String[] getVenvPaths() {
 		return globalConfig.venvPaths.toArray(new String[0]);
@@ -290,6 +294,8 @@ public class Config {
 
 	/*
 	 * Get the selected user script path.
+	 *
+	 * @return The selected user script path.
 	 */
 	public String getUserScriptPath() {
 		return projectConfig.userScriptPath;
@@ -297,6 +303,8 @@ public class Config {
 
 	/*
 	 * Get the selected framework path.
+	 *
+	 * @return The selected framework path.
 	 */
 	public String getFrameworkPath() {
 		return projectConfig.frameworkPath;
@@ -304,6 +312,8 @@ public class Config {
 
 	/*
 	 * Get the selected venv path.
+	 *
+	 * @return The selected venv path.
 	 */
 	public String getSelectedVenvPath() {
 		return projectConfig.venvPath;
