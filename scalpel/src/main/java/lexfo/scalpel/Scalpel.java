@@ -68,13 +68,7 @@ public class Scalpel implements BurpExtension {
 			MainInterpreter.setJepLibraryPath(unpacker.getJepNativeLibPath());
 
 			// Instantiate the executor (handles Python execution)
-			executor =
-				new ScalpelExecutor(
-					API,
-					unpacker,
-					logger,
-					unpacker.getPythonFrameworkPath()
-				);
+			executor = new ScalpelExecutor(API, unpacker, logger, config);
 
 			// Add the configuration tab to Burp UI.
 			API

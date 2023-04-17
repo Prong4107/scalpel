@@ -243,6 +243,8 @@ public class ScalpelExecutor {
 	 */
 	private long lastFrameworkModificationTimestamp = -1;
 
+	private long lastConfigModificationTimestamp = -1;
+
 	/**
 	 * Flag indicating whether the task runner loop is running.
 	 */
@@ -251,20 +253,23 @@ public class ScalpelExecutor {
 	/**
 	 * The ScalpelUnpacker object to get the ressources paths.
 	 */
-	private ScalpelUnpacker unpacker;
+	private final ScalpelUnpacker unpacker;
+
+	private final Config config;
 
 	/**
 	 * Constructs a new ScalpelExecutor object.
 	 *
 	 * @param API the MontoyaApi object to use for sending and receiving HTTP messages.
+	 * @param unpacker the ScalpelUnpacker object to use for getting the ressources paths.
 	 * @param logger the Logging object to use for logging messages.
-	 * @param scriptPath the path of the Scalpel script to execute.
+	 * @param config the Config object to use for getting the configuration values.
 	 */
 	public ScalpelExecutor(
 		MontoyaApi API,
 		ScalpelUnpacker unpacker,
 		Logging logger,
-		String scriptPath
+		Config config
 	) {
 		// Store Montoya API object
 		this.API = API;
@@ -275,29 +280,25 @@ public class ScalpelExecutor {
 		// Keep a reference to a logger
 		this.logger = logger;
 
+		// Keep a reference to the config
+		this.config = config;
+
 		// Create a File wrapper from the script path.
-		this.script = Optional.ofNullable(new File(scriptPath));
+		this.script = Optional.ofNullable(new File(config.getUserScriptPath()));
 
-		this.script.ifPresent(s -> {
-				this.lastScriptModificationTimestamp = s.lastModified();
+		this.framework =
+			Optional.ofNullable(new File(config.getFrameworkPath()));
 
-				// Launch task thread.
-				this.runner = this.launchTaskRunner();
-			});
-	}
+		this.lastConfigModificationTimestamp = config.getLastModified();
+		this.framework.ifPresent(f ->
+				this.lastFrameworkModificationTimestamp = f.lastModified()
+			);
+		this.script.ifPresent(s ->
+				this.lastScriptModificationTimestamp = s.lastModified()
+			);
 
-	/**
-	 * Constructs a new ScalpelExecutor object.
-	 *
-	 * @param API the MontoyaApi object to use for sending and receiving HTTP messages.
-	 * @param logger the Logging object to use for logging messages.
-	 */
-	public ScalpelExecutor(
-		MontoyaApi API,
-		ScalpelUnpacker unpacker,
-		Logging logger
-	) {
-		this(API, unpacker, logger, "");
+		// Launch task thread.
+		this.script.ifPresent(s -> this.runner = this.launchTaskRunner());
 	}
 
 	/**
@@ -405,13 +406,31 @@ public class ScalpelExecutor {
 			.orElse(false);
 	}
 
+	private final Boolean hasConfigChanged() {
+		final long currentConfigModificationTimestamp = config.getLastModified();
+
+		// Check if the last modification date has changed since last record.
+		final Boolean hasChanged =
+			lastConfigModificationTimestamp !=
+			currentConfigModificationTimestamp;
+
+		// Update the last modification date record.
+		lastConfigModificationTimestamp = currentConfigModificationTimestamp;
+
+		// Return the check result.
+		return hasChanged;
+	}
+
 	/**
 	 * Checks if either the framework or user script file has been modified since the last check.
 	 *
 	 * @return true if either the framework or user script file has been modified since the last check, false otherwise.
 	 */
-	private final Boolean hasPythonChanged() {
-		return hasFrameworkChanged() && hasScriptChanged();
+	private final Boolean mustReload() {
+		// Use | instead of || to avoid lazy evaluation preventing all modification timestamp from being updated.
+		return (
+			hasFrameworkChanged() | hasScriptChanged() | hasConfigChanged()
+		);
 	}
 
 	/**
@@ -452,11 +471,11 @@ public class ScalpelExecutor {
 				isRunnerAlive = true;
 				while (true) {
 					// Relaunch interpreter when files have changed (hot reload).
-					if (hasPythonChanged()) {
+					if (mustReload()) {
 						TraceLogger.log(
 							logger,
 							Level.INFO,
-							"Python files have changed, reloading interpreter..."
+							"Config or Python files have changed, reloading interpreter..."
 						);
 						break;
 					}
@@ -614,6 +633,11 @@ public class ScalpelExecutor {
 						script.orElseThrow().getAbsolutePath()
 					);
 
+					interp.set("__framework__", framework.getAbsolutePath());
+
+					// Pass the selected venv path so it can be activated by the framework.
+					interp.set("__venv__", config.getSelectedVenvPath());
+
 					// Add the framework's directory to Python's path to allow imports of adjacent files.
 					interp.exec(
 						"""
@@ -674,52 +698,6 @@ public class ScalpelExecutor {
 			);
 			return new String[] { capturedOut, capturedErr };
 		}
-	}
-
-	private void reloadRunner() {
-		// Launch runner when it does not exist.
-		if (runner == null && framework.isPresent() && script.isPresent()) {
-			// Set the timestamp to prevent reloading the interpreter.
-			lastScriptModificationTimestamp = script.get().lastModified();
-
-			// Set the timestamp to prevent reloading the interpreter.
-			lastFrameworkModificationTimestamp = framework.get().lastModified();
-
-			// Launch the task runner thread.
-			runner = launchTaskRunner();
-			return;
-		}
-
-		// Reset the timestamp to reload the interpreter.
-		this.lastScriptModificationTimestamp = -1;
-		this.lastFrameworkModificationTimestamp = -1;
-	}
-
-	/**
-	 * Sets the script path.
-	 *
-	 * @param path the path to the script.
-	 */
-	public void setUserScript(String path) {
-		// Update the script path.
-		this.script = Optional.ofNullable(new File(path));
-		// This should now be done in ConfigTab class.
-		// API.persistence().extensionData().setString("scalpelScript", path);
-
-		reloadRunner();
-	}
-
-	/**
-	 * Sets the framework path and reloads the runner.
-	 *
-	 * @param path the path to the framework.
-	 */
-	public void setFramework(String path) {
-		// Update the framework path.
-		this.framework = Optional.ofNullable(new File(path));
-
-		// Launch runner when it does not exist or reload it.
-		reloadRunner();
 	}
 
 	/**

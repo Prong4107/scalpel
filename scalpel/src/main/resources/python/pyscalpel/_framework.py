@@ -33,9 +33,12 @@ class DebugLogger:
 
 logger = DebugLogger()
 
+VENV = None
+
 # Try to use the logger a first time to ensure it is initialized
 try:
     logger = __logger__  # type: ignore
+    VENV = __venv__  # type: ignore
     logger.logToOutput("Python: Loading _framework.py ...")
 except NameError:
     logger.logToOutput(
@@ -43,11 +46,9 @@ except NameError:
     )
 
 try:
-    from pyscalpel.venv import activate, install, create_default
+    from pyscalpel.venv import activate
 
-    # TODO: Activate the venv passed from Java.
-    activate(create_default())
-    # install("mitmproxy")
+    activate(VENV)
 
     # Import the globals module to set the logger
     import pyscalpel._globals

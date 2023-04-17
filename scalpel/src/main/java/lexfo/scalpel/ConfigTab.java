@@ -218,9 +218,6 @@ public class ConfigTab extends JFrame {
 	 * @param path the path to the script
 	 */
 	private void setUserScriptPath(String path) {
-		// Change and load the user script that will define user callbacks.
-		executor.setUserScript(path);
-
 		// Update the path selection text field.
 		scriptPathField.setText(path);
 
@@ -248,9 +245,6 @@ public class ConfigTab extends JFrame {
 	 * @param path the path to the framework
 	 */
 	private void setFrameworkPath(String path) {
-		// Change and load the framework script that will be ran by Jep. (wraps user callbacks)
-		executor.setFramework(path);
-
 		// Update the path selection text field.
 		frameworkPathField.setText(path);
 

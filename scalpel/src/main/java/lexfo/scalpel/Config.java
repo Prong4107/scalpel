@@ -77,6 +77,7 @@ public class Config {
 
 	private final _GlobalData globalConfig;
 	private final _ProjectData projectConfig;
+	private long lastModified = System.currentTimeMillis();
 
 	// Scalpel configuration directory basename
 	private static final String CONFIG_DIR = ".scalpel";
@@ -166,6 +167,7 @@ public class Config {
 	 * Write the project configuration to the project configuration file.
 	 */
 	private synchronized void saveProjectConfig() {
+		this.lastModified = System.currentTimeMillis();
 		IO.writeJSON(projectScalpelConfig, projectConfig);
 	}
 
@@ -175,6 +177,16 @@ public class Config {
 	private synchronized void saveAllConfig() {
 		saveGlobalConfig();
 		saveProjectConfig();
+	}
+
+	/**
+	 * Get the last modification time of the project configuration file.
+	 *
+	 * This is used to reload the execution configuration when the project configuration file is modified.
+	 * @return The last modification time of the project configuration file.
+	 */
+	public long getLastModified() {
+		return lastModified;
 	}
 
 	/**
