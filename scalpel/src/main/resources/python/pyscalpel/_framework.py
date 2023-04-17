@@ -45,8 +45,9 @@ except NameError:
 try:
     from pyscalpel.venv import activate, install, create_default
 
+    # TODO: Activate the venv passed from Java.
     activate(create_default())
-    install("mitmproxy")
+    # install("mitmproxy")
 
     # Import the globals module to set the logger
     import pyscalpel._globals

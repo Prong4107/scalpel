@@ -76,20 +76,16 @@ public class Scalpel implements BurpExtension {
 					unpacker.getPythonFrameworkPath()
 				);
 
-			// Add the scripting editor tab to Burp UI.
-			API
-				.userInterface()
-				.registerSuiteTab(
-					"Scalpel Interpreter",
-					UIBuilder.constructScalpelInterpreterTab(executor, logger)
-				);
-
 			// Add the configuration tab to Burp UI.
 			API
 				.userInterface()
 				.registerSuiteTab(
-					"Scalpel Config",
-					UIBuilder.constructConfigTab(executor, config)
+					"Scalpel",
+					UIBuilder.constructConfigTab(
+						executor,
+						config,
+						API.userInterface().currentTheme()
+					)
 				);
 
 			// Create the provider responsible for creating the request/response editors for Burp.
