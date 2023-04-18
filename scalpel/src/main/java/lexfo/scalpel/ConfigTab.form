@@ -18,7 +18,7 @@
         <properties>
           <background color="-4915176"/>
         </properties>
-        <border type="none"/>
+        <border type="none" title="Manage virtualenvs"/>
         <children>
           <grid id="925d" layout-manager="FormLayout">
             <rowspec value="center:d:grow"/>
@@ -49,7 +49,9 @@
                   </grid>
                   <forms defaultalign-horz="false" defaultalign-vert="false"/>
                 </constraints>
-                <properties/>
+                <properties>
+                  <toolTipText value=""/>
+                </properties>
               </component>
             </children>
           </grid>

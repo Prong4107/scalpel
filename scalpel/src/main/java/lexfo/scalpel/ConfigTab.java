@@ -110,23 +110,60 @@ public class ConfigTab extends JFrame {
 		);
 	}
 
+	private static final String filenameForbidenChars =
+		"/<>:\"\\|?*\0\1\2\3\4\5\6\7\10\11\12\13\14\15\16\17\20\21\22\23\24\25\26\27\30\31";
+
+	// https://stackoverflow.com/a/31976060
+	private static final String validateVenvName(String name)
+		throws IllegalArgumentException {
+		var filtered = filenameForbidenChars
+			.chars()
+			.filter(c -> name.indexOf(c) != -1);
+		filtered
+			.findFirst()
+			.ifPresent(c -> {
+				throw new IllegalArgumentException(
+					// Join the chars into a string.
+					"Invalid characters: " +
+					filtered
+						.mapToObj(i -> String.valueOf((char) i))
+						.reduce("", String::concat)
+				);
+			});
+
+		return name;
+	}
+
 	private void handleVenvButton() {
-		// Show a blocking dialog while the venv is created.
-		WorkingPopup.showBlockingWaitDialog(() -> {
-			// Remove leading and trailing spaces from the text field.
-			final String value = addVentText.getText().trim();
+		// Remove leading and trailing spaces from the text field.
+		final String value = addVentText.getText().trim();
 
-			// Ignore empty strings.
-			if (value.isEmpty()) return;
+		// Ignore empty strings.
+		if (value.isEmpty()) return;
 
+		final String path;
+
+		try {
 			// When an absolute path is provided, check if it already exists, else create it
 			// When something else is provided, treat it as a name and create a new venv in the default venvs dir
-			final String path = new File(value).isAbsolute()
-				? value
-				: Config.getDefaultVenvsDir() +
-				File.separator +
-				value.replaceAll(File.separator, "_");
+			path =
+				new File(value).isAbsolute()
+					? value
+					: Config.getDefaultVenvsDir() +
+					File.separator +
+					validateVenvName(value);
+		} catch (IllegalArgumentException e) {
+			JOptionPane.showMessageDialog(
+				this,
+				e.getMessage(),
+				"Invalid venv name",
+				JOptionPane.ERROR_MESSAGE
+			);
+			return;
+		}
 
+		// Show a blocking dialog while the venv is created.
+		WorkingPopup.showBlockingWaitDialog(() -> {
 			// Create the venv and installed required packages. (i.e. mitmproxy)
 			Venv.createAndInstallDefaults(path);
 
@@ -317,6 +354,16 @@ public class ConfigTab extends JFrame {
 				false
 			)
 		);
+		venvSelectPanel.setBorder(
+			BorderFactory.createTitledBorder(
+				null,
+				"Manage virtualenvs",
+				TitledBorder.DEFAULT_JUSTIFICATION,
+				TitledBorder.DEFAULT_POSITION,
+				null,
+				null
+			)
+		);
 		final JPanel panel1 = new JPanel();
 		panel1.setLayout(
 			new FormLayout(
@@ -348,6 +395,7 @@ public class ConfigTab extends JFrame {
 		CellConstraints cc = new CellConstraints();
 		panel1.add(addVenvButton, cc.xy(3, 1));
 		addVentText = new JTextField();
+		addVentText.setToolTipText("");
 		panel1.add(
 			addVentText,
 			cc.xy(1, 1, CellConstraints.FILL, CellConstraints.FILL)
