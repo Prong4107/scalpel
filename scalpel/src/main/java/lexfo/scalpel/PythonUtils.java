@@ -1,13 +1,7 @@
 package lexfo.scalpel;
 
 import burp.api.montoya.core.ByteArray;
-import burp.api.montoya.http.handler.HttpRequestToBeSent;
-import burp.api.montoya.http.handler.HttpResponseReceived;
 import burp.api.montoya.http.message.HttpMessage;
-import burp.api.montoya.http.message.requests.HttpRequest;
-import burp.api.montoya.http.message.responses.HttpResponse;
-import burp.api.montoya.proxy.http.InterceptedRequest;
-import burp.api.montoya.proxy.http.InterceptedResponse;
 import java.util.stream.IntStream;
 
 /**
@@ -62,16 +56,16 @@ public class PythonUtils {
 	}
 
 	/**
-    Updates the specified HttpMessage object's header with the specified name and value.
-    Creates the header when it doesn't exist.
-    <p> (Burp's withUpdatedHeader() method does not create the header.)
-
-    @param <T> The type of the HttpMessage object.
-    @param msg The HttpMessage object to update.
-    @param name The name of the header to update.
-    @param value The value of the header to update.
-    @return The updated HttpMessage object.
-  */
+	 *    Updates the specified HttpMessage object's header with the specified name and value.
+	 *    Creates the header when it doesn't exist.
+	 *    <p> (Burp's withUpdatedHeader() method does not create the header.)
+	 *
+	 *    @param <T> The type of the HttpMessage object.
+	 *    @param msg The HttpMessage object to update.
+	 *    @param name The name of the header to update.
+	 *    @param value The value of the header to update.
+	 *    @return The updated HttpMessage object.
+	 */
 	@SuppressWarnings({ "unchecked" })
 	public static <T extends HttpMessage> T updateHeader(
 		T msg,
