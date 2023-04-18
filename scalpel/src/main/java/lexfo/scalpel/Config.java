@@ -152,7 +152,7 @@ public class Config {
 				})
 				.orElseGet(this::getDefaultProjectData);
 
-		// Write the global config to the file for when they didn't exist.
+		// Write the global config to the file if they didn't exist.
 		saveAllConfig();
 	}
 
