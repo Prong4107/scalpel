@@ -34,13 +34,14 @@ public class PythonUtils {
 	/**
 	 * Convert Python bytes to Java bytes
 	 *
-	 * It is not possible to convert to Java bytes Python side without a Java helper like this one,
+	 * It is not possible to explicitely convert to Java bytes Python side without a Java helper like this one,
 	 * 	because Jep doesn't natively support the convertion:
 	 * 	https://github.com/ninia/jep/wiki/How-Jep-Works#objects
 	 *
-	 * When passing byte[],
+	 * When returning byte[],
 	 * 	Python receives a PyJArray of integer-like objects which will be mapped back to byte[] by Jep.
 	 *
+	 * Some errors this solves are for example when there is both an overload for byte[] and int[] and Jep chooses the wrong one.
 	 * This can be used to avoid type errors by avoding Jep's conversion by passing a native Java object.
 	 *
 	 * @param pythonBytes the unsigned values to convert
