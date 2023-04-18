@@ -116,20 +116,21 @@ public class ConfigTab extends JFrame {
 	// https://stackoverflow.com/a/31976060
 	private static final String validateVenvName(String name)
 		throws IllegalArgumentException {
-		var filtered = filenameForbidenChars
+		int[] filtered = filenameForbidenChars
 			.chars()
-			.filter(c -> name.indexOf(c) != -1);
-		filtered
-			.findFirst()
-			.ifPresent(c -> {
-				throw new IllegalArgumentException(
-					// Join the chars into a string.
-					"Invalid characters: " +
-					filtered
-						.mapToObj(i -> String.valueOf((char) i))
-						.reduce("", String::concat)
-				);
-			});
+			.filter(c -> name.indexOf(c) != -1)
+			.distinct()
+			.toArray();
+
+		if (filtered.length > 0) throw new IllegalArgumentException(
+			// Join the chars into a string.
+			"Invalid characters: " +
+			Arrays
+				.stream(filtered)
+				.mapToObj(c -> String.valueOf((char) c))
+				.reduce((a, b) -> a + b)
+				.get()
+		);
 
 		return name;
 	}
