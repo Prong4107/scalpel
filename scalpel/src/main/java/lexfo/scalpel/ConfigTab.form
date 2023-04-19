@@ -20,37 +20,26 @@
         </properties>
         <border type="none" title="Manage virtualenvs"/>
         <children>
-          <grid id="925d" layout-manager="FormLayout">
-            <rowspec value="center:d:grow"/>
-            <colspec value="fill:d:grow"/>
-            <colspec value="left:4dlu:noGrow"/>
-            <colspec value="fill:max(d;4px):noGrow"/>
+          <grid id="925d" layout-manager="BorderLayout" hgap="0" vgap="0">
             <constraints>
-              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="2" fill="1" indent="0" use-parent-layout="false"/>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="1" anchor="2" fill="1" indent="0" use-parent-layout="false">
+                <preferred-size width="100" height="-1"/>
+              </grid>
             </constraints>
             <properties/>
             <border type="none"/>
             <children>
-              <component id="18610" class="javax.swing.JButton" binding="addVenvButton">
-                <constraints>
-                  <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false">
-                    <preferred-size width="2" height="2"/>
-                  </grid>
-                  <forms/>
-                </constraints>
+              <component id="ecd18" class="javax.swing.JTextField" binding="addVentText">
+                <constraints border-constraint="Center"/>
                 <properties>
-                  <text value="+"/>
+                  <text value=""/>
+                  <toolTipText value=""/>
                 </properties>
               </component>
-              <component id="ecd18" class="javax.swing.JTextField" binding="addVentText">
-                <constraints>
-                  <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                    <preferred-size width="150" height="50"/>
-                  </grid>
-                  <forms defaultalign-horz="false" defaultalign-vert="false"/>
-                </constraints>
+              <component id="18610" class="javax.swing.JButton" binding="addVenvButton">
+                <constraints border-constraint="East"/>
                 <properties>
-                  <toolTipText value=""/>
+                  <text value="+"/>
                 </properties>
               </component>
             </children>
