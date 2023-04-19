@@ -309,7 +309,7 @@ public class ScalpelExecutor {
 	 * @param kwargs the keyword arguments to pass to the python function.
 	 * @return a Task object representing the added task.
 	 */
-	private final Task addTask(
+	private Task addTask(
 		String name,
 		Object[] args,
 		Map<String, Object> kwargs
@@ -390,7 +390,7 @@ public class ScalpelExecutor {
 	 *
 	 * @return true if the script file has been modified since the last check, false otherwise.
 	 */
-	private final Boolean hasScriptChanged() {
+	private Boolean hasScriptChanged() {
 		return script
 			.map(script -> {
 				// Check if the last modification date has changed since last record.
@@ -426,7 +426,7 @@ public class ScalpelExecutor {
 	 *
 	 * @return true if either the framework or user script file has been modified since the last check, false otherwise.
 	 */
-	private final Boolean mustReload() {
+	private Boolean mustReload() {
 		// Use | instead of || to avoid lazy evaluation preventing all modification timestamp from being updated.
 		return (
 			hasFrameworkChanged() | hasScriptChanged() | hasConfigChanged()
@@ -460,7 +460,7 @@ public class ScalpelExecutor {
 	 *
 	 * @return the launched thread.
 	 */
-	private final Thread launchTaskRunner() {
+	private Thread launchTaskRunner() {
 		// Instantiate the task runner thread.
 		final var thread = new Thread(() -> {
 			TraceLogger.log(logger, "Starting task loop.");
@@ -604,7 +604,7 @@ public class ScalpelExecutor {
 	 *
 	 * @return the initialized interpreter.
 	 */
-	private final SubInterpreter initInterpreter() {
+	private SubInterpreter initInterpreter() {
 		try {
 			return framework
 				.map(framework -> {
