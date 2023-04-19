@@ -163,11 +163,6 @@ public class ScalpelUnpacker {
 	*/
 	public void initializeResourcesDirectory() {
 		try {
-			// Generate an unique directory name to avoid "libjep.so already loaded in another classloader"
-			// ressourcesDirectory = Files.createTempDirectory(".scalpel_tmp_");
-			// ^^^ This is weirdly not needed anymore and we can simply extract to the home directory,
-			// 		I certainly misundertood the issue.
-
 			// Create a $HOME/.scalpel/extracted directory.
 			ressourcesDirectory =
 				Path.of(
