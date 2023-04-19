@@ -11,14 +11,14 @@ def req_edit_in(req: Request) -> bytes:
         except binascii.Error:
             pass
 
-    return req.to_bytes()
+    return bytes(req)
 
 
 def req_edit_out(_: Request, text: bytes) -> bytes:
     req = Request.from_bytes(text)
     if req.content:
         req.content = b64encode(cast(bytes, req.get_content()))
-    return req.to_bytes()
+    return bytes(req)
 
 
 def res_edit_in(res: Response) -> bytes:
@@ -27,11 +27,11 @@ def res_edit_in(res: Response) -> bytes:
             res.content = b64decode(cast(bytes, res.get_content()), validate=True)
         except binascii.Error:
             pass
-    return res.to_bytes()
+    return bytes(res)
 
 
 def res_edit_out(_: Response, text: bytes) -> bytes:
     res = Response.from_bytes(text)
     if res.content:
         res.content = b64encode(cast(bytes, res.get_content()))
-    return res.to_bytes()
+    return bytes(res)
