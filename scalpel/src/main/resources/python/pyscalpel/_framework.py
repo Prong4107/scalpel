@@ -37,8 +37,7 @@ VENV = None
 
 # Try to use the logger a first time to ensure it is initialized
 try:
-    logger = __logger__  # type: ignore
-    VENV = __venv__  # type: ignore
+    logger = __scalpel__["logger"]  # type: ignore
     logger.logToOutput("Python: Loading _framework.py ...")
 except NameError:
     logger.logToOutput(
@@ -47,6 +46,11 @@ except NameError:
 
 try:
     from pyscalpel.venv import activate
+    from pyscalpel.java.scalpel_types.scalpel import Scalpel
+
+    scalpel: Scalpel = cast(Scalpel, __scalpel__)  # type: ignore pylint: disable=undefined-variable
+
+    VENV = scalpel["venv"]
 
     activate(VENV)
 
@@ -57,7 +61,7 @@ try:
     pyscalpel._globals.logger = logger  # pylint: disable=protected-access
 
     # Get the user script path from the JEP initialized variable
-    user_script: str = __user_script__  # type: ignore # pylint: disable=undefined-variable
+    user_script: str = scalpel["user_script"]
 
     # Get utils to dynamically import the user script in a convinient way
     import importlib.util
