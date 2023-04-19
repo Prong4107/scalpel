@@ -191,7 +191,7 @@ class Request(MITMProxyRequest):
         return req
 
     @lru_cache
-    def to_bytes(self) -> bytes:
+    def __bytes__(self) -> bytes:
         """Convert the request to bytes
         :return: The request as bytes.
         """
@@ -239,7 +239,7 @@ class Request(MITMProxyRequest):
         )
 
         # Convert the request to a Burp ByteArray.
-        request_byte_array: IByteArray = PythonUtils.toByteArray(self.to_bytes())
+        request_byte_array: IByteArray = PythonUtils.toByteArray(bytes(self))
 
         # Instantiate and return a new Burp HTTP request.
         return HttpRequest.httpRequest(service, request_byte_array)
@@ -335,7 +335,7 @@ class Response(MITMProxyResponse):
         )
 
     @lru_cache
-    def to_bytes(self) -> bytes:
+    def __bytes__(self) -> bytes:
         """Convert the response to raw bytes."""
         # Reserialize the response to bytes.
 
@@ -363,7 +363,7 @@ class Response(MITMProxyResponse):
     def to_burp(self) -> IHttpResponse:
         """Convert the response to a Burp suite :class:`IHttpResponse`."""
         # Convert the response to a Burp ByteArray.
-        response_byte_array: IByteArray = PythonUtils.toByteArray(self.to_bytes())
+        response_byte_array: IByteArray = PythonUtils.toByteArray(bytes(self))
 
         # Instantiate and return a new Burp HTTP response.
         return HttpResponse.httpResponse(response_byte_array)

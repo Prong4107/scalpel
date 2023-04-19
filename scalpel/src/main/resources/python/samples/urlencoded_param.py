@@ -13,4 +13,4 @@ def req_edit_in(req: Request) -> bytes | None:
 
 
 def req_edit_out(req: Request, text: bytes) -> bytes | None:
-    return update_param(req, PARAM_NAME, urlencode_all(text)).to_bytes()
+    return bytes(update_param(req, PARAM_NAME, urlencode_all(text)))

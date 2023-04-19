@@ -20,5 +20,5 @@ def req_edit_out(req: Request, text: bytes) -> bytes | None:
     encoded = urlencode_all(prefix + text)
     str_encoded = str(encoded, "ascii")
     new_req = update_param(req, param_name, str_encoded)
-    req_bytes = new_req.to_bytes()
+    req_bytes = bytes(new_req)
     return req_bytes
