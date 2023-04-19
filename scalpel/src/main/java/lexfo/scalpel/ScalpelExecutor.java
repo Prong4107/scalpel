@@ -9,6 +9,7 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.logging.Logging;
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
@@ -613,30 +614,34 @@ public class ScalpelExecutor {
 						new JepConfig().setClassEnquirer(new CustomEnquirer())
 					);
 
+					var burpEnv = new HashMap<>(10);
+
 					// Make the Montoya API object accessible in Python
-					interp.set("__montoya__", API);
+					burpEnv.put("API", API);
 
 					// Set the framework's filename to corresponding Python variable
 					// This isn't set by JEP, we have to do it ourselves.
-					interp.set("__file__", framework.getAbsolutePath());
-
-					// Set the framework's directory to be able to add it to Python's path.
-					interp.set("__directory__", unpacker.getPythonPath());
+					burpEnv.put("file", framework.getAbsolutePath());
 
 					// Add logger global to be able to log to Burp from Python.
 					// TODO: Change this to TraceLogger.
-					interp.set("__logger__", logger);
+					burpEnv.put("logger", logger);
 
 					// Set the path to the user script that will define the actual callbacks.
-					interp.set(
-						"__user_script__",
+					burpEnv.put(
+						"user_script",
 						script.orElseThrow().getAbsolutePath()
 					);
 
-					interp.set("__framework__", framework.getAbsolutePath());
+					burpEnv.put("framework", framework.getAbsolutePath());
 
 					// Pass the selected venv path so it can be activated by the framework.
-					interp.set("__venv__", config.getSelectedVenvPath());
+					burpEnv.put("venv", config.getSelectedVenvPath());
+
+					interp.set("__scalpel__", burpEnv);
+
+					// Set the framework's directory to be able to add it to Python's path.
+					interp.set("__directory__", unpacker.getPythonPath());
 
 					// Add the framework's directory to Python's path to allow imports of adjacent files.
 					interp.exec(
