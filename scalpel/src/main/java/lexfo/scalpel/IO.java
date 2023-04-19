@@ -14,14 +14,14 @@ public class IO {
 
 	@FunctionalInterface
 	public static interface IOCallable<T> {
-		T call() throws IOException;
+		T call() throws IOException, InterruptedException;
 	}
 
 	// Wrapper to catch IOExceptions and rethrow them as RuntimeExceptions
 	public static final <T> T ioWrap(IOCallable<T> supplier) {
 		try {
 			return supplier.call();
-		} catch (IOException e) {
+		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
 		}
 	}

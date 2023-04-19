@@ -11,6 +11,8 @@ import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -19,6 +21,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.DefaultCaret;
+import lexfo.scalpel.Venv.PackageInfo;
 
 /**
  * Burp tab handling Scalpel configuration
@@ -110,63 +113,59 @@ public class ConfigTab extends JFrame {
 		);
 	}
 
-	private static final String filenameForbidenChars =
-		"/<>:\"\\|?*\0\1\2\3\4\5\6\7\10\11\12\13\14\15\16\17\20\21\22\23\24\25\26\27\30\31";
-
-	// https://stackoverflow.com/a/31976060
-	private static final String validateVenvName(String name)
-		throws IllegalArgumentException {
-		int[] filtered = filenameForbidenChars
-			.chars()
-			.filter(c -> name.indexOf(c) != -1)
-			.distinct()
-			.toArray();
-
-		if (filtered.length > 0) throw new IllegalArgumentException(
-			// Join the chars into a string.
-			"Invalid characters: " +
-			Arrays
-				.stream(filtered)
-				.mapToObj(c -> String.valueOf((char) c))
-				.reduce((a, b) -> a + b)
-				.get()
-		);
-
-		return name;
-	}
-
 	private void handleVenvButton() {
-		// Remove leading and trailing spaces from the text field.
 		final String value = addVentText.getText().trim();
 
-		// Ignore empty strings.
-		if (value.isEmpty()) return;
+		if (value.isEmpty()) {
+			return;
+		}
 
 		final String path;
-
 		try {
-			// When an absolute path is provided, check if it already exists, else create it
-			// When something else is provided, treat it as a name and create a new venv in the default venvs dir
-			path =
-				new File(value).isAbsolute()
-					? value
-					: Config.getDefaultVenvsDir() +
+			if ((new File(value).isAbsolute())) {
+				// The user provided an absolute path, use it as is.
+				path = value;
+			} else if (value.contains(File.separator)) {
+				// The user provided a relative path, forbid it.
+				throw new IllegalArgumentException(
+					"Venv name cannot contain " +
 					File.separator +
-					validateVenvName(value);
+					"\n" +
+					"Please provide a venv name or an absolute path."
+				);
+			} else {
+				// The user provided a name, use it to create a venv in the default venvs dir.
+				path =
+					Paths
+						.get(
+							Config.getDefaultVenvsDir().getAbsolutePath(),
+							value
+						)
+						.toString();
+			}
 		} catch (IllegalArgumentException e) {
 			JOptionPane.showMessageDialog(
 				this,
 				e.getMessage(),
-				"Invalid venv name",
+				"Invalid venv name or absolute path",
 				JOptionPane.ERROR_MESSAGE
 			);
 			return;
 		}
 
-		// Show a blocking dialog while the venv is created.
 		WorkingPopup.showBlockingWaitDialog(() -> {
 			// Create the venv and installed required packages. (i.e. mitmproxy)
-			Venv.createAndInstallDefaults(path);
+			try {
+				Venv.createAndInstallDefaults(path);
+			} catch (IOException | InterruptedException e) {
+				JOptionPane.showMessageDialog(
+					this,
+					"Failed to create venv: \n" + e.getMessage(),
+					"Failed to create venv",
+					JOptionPane.ERROR_MESSAGE
+				);
+				return;
+			}
 
 			// Add the venv to the config.
 			config.addVenvPath(path);
@@ -188,21 +187,21 @@ public class ConfigTab extends JFrame {
 		config.setSelectedVenvPath(selectedVenvPath);
 
 		// Update the package table.
-		updatePackagesTable();
+		updatePackagesTable(__ -> {
+			// Stop the terminal whiile we update it.
+			this.terminalForVenvConfig.stop();
 
-		// Stop the terminal whiile we update it.
-		this.terminalForVenvConfig.stop();
+			// Close the terminal to ensure the process is killed.
+			this.terminalForVenvConfig.getTtyConnector().close();
 
-		// Close the terminal to ensure the process is killed.
-		this.terminalForVenvConfig.getTtyConnector().close();
+			// Connect the terminal to the new process in the new venv.
+			this.terminalForVenvConfig.createTerminalSession(
+					Terminal.createTtyConnector(selectedVenvPath)
+				);
 
-		// Connect the terminal to the new process in the new venv.
-		this.terminalForVenvConfig.createTerminalSession(
-				Terminal.createTtyConnector(selectedVenvPath)
-			);
-
-		// Start the terminal.
-		this.terminalForVenvConfig.start();
+			// Start the terminal.
+			this.terminalForVenvConfig.start();
+		});
 	}
 
 	private void handleBrowseButtonClick(
@@ -225,7 +224,25 @@ public class ConfigTab extends JFrame {
 		}
 	}
 
-	private void updatePackagesTable() {
+	private void updatePackagesTable(
+		Consumer<JTable> onSuccess,
+		Runnable onFail
+	) {
+		final PackageInfo[] installedPackages;
+		try {
+			installedPackages =
+				Venv.getInstalledPackages(config.getSelectedVenvPath());
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(
+				this,
+				"Failed to get installed packages: \n" + e.getMessage(),
+				"Failed to get installed packages",
+				JOptionPane.ERROR_MESSAGE
+			);
+			onFail.run();
+			return;
+		}
+
 		// Create a table model with the appropriate column names
 		DefaultTableModel tableModel = new DefaultTableModel(
 			new Object[] { "Name", "Version" },
@@ -234,7 +251,7 @@ public class ConfigTab extends JFrame {
 
 		// Parse with jackson and add to the table model
 		Arrays
-			.stream(Venv.getInstalledPackages(config.getSelectedVenvPath()))
+			.stream(installedPackages)
 			.map(p -> new Object[] { p.name, p.version })
 			.forEach(tableModel::addRow);
 
@@ -243,6 +260,16 @@ public class ConfigTab extends JFrame {
 
 		// make the table uneditable
 		packagesTable.setDefaultEditor(Object.class, null);
+
+		onSuccess.accept(packagesTable);
+	}
+
+	private void updatePackagesTable(Consumer<JTable> onSuccess) {
+		updatePackagesTable(onSuccess, () -> {});
+	}
+
+	private void updatePackagesTable() {
+		updatePackagesTable(__ -> {});
 	}
 
 	private static void scrollToRight(JTextField textField) {
@@ -381,8 +408,7 @@ public class ConfigTab extends JFrame {
 				1,
 				GridConstraints.ANCHOR_SOUTH,
 				GridConstraints.FILL_HORIZONTAL,
-				GridConstraints.SIZEPOLICY_CAN_SHRINK |
-				GridConstraints.SIZEPOLICY_CAN_GROW,
+				1,
 				1,
 				null,
 				null,
@@ -456,8 +482,7 @@ public class ConfigTab extends JFrame {
 				1,
 				GridConstraints.ANCHOR_CENTER,
 				GridConstraints.FILL_BOTH,
-				GridConstraints.SIZEPOLICY_CAN_SHRINK |
-				GridConstraints.SIZEPOLICY_WANT_GROW,
+				1,
 				GridConstraints.SIZEPOLICY_CAN_SHRINK |
 				GridConstraints.SIZEPOLICY_CAN_GROW,
 				null,
@@ -473,7 +498,9 @@ public class ConfigTab extends JFrame {
 		defaultListModel1.addElement("ipsum");
 		defaultListModel1.addElement("aucupatum");
 		defaultListModel1.addElement("versatio");
-		defaultListModel1.addElement("lorem");
+		defaultListModel1.addElement(
+			"loremaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatum"
+		);
 		defaultListModel1.addElement("ipsum");
 		defaultListModel1.addElement("aucupatum");
 		defaultListModel1.addElement("versatio");

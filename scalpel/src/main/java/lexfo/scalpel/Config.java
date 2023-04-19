@@ -3,6 +3,7 @@ package lexfo.scalpel;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.persistence.PersistedObject;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -129,10 +130,20 @@ public class Config {
 				.filter(File::exists)
 				.map(file -> IO.readJSON(file, _GlobalData.class))
 				.map(d -> {
+					// Remove venvs that were deleted by an external process.
+					d.venvPaths.removeIf(path -> !new File(path).exists());
+
+					// Ensure that there is at least one venv.
+					if (d.venvPaths.size() == 0) {
+						d.venvPaths.add(getOrCreateDefaultVenv());
+					}
+
+					// Select the first venv if the default one doesn't exist anymore or if it's not set.
 					d.defaultVenvPath =
 						Optional
 							.ofNullable(d.defaultVenvPath)
-							.orElse(d.venvPaths.get(0));
+							.filter(path -> new File(path).exists())
+							.orElseGet(() -> d.venvPaths.get(0));
 					return d;
 				})
 				.orElseGet(() -> getDefaultGlobalData(unpacker));
@@ -146,8 +157,9 @@ public class Config {
 				.map(d -> {
 					d.venvPath =
 						Optional
-							.ofNullable(d.venvPath)
-							.orElse(globalConfig.defaultVenvPath);
+							.ofNullable(d.venvPath) // Ensure the venv path is set.
+							.filter(p -> globalConfig.venvPaths.contains(p)) // Ensure the selected venv is registered.
+							.orElse(globalConfig.defaultVenvPath); // Otherwise, use the default venv.
 					return d;
 				})
 				.orElseGet(this::getDefaultProjectData);
@@ -195,10 +207,9 @@ public class Config {
 	 * @return The scalpel configuration directory. (default: $HOME/.scalpel)
 	 */
 	public static File getScalpelDir() {
-		Path home = new File(System.getProperty("user.home")).toPath();
+		final Path home = new File(System.getProperty("user.home")).toPath();
 
-		// Create dir if not exists
-		File dir = new File(home.toFile(), CONFIG_DIR);
+		final File dir = new File(home.toFile(), CONFIG_DIR);
 		if (!dir.exists()) {
 			dir.mkdir();
 		}
@@ -212,8 +223,7 @@ public class Config {
 	 * @return The default venvs directory. (default: $HOME/.scalpel/venvs)
 	 */
 	public static File getDefaultVenvsDir() {
-		// Create dir if not exists
-		File dir = new File(getScalpelDir(), "venvs");
+		final File dir = new File(getScalpelDir(), "venvs");
 		if (!dir.exists()) {
 			dir.mkdir();
 		}
@@ -253,10 +263,19 @@ public class Config {
 			return path;
 		}
 
-		if (Venv.create(path) != 0) {
-			throw new RuntimeException("Failed to create default venv");
+		final RuntimeException failureException = new RuntimeException(
+			"Failed to create default venv"
+		);
+
+		try {
+			if (Venv.create(path) != 0) {
+				throw failureException;
+			}
+		} catch (IOException | InterruptedException e) {
+			throw failureException;
 		}
 
+		// Install the dependencies.
 		Venv.install_background(path, "mitmproxy");
 
 		return path;
@@ -269,7 +288,7 @@ public class Config {
 	 * @return The global configuration.
 	 */
 	private _GlobalData getDefaultGlobalData(ScalpelUnpacker unpacker) {
-		_GlobalData data = new _GlobalData();
+		final _GlobalData data = new _GlobalData();
 
 		data.defaultScriptPath = unpacker.getDefaultScriptPath();
 		data.defaultFrameworkPath = unpacker.getPythonFrameworkPath();
@@ -285,7 +304,7 @@ public class Config {
 	 * @return The project configuration.
 	 */
 	private _ProjectData getDefaultProjectData() {
-		_ProjectData data = new _ProjectData();
+		final _ProjectData data = new _ProjectData();
 
 		data.userScriptPath = globalConfig.defaultScriptPath;
 		data.frameworkPath = globalConfig.defaultFrameworkPath;
