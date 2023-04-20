@@ -7,7 +7,9 @@ def always_bytes(x: str | bytes) -> bytes:
     return strutils.always_bytes(x, "utf-8", "surrogateescape")
 
 
-def always_str(x: str | bytes) -> str:
+def always_str(x: str | bytes | int) -> str:
+    if isinstance(x, int):
+        return str(x)
     return strutils.always_str(x, "utf-8", "surrogateescape")
 
 

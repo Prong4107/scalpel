@@ -2,13 +2,16 @@ import time
 
 from typing import Iterable, Literal
 
-from functools import lru_cache
+from functools import lru_cache, singledispatch
 
 from mitmproxy.http import (
     Headers as MITMProxyHeaders,
     Request as MITMProxyRequest,
     Response as MITMProxyResponse,
 )
+
+from mitmproxy.coretypes import multidict
+
 
 from pyscalpel.java.burp.http_header import IHttpHeader, HttpHeader
 from pyscalpel.java.burp.http_request import IHttpRequest, HttpRequest
@@ -17,7 +20,7 @@ from pyscalpel.java.burp.http_service import IHttpService, HttpService
 from pyscalpel.burp_utils import get_bytes
 from pyscalpel.java.burp.byte_array import IByteArray
 from pyscalpel.java.scalpel_types.utils import PythonUtils
-from pyscalpel.encoding import always_bytes, native
+from pyscalpel.encoding import always_bytes, native, always_str
 
 
 class Headers(MITMProxyHeaders):
@@ -74,6 +77,14 @@ class Headers(MITMProxyHeaders):
             HttpHeader.httpHeader(native(header[0]), native(header[1]))
             for header in self.fields
         ]
+
+
+class QueryParams(multidict.MultiDictView[str, str]):
+    def __init__(self, origin: multidict.MultiDictView[str, str]) -> None:
+        super().__init__(origin._getter, origin._setter)
+
+    def __setitem__(self, key: int | str | bytes, value: int | str | bytes) -> None:
+        super().__setitem__(always_str(key), always_str(value))
 
 
 class Request(MITMProxyRequest):
@@ -286,6 +297,10 @@ class Request(MITMProxyRequest):
 
         # Construct the request from the Burp.
         return cls.from_burp(burp_request)
+
+    @property
+    def query(self) -> QueryParams:
+        return QueryParams(super().query)
 
 
 class Response(MITMProxyResponse):
