@@ -426,7 +426,7 @@ class IHttpRequest(IHttpMessage, Protocol):
 
     @abstractmethod
     @overload
-    def httpRequest(self, request: IByteArray) -> "IHttpRequest":
+    def httpRequest(self, request: IByteArray | str) -> "IHttpRequest":
         """generated source for method httpRequest"""
 
     @abstractmethod

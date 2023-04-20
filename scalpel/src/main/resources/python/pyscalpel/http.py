@@ -245,9 +245,9 @@ class Request(MITMProxyRequest):
         return HttpRequest.httpRequest(service, request_byte_array)
 
     @classmethod
-    def from_bytes(
+    def from_raw(
         cls,
-        data: bytes,
+        data: bytes | str,
         real_host: str = "",
         port: int = 0,
         scheme: Literal["http"] | Literal["https"] | str = "http",
@@ -261,12 +261,14 @@ class Request(MITMProxyRequest):
         """
         # Convert the raw bytes to a Burp ByteArray.
         # We use the Burp API to trivialize the parsing of the request from raw bytes.
-        req_byte_array: IByteArray = PythonUtils.toByteArray(data)
+        str_or_byte_array: IByteArray | str = (
+            data if isinstance(data, str) else PythonUtils.toByteArray(data)
+        )
 
         # Handle the case where the networking informations are not provided.
         if port == 0:
             # Instantiate and return a new Burp HTTP request without networking informations.
-            burp_request: IHttpRequest = HttpRequest.httpRequest(req_byte_array)
+            burp_request: IHttpRequest = HttpRequest.httpRequest(str_or_byte_array)
         else:
             # Build the Burp HTTP networking service.
             service: IHttpService = HttpService.httpService(
@@ -275,7 +277,7 @@ class Request(MITMProxyRequest):
 
             # Instantiate a new Burp HTTP request with networking informations.
             burp_request: IHttpRequest = HttpRequest.httpRequest(
-                service, req_byte_array
+                service, str_or_byte_array
             )
 
         # Construct the request from the Burp.
@@ -369,17 +371,20 @@ class Response(MITMProxyResponse):
         return HttpResponse.httpResponse(response_byte_array)
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "Response":
+    def from_raw(cls, data: bytes | str) -> "Response":
         """Construct an instance of the Response class from raw bytes.
         :param data: The raw bytes to convert.
         :return: A :class:`Response` parsed from the raw bytes.
         """
         # Use the Burp API to trivialize the parsing of the response from raw bytes.
         # Convert the raw bytes to a Burp ByteArray.
-        resp_byte_array: IByteArray = PythonUtils.toByteArray(data)
+        # Plain strings are OK too.
+        str_or_byte_array: IByteArray | str = (
+            data if isinstance(data, str) else PythonUtils.toByteArray(data)
+        )
 
         # Instantiate a new Burp HTTP response.
-        burp_response: IHttpResponse = HttpResponse.httpResponse(resp_byte_array)
+        burp_response: IHttpResponse = HttpResponse.httpResponse(str_or_byte_array)
 
         return cls.from_burp(burp_response)
 
