@@ -15,7 +15,7 @@ def req_edit_in(req: Request) -> bytes:
 
 
 def req_edit_out(_: Request, text: bytes) -> bytes:
-    req = Request.from_bytes(text)
+    req = Request.from_raw(text)
     if req.content:
         req.content = b64encode(cast(bytes, req.get_content()))
     return bytes(req)
@@ -31,7 +31,7 @@ def res_edit_in(res: Response) -> bytes:
 
 
 def res_edit_out(_: Response, text: bytes) -> bytes:
-    res = Response.from_bytes(text)
+    res = Response.from_raw(text)
     if res.content:
         res.content = b64encode(cast(bytes, res.get_content()))
     return bytes(res)
