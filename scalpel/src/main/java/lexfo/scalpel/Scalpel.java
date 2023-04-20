@@ -69,6 +69,13 @@ public class Scalpel implements BurpExtension {
 
 			// Instantiate the executor (handles Python execution)
 			executor = new ScalpelExecutor(API, unpacker, logger, config);
+			// Add the scripting editor tab to Burp UI.
+			API
+				.userInterface()
+				.registerSuiteTab(
+					"Scalpel Interpreter",
+					UIBuilder.constructScalpelInterpreterTab(executor, logger)
+				);
 
 			// Add the configuration tab to Burp UI.
 			API
