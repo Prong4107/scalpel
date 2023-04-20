@@ -166,7 +166,7 @@ class Request(MITMProxyRequest):
                 "",
                 0,
                 always_bytes(request.method()),
-                b"",
+                b"http",  # Setting an empty string will break calls to urllib.parse.* that mitmproxy uses internally.
                 b"",
                 always_bytes(request.path()),
                 always_bytes(request.httpVersion()),
