@@ -55,6 +55,7 @@ class Headers(MITMProxyHeaders):
         :return: A Headers with the same headers as the Burp suite HttpHeader array.
         """
 
+        # print(f"burp: {headers}")
         # Convert the list of Burp IHttpHeaders to a list of tuples: (key, value)
         return cls(
             (
@@ -228,18 +229,21 @@ class Request(MITMProxyRequest):
         # Construct the whole request and return it.
         return first_line + headers_lines + b"\r\n" + body
 
-    @lru_cache
     def to_burp(self) -> IHttpRequest:
         """Convert the request to a Burp suite :class:`IHttpRequest`.
         :return: The request as a Burp suite :class:`IHttpRequest`.
         """
+        # Convert the request to a Burp ByteArray.
+        request_byte_array: IByteArray = PythonUtils.toByteArray(bytes(self))
+
+        if self.port == 0:
+            # No networking information is available, so we build a plain network-less request.
+            return HttpRequest.httpRequest(request_byte_array)
+
         # Build the Burp HTTP networking service.
         service: IHttpService = HttpService.httpService(
             self.host, self.port, self.scheme == "https"
         )
-
-        # Convert the request to a Burp ByteArray.
-        request_byte_array: IByteArray = PythonUtils.toByteArray(bytes(self))
 
         # Instantiate and return a new Burp HTTP request.
         return HttpRequest.httpRequest(service, request_byte_array)
