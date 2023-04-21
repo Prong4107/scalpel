@@ -8,8 +8,6 @@ import javax.swing.*;
 */
 public class WorkingPopup {
 
-	private static JDialog waitDialog;
-
 	/**
 		Shows a blocking wait dialog.
 
@@ -30,17 +28,15 @@ public class WorkingPopup {
 		dialog.setSize(200, 100);
 		dialog.setLocationRelativeTo(parent);
 
-		waitDialog = dialog;
-
 		Thread taskThread = new Thread(() -> {
 			try {
 				task.run();
 			} finally {
-				SwingUtilities.invokeLater(() -> waitDialog.dispose());
+				SwingUtilities.invokeLater(() -> dialog.dispose());
 			}
 		});
 		taskThread.start();
 
-		SwingUtilities.invokeLater(() -> waitDialog.setVisible(true));
+		SwingUtilities.invokeLater(() -> dialog.setVisible(true));
 	}
 }
