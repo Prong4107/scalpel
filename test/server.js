@@ -1,7 +1,8 @@
 const { urlencoded } = require('express');
 
 const app = require('express')()
-app.use(require('body-parser').raw({ type: String }))
+// 10 GB limit
+app.use(require('body-parser').raw({ type: String, limit: '1gb' }))
 
 // Known issue: duplicate headers are not supported
 jsonifyRequest =  (req) => ({
@@ -46,5 +47,28 @@ app.all('/echo', (req, res) => {
     res.write(req.body);
     res.end();
 })
+
+// Display a multipart form
+app.get("/upload", (req, res) => {
+    res.send(`
+        <html>
+            <body>
+                <form action="/upload" method="post" enctype="multipart/form-data">
+                    <input type="file" name="file" />
+                    <input type="submit" value="Upload" />
+                </form>
+            </body>
+        </html>
+    `);
+});
+
+// Handle a multipart form
+app.post("/upload", (req, res) => {
+    console.log("Received")
+    // Remove date header to ensure identical requests returns the exact same response
+    res.setHeader("Date", "[REDACTED]")
+    res.send(jsonifyRequest(req))
+})
+
 
 app.listen(3000)
