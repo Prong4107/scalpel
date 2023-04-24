@@ -87,6 +87,23 @@ class QueryParams(multidict.MultiDictView[str, str]):
         super().__setitem__(always_str(key), always_str(value))
 
 
+class JSONDictView(multidict.MultiDictView[JSON_KEY_TYPES, JSON_VALUE_TYPES]):
+    def __init__(
+        self,
+        getter: Callable[
+            [], dict[JSON_KEY_TYPES, JSON_VALUE_TYPES] | list[JSON_VALUE_TYPES]
+        ],
+        setter: Callable[[JSON_KEY_TYPES, JSON_VALUE_TYPES], None],
+    ):
+        self._getter = getter
+        self._setter = setter
+
+    def __getitem__(self, key: JSON_KEY_TYPES):
+        return self._getter()[key]  # type: ignore
+
+    def __setitem__(self, key: JSON_KEY_TYPES, value: JSON_VALUE_TYPES):
+        self._setter(key, value)
+
 class Request(MITMProxyRequest):
     """A wrapper class for `mitmproxy.http.Request`.
 
@@ -301,6 +318,79 @@ class Request(MITMProxyRequest):
     @property
     def query(self) -> QueryParams:
         return QueryParams(super().query)
+
+    @property
+    def json_form(
+        self,
+    ) -> JSONDictView:
+        """
+                The JSON form data.
+        jij
+                If the content-type indicates non-form data or the form could not be parsed, this is set to
+                an empty `MultiDictView`.
+
+                Modifications to the MultiDictView update `Request.content`, and vice versa.
+        """
+        return JSONDictView(self._get_json_form, self._set_json_form_value)  # type: ignore
+
+    @json_form.setter
+    def json_form(self, value):
+        self._set_json_form(value)
+
+    def _get_json_form(self) -> JSON_VALUE_TYPES:
+        is_valid_content_type = (
+            "application/json" in self.headers.get("content-type", "").lower()
+        )
+        is_valid_content_type = True
+        if is_valid_content_type:
+            text = self.get_text(strict=False)
+            if text:
+                return json.loads(text)
+        return None
+
+    def _set_json_form(self, value: JSON_VALUE_TYPES):
+        self.headers["content-type"] = "application/json"
+        self.content = json.dumps(value).encode()
+
+    def _set_json_form_value(self, key: JSON_KEY_TYPES, value: JSON_VALUE_TYPES):
+        current_json = self._get_json_form()
+        if not isinstance(current_json, dict) and not isinstance(current_json, list):
+            current_json = {}
+
+        current_json[key] = value  # type: ignore
+        self._set_json_form(current_json)
+
+    @property
+    def form(
+        self,
+    ) -> multidict.MultiDictView[Any, Any]:
+        """
+        The form data.
+
+        If the content-type indicates non-form data or the form could not be parsed, this is set to
+        an empty `MultiDictView`.
+
+        Modifications to the MultiDictView update `Request.content`, and vice versa.
+        """
+        content_type = self.headers.get("content-type", "").lower()
+        if "application/json" in content_type:
+            return self.json_form
+        elif "multipart/form-data" in content_type:
+            return self.multipart_form
+        elif "application/x-www-form-urlencoded" in content_type:
+            return self.urlencoded_form
+
+        return multidict.MultiDictView(lambda: (), lambda _: None)
+
+    @form.setter
+    def form(self, value):
+        content_type = self.headers.get("content-type", "").lower()
+        if "application/json" in content_type:
+            self.json_form = value
+        elif "multipart/form-data" in content_type:
+            self.multipart_form = value
+        elif "application/x-www-form-urlencoded" in content_type:
+            self.urlencoded_form = value
 
 
 class Response(MITMProxyResponse):
