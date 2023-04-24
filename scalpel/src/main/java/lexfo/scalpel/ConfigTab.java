@@ -346,11 +346,9 @@ public class ConfigTab extends JFrame {
 	private void $$$setupUI$$$() {
 		createUIComponents();
 		rootPanel.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
-		rootPanel.setBackground(new Color(-65296));
 		rootPanel.setBorder(BorderFactory.createTitledBorder(null, "", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
 		venvSelectPanel = new JPanel();
 		venvSelectPanel.setLayout(new GridLayoutManager(4, 2, new Insets(5, 5, 5, 0), -1, -1));
-		venvSelectPanel.setBackground(new Color(-4915176));
 		rootPanel.add(venvSelectPanel, new GridConstraints(0, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
 		venvSelectPanel.setBorder(BorderFactory.createTitledBorder(null, "Manage virtualenvs", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
 		final JPanel panel1 = new JPanel();
@@ -363,7 +361,6 @@ public class ConfigTab extends JFrame {
 		addVenvButton = new JButton();
 		addVenvButton.setText("+");
 		panel1.add(addVenvButton, BorderLayout.EAST);
-		terminalForVenvConfig.setBackground(new Color(-15678720));
 		venvSelectPanel.add(terminalForVenvConfig, new GridConstraints(0, 1, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
 		final JPanel panel2 = new JPanel();
 		panel2.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
