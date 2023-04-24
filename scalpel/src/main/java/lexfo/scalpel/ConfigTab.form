@@ -5,9 +5,9 @@
     <constraints>
       <xy x="59" y="42" width="960" height="540"/>
     </constraints>
-    <properties>
-      <background color="-65296"/>
-    </properties>
+    <!-- <properties>
+      <background color="-12828863"/>
+    </properties> -->
     <border type="none" title=""/>
     <children>
       <grid id="47089" binding="venvSelectPanel" layout-manager="GridLayoutManager" row-count="4" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -15,9 +15,9 @@
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
-        <properties>
-          <background color="-4915176"/>
-        </properties>
+        <!-- <properties>
+          <background color="-12828863"/>
+        </properties> -->
         <border type="none" title="Manage virtualenvs"/>
         <children>
           <grid id="925d" layout-manager="BorderLayout" hgap="0" vgap="0">
@@ -48,9 +48,9 @@
             <constraints>
               <grid row="0" column="1" row-span="4" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
             </constraints>
-            <properties>
-              <background color="-15678720"/>
-            </properties>
+            <!-- <properties>
+              <background color="-12828863"/>
+            </properties> -->
           </component>
           <grid id="b57e7" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
