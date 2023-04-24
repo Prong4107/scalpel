@@ -4,6 +4,7 @@ import burp.api.montoya.logging.Logging;
 import burp.api.montoya.ui.Theme;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.util.Arrays;
 import javax.swing.*;
 
 /**
@@ -59,7 +60,16 @@ public class UIBuilder {
 
 				outputArea.setText(txt);
 			} catch (Exception exception) {
-				outputArea.setText(exception.toString());
+				outputArea.setText(exception.getMessage());
+				outputArea.append("\n\n");
+
+				final String stackTrace = Arrays
+					.stream(exception.getStackTrace())
+					.map(StackTraceElement::toString)
+					.reduce((a, b) -> a + "\n" + b)
+					.orElse("No stack trace.");
+
+				outputArea.append(stackTrace);
 			}
 			logger.logToOutput("Handled action.");
 		});
