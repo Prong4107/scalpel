@@ -74,7 +74,11 @@ public class Scalpel implements BurpExtension {
 				.userInterface()
 				.registerSuiteTab(
 					"Scalpel Interpreter",
-					UIBuilder.constructScalpelInterpreterTab(executor, logger)
+					UIBuilder.constructScalpelInterpreterTab(
+						config,
+						executor,
+						logger
+					)
 				);
 
 			// Add the configuration tab to Burp UI.

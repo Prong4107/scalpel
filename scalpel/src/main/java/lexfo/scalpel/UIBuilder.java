@@ -4,8 +4,10 @@ import burp.api.montoya.logging.Logging;
 import burp.api.montoya.ui.Theme;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.util.Arrays;
 import javax.swing.*;
+import org.apache.commons.io.FileUtils;
 
 /**
 	Provides methods for constructing the Burp Suite UI.
@@ -34,6 +36,7 @@ public class UIBuilder {
 		@return The constructed tab.
 	*/
 	public static final Component constructScalpelInterpreterTab(
+		Config config,
 		ScalpelExecutor executor,
 		Logging logger
 	) {
@@ -74,12 +77,11 @@ public class UIBuilder {
 			logger.logToOutput("Handled action.");
 		});
 
+		File file = new File(config.getFrameworkPath());
 		editorPane.setText(
-			"""
-print('This goes in stdout')
-print('This goes in stderr', file=sys.stderr)
-"""
+			IO.ioWrap(() -> FileUtils.readFileToString(file, "UTF-8"), () -> "")
 		);
+
 		outputArea.setEditable(false);
 		scriptingPane.setLeftComponent(new JScrollPane(editorPane));
 		scriptingPane.setRightComponent(new JScrollPane(outputArea));
