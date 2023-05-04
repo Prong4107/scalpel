@@ -9,6 +9,7 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.logging.Logging;
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -18,6 +19,7 @@ import jep.ClassEnquirer;
 import jep.ClassList;
 import jep.Interpreter;
 import jep.JepConfig;
+import jep.JepException;
 import jep.SubInterpreter;
 import lexfo.scalpel.TraceLogger.Level;
 
@@ -648,7 +650,6 @@ public class ScalpelExecutor {
 						"""
     from sys import path
     path.append(__directory__)
-    del path
     """
 					);
 
@@ -686,12 +687,31 @@ public class ScalpelExecutor {
     sys.stderr = temp_err
     """
 			);
-			interp.exec(scriptContent);
+			Optional<String> exceptionMessage = Optional.empty();
+			try {
+				interp.exec(scriptContent);
+			} catch (Exception e) {
+				final String stackTrace = Arrays
+					.stream(e.getStackTrace())
+					.map(StackTraceElement::toString)
+					.reduce((a, b) -> a + "\n" + b)
+					.orElse("No stack trace.");
+
+				final String msgAndTrace = e.getMessage() + "\n" + stackTrace;
+
+				exceptionMessage = Optional.of(msgAndTrace);
+			}
 			interp.exec("captured_out = temp_out.getvalue()");
 			interp.exec("captured_err = temp_err.getvalue()");
 
-			String capturedOut = (String) interp.getValue("captured_out");
-			String capturedErr = (String) interp.getValue("captured_err");
+			final String capturedOut = (String) interp.getValue("captured_out");
+			// final String capturedErr = (String) interp.getValue("captured_err");
+			final String capturedErr = (String) interp.getValue(
+				"captured_err"
+			) +
+			exceptionMessage
+				.flatMap(msg -> Optional.of("\n\n" + msg))
+				.orElse("");
 			logger.logToOutput(
 				String.format(
 					"Executed:\n%s\nOutput:\n%s\nErr:%s\n",
