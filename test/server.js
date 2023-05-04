@@ -48,18 +48,15 @@ app.all('/echo', (req, res) => {
     res.end();
 })
 
-// Display a multipart form
+// Display a multipart form to upload multiple files
 app.get("/upload", (req, res) => {
     res.send(`
-        <html>
-            <body>
-                <form action="/upload" method="post" enctype="multipart/form-data">
-                    <input type="file" name="file" />
-                    <input type="submit" value="Upload" />
-                </form>
-            </body>
-        </html>
-    `);
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file1" />
+        <input type="file" name="file2" />
+        <input type="submit" value="Upload" />
+    </form>
+    `)
 });
 
 // Handle a multipart form
