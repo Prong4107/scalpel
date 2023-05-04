@@ -2,6 +2,7 @@ package lexfo.scalpel;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.common.base.Supplier;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -23,6 +24,17 @@ public class IO {
 			return supplier.call();
 		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
+		}
+	}
+
+	public static final <T> T ioWrap(
+		IOCallable<T> supplier,
+		Supplier<T> defaultSupplier
+	) {
+		try {
+			return supplier.call();
+		} catch (IOException | InterruptedException e) {
+			return defaultSupplier.get();
 		}
 	}
 
