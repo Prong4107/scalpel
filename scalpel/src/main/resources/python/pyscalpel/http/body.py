@@ -182,23 +182,53 @@ class MultiPartFormField:
         self.headers[header_key] = new_header
     
     @staticmethod
-    def _find_param(params: Sequence[tuple[str,str | None]], key:str) -> tuple[str,str | None]:
-        return cast(tuple[str,str | None], next(param for param in params if param[0] == key))
+    def _find_param(params: Sequence[tuple[str,str | None]], key:str) -> tuple[str,str | None] | None:
+        return next(param for param in params if param[0] == key)
     
     @staticmethod
-    def _with_param(params: Sequence[tuple[str, str |None]], value: tuple[str,str]):
+    def _with_param(params: Sequence[tuple[str, str |None]], key: str, value: str | None) -> list[tuple[str, str | None]]:
         """ WIP: Copy the provided params and update or add the matching value"""
-        ...
+        new_params: list[tuple[str,str|None]] = list()
+        found:bool = False
+        for param in params:
+            if key == param[0]:
+                new_params.append((key,value))
+                found = True
+            else:
+                new_params.append(param)
+
+        if not found:
+            new_params.append((key,value))
         
-    def get_disposition_param(self, key: str) -> tuple[str, str|None]:
+        return new_params
+                
+        
+    def get_disposition_param(self, key: str) -> tuple[str, str|None] | None:
         return MultiPartFormField._find_param(self._parse_disposition(),key)
     
     def set_disposition_param(self, key:str, value:str):
         parsed = self._parse_disposition()
+        updated = MultiPartFormField._with_param(parsed, key,value)
+        self._unparse_disposition(updated)
         
+    
     @property
     def name(self) -> str:
-        return cast(str, self.get_disposition_param("name")[0])
+        # Assume name is always present
+        return cast(tuple[str,str], self.get_disposition_param("name"))[0]
+
+    @name.setter
+    def name(self, value:str):
+        self.set_disposition_param("name", value)
+    
+    @property
+    def filename(self) -> str | None:
+        param = self.get_disposition_param("filename")
+        return param and param[1]
+    
+    @filename.setter
+    def filename(self, value:str):
+        self.set_disposition_param("filename", value)
 
 
 class MultiPartForm(multidict.MultiDict[str, MultiPartFormField]):
