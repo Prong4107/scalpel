@@ -3,7 +3,9 @@ from mitmproxy.utils import strutils
 
 # str/bytes conversion helpers from mitmproxy/http.py:
 # https://github.com/mitmproxy/mitmproxy/blob/main/mitmproxy/http.py#:~:text=def-,_native,-(x%3A
-def always_bytes(x: str | bytes) -> bytes:
+def always_bytes(x: str | bytes | int) -> bytes:
+    if isinstance(x, int):
+        x = str(x)
     return strutils.always_bytes(x, "utf-8", "surrogateescape")
 
 
