@@ -1,5 +1,6 @@
-import urllib.parse
+from __future__ import annotations
 
+import urllib.parse
 from typing import Iterable, Literal, cast, Sequence, Protocol, Any, TypeVar, Type
 from copy import deepcopy
 from pyscalpel.java.burp.http_request import IHttpRequest, HttpRequest
@@ -163,7 +164,7 @@ class Request:
         )
 
     @classmethod
-    def from_burp(cls, request: IHttpRequest) -> "Request":
+    def from_burp(cls, request: IHttpRequest) -> Request:
         """Construct an instance of the Request class from a Burp suite HttpRequest.
         :param request: The Burp suite HttpRequest to convert.
         :return: A Request with the same data as the Burp suite HttpRequest.
@@ -433,6 +434,3 @@ class Request:
     @raw_form.setter
     def raw_form(self, form: bytes):
         self._update_serializer_and_set_form(OctetStreamSerializer(), form)
-
-
-    

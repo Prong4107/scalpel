@@ -1,3 +1,4 @@
+from __future__ import annotations
 
 from typing import (
     Iterable,
@@ -7,10 +8,8 @@ from mitmproxy.http import (
 )
 
 
-
 from pyscalpel.java.burp.http_header import IHttpHeader, HttpHeader
 from pyscalpel.encoding import always_bytes, native
-
 
 
 class Headers(MITMProxyHeaders):
@@ -29,7 +28,7 @@ class Headers(MITMProxyHeaders):
         super().__init__(fields, **headers)
 
     @classmethod
-    def from_mitmproxy(cls, headers: MITMProxyHeaders) -> "Headers":
+    def from_mitmproxy(cls, headers: MITMProxyHeaders) -> Headers:
         """
         Creates a `Headers` from a `mitmproxy.http.Headers`.
 
@@ -42,7 +41,7 @@ class Headers(MITMProxyHeaders):
         return cls(headers.fields)
 
     @classmethod
-    def from_burp(cls, headers: list[IHttpHeader]) -> "Headers":
+    def from_burp(cls, headers: list[IHttpHeader]) -> Headers:
         """Construct an instance of the Headers class from a Burp suite HttpHeader array.
         :param headers: The Burp suite HttpHeader array to convert.
         :return: A Headers with the same headers as the Burp suite HttpHeader array.

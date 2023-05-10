@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # pylint: disable=invalid-name
 
 from abc import abstractmethod
@@ -151,7 +153,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     #      * @return A new {@code HttpResponse} instance stored in temporary file.
     #
     @abstractmethod
-    def copyToTempFile(self) -> "IHttpResponse":
+    def copyToTempFile(self) -> IHttpResponse:
         """generated source for method copyToTempFile"""
 
     #
@@ -162,7 +164,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     #      * @return A new {@code HttpResponse} instance.
     #
     @abstractmethod
-    def withStatusCode(self, statusCode: int) -> "IHttpResponse":
+    def withStatusCode(self, statusCode: int) -> IHttpResponse:
         """generated source for method withStatusCode"""
 
     #
@@ -173,7 +175,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     #      * @return A new {@code HttpResponse} instance.
     #
     @abstractmethod
-    def withReasonPhrase(self, reasonPhrase: str) -> "IHttpResponse":
+    def withReasonPhrase(self, reasonPhrase: str) -> IHttpResponse:
         """generated source for method withReasonPhrase"""
 
     #
@@ -184,7 +186,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     #      * @return A new {@code HttpResponse} instance.
     #
     @abstractmethod
-    def withHttpVersion(self, httpVersion: str) -> "IHttpResponse":
+    def withHttpVersion(self, httpVersion: str) -> IHttpResponse:
         """generated source for method withHttpVersion"""
 
     #
@@ -196,7 +198,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     #      * @return A new {@code HttpResponse} instance.
     #
     @abstractmethod
-    def withBody(self, body: IByteArray | str) -> "IHttpResponse":
+    def withBody(self, body: IByteArray | str) -> IHttpResponse:
         """generated source for method withBody"""
 
     #
@@ -219,7 +221,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     # #      * @return The updated response containing the added header.
     # #
     @abstractmethod
-    def withAddedHeader(self, name: str, value: str) -> "IHttpResponse":
+    def withAddedHeader(self, name: str, value: str) -> IHttpResponse:
         """generated source for method withAddedHeader_0"""
 
     #
@@ -242,7 +244,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     # #      * @return The updated response containing the updated header.
     # #
     @abstractmethod
-    def withUpdatedHeader(self, name: str, value: str) -> "IHttpResponse":
+    def withUpdatedHeader(self, name: str, value: str) -> IHttpResponse:
         """generated source for method withUpdatedHeader_0"""
 
     #
@@ -264,7 +266,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     # #      * @return The updated response containing the removed header.
     # #
     @abstractmethod
-    def withRemovedHeader(self, name: str) -> "IHttpResponse":
+    def withRemovedHeader(self, name: str) -> IHttpResponse:
         """generated source for method withRemovedHeader_0"""
 
     #
@@ -276,7 +278,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     #
     @abstractmethod
     @overload
-    def withMarkers(self, markers: JavaObject) -> "IHttpResponse":
+    def withMarkers(self, markers: JavaObject) -> IHttpResponse:
         """generated source for method withMarkers"""
 
     #
@@ -288,7 +290,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     #
     @abstractmethod
     @overload
-    def withMarkers(self, *markers: JavaObject) -> "IHttpResponse":
+    def withMarkers(self, *markers: JavaObject) -> IHttpResponse:
         """generated source for method withMarkers_0"""
 
     #
@@ -297,7 +299,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     #      * @return A new {@link HttpResponse} instance.
     #
     @abstractmethod
-    def httpResponse(self, response: IByteArray | str) -> "IHttpResponse":
+    def httpResponse(self, response: IByteArray | str) -> IHttpResponse:
         """generated source for method httpResponse"""
 
 
