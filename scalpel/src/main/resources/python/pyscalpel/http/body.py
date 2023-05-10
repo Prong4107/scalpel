@@ -101,9 +101,9 @@ class MultiPartFormField:
     ) -> bytes:
         # Prepend content with headers
         merged_content: bytes = b""
-        for key, value in headers.items():
-            merged_content += always_bytes(key) + b": " + always_bytes(value) + b"\r\n"
-        merged_content += b"\r\n"
+        header_lines = (always_bytes(key) + b": " + always_bytes(value) for key, value in headers.items())
+        merged_content += b"\r\n".join(header_lines)
+        merged_content += b"\r\n\r\n"
         merged_content += content
         return merged_content
 
