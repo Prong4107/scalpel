@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import time
 
 from functools import lru_cache
@@ -39,7 +41,7 @@ class Response(MITMProxyResponse):
     @classmethod
     # https://docs.mitmproxy.org/stable/api/mitmproxy/http.html#Response
     # link to mitmproxy documentation
-    def from_mitmproxy(cls, response: MITMProxyResponse) -> "Response":
+    def from_mitmproxy(cls, response: MITMProxyResponse) -> Response:
         """Construct an instance of the Response class from a [mitmproxy.http.HTTPResponse](https://docs.mitmproxy.org/stable/api/mitmproxy/http.html#Response).
         :param response: The [mitmproxy.http.HTTPResponse](https://docs.mitmproxy.org/stable/api/mitmproxy/http.html#Response) to convert.
         :return: A :class:`Response` with the same data as the [mitmproxy.http.HTTPResponse](https://docs.mitmproxy.org/stable/api/mitmproxy/http.html#Response).
@@ -54,7 +56,7 @@ class Response(MITMProxyResponse):
         )
 
     @classmethod
-    def from_burp(cls, response: IHttpResponse) -> "Response":
+    def from_burp(cls, response: IHttpResponse) -> Response:
         """Construct an instance of the Response class from a Burp suite :class:`IHttpResponse`."""
         body = get_bytes(response.body())
         return cls(
@@ -94,14 +96,12 @@ class Response(MITMProxyResponse):
     @lru_cache
     def to_burp(self) -> IHttpResponse:
         """Convert the response to a Burp suite :class:`IHttpResponse`."""
-        # Convert the response to a Burp ByteArray.
         response_byte_array: IByteArray = PythonUtils.toByteArray(bytes(self))
 
-        # Instantiate and return a new Burp HTTP response.
         return HttpResponse.httpResponse(response_byte_array)
 
     @classmethod
-    def from_raw(cls, data: bytes | str) -> "Response":
+    def from_raw(cls, data: bytes | str) -> Response:
         """Construct an instance of the Response class from raw bytes.
         :param data: The raw bytes to convert.
         :return: A :class:`Response` parsed from the raw bytes.

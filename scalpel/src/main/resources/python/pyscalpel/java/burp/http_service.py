@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # pylint: disable=invalid-name
 
 from abc import ABCMeta, abstractmethod
@@ -13,21 +15,21 @@ class IHttpService(JavaObject, metaclass=ABCMeta):
 
     @abstractmethod
     @overload
-    def httpService(self, baseUrl: str) -> "IHttpService":
+    def httpService(self, baseUrl: str) -> IHttpService:
         """Create a new instance of {@code HttpService} from a base URL."""
 
     @abstractmethod
     @overload
-    def httpService(self, baseUrl: str, secure: bool) -> "IHttpService":
+    def httpService(self, baseUrl: str, secure: bool) -> IHttpService:
         """Create a new instance of {@code HttpService} from a base URL and a protocol."""
 
     @abstractmethod
     @overload
-    def httpService(self, host: str, port: int, secure: bool) -> "IHttpService":
+    def httpService(self, host: str, port: int, secure: bool) -> IHttpService:
         """Create a new instance of {@code HttpService} from a host, a port and a protocol."""
 
     @abstractmethod
-    def httpService(self, *args, **kwargs) -> "IHttpService":
+    def httpService(self, *args, **kwargs) -> IHttpService:
         """Create a new instance of {@code HttpService} from a host, a port and a protocol."""
 
     @abstractmethod

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # pylint: disable=invalid-name
 #
 #  * Burp HTTP parameter able to retrieve to hold details about an HTTP request parameter.
@@ -44,7 +46,7 @@ class IHttpParameter(JavaObject):
     #      * @return A new {@code HttpParameter} instance.
     #
     @abstractmethod
-    def urlParameter(self, name: str, value: str) -> "IHttpParameter":
+    def urlParameter(self, name: str, value: str) -> IHttpParameter:
         """generated source for method urlParameter"""
 
     #
@@ -56,7 +58,7 @@ class IHttpParameter(JavaObject):
     #      * @return A new {@code HttpParameter} instance.
     #
     @abstractmethod
-    def bodyParameter(self, name: str, value: str) -> "IHttpParameter":
+    def bodyParameter(self, name: str, value: str) -> IHttpParameter:
         """generated source for method bodyParameter"""
 
     #
@@ -68,7 +70,7 @@ class IHttpParameter(JavaObject):
     #      * @return A new {@code HttpParameter} instance.
     #
     @abstractmethod
-    def cookieParameter(self, name: str, value: str) -> "IHttpParameter":
+    def cookieParameter(self, name: str, value: str) -> IHttpParameter:
         """generated source for method cookieParameter"""
 
     #
@@ -81,7 +83,7 @@ class IHttpParameter(JavaObject):
     #      * @return A new {@code HttpParameter} instance.
     #
     @abstractmethod
-    def parameter(self, name: str, value: str, type_: JavaObject) -> "IHttpParameter":
+    def parameter(self, name: str, value: str, type_: JavaObject) -> IHttpParameter:
         """generated source for method parameter"""
 
 

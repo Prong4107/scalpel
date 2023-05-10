@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # pylint: disable=invalid-name
 
 from abc import abstractmethod, ABCMeta
@@ -65,7 +67,7 @@ class IByteArray(JavaObject, Protocol):
 
     @abstractmethod
     @overload
-    def setBytes(self, index: int, byteArray: "IByteArray") -> None:
+    def setBytes(self, index: int, byteArray: IByteArray) -> None:
         """generated source for method setBytes_1"""
 
     #
@@ -110,7 +112,7 @@ class IByteArray(JavaObject, Protocol):
     #
     @abstractmethod
     @overload
-    def subArray(self, _range) -> "IByteArray":
+    def subArray(self, _range) -> IByteArray:
         """generated source for method subArray_0"""
 
     #
@@ -119,7 +121,7 @@ class IByteArray(JavaObject, Protocol):
     #      * @return New {@code ByteArray} with a copy of the wrapped bytes.
     #
     @abstractmethod
-    def copy(self) -> "IByteArray":
+    def copy(self) -> IByteArray:
         """generated source for method copy"""
 
     #
@@ -131,7 +133,7 @@ class IByteArray(JavaObject, Protocol):
     #      * @return A new {@code ByteArray} instance stored in temporary file.
     #
     @abstractmethod
-    def copyToTempFile(self) -> "IByteArray":
+    def copyToTempFile(self) -> IByteArray:
         """generated source for method copyToTempFile"""
 
     #
@@ -144,7 +146,7 @@ class IByteArray(JavaObject, Protocol):
     #
     @abstractmethod
     @overload
-    def indexOf(self, searchTerm: "IByteArray") -> int:
+    def indexOf(self, searchTerm: IByteArray) -> int:
         """generated source for method indexOf"""
 
     #
@@ -171,7 +173,7 @@ class IByteArray(JavaObject, Protocol):
     #
     @abstractmethod
     @overload
-    def indexOf(self, searchTerm: "IByteArray", caseSensitive: bool) -> int:
+    def indexOf(self, searchTerm: IByteArray, caseSensitive: bool) -> int:
         """generated source for method indexOf_1"""
 
     #
@@ -203,7 +205,7 @@ class IByteArray(JavaObject, Protocol):
     @overload
     def indexOf(
         self,
-        searchTerm: "IByteArray",
+        searchTerm: IByteArray,
         caseSensitive: bool,
         startIndexInclusive: int,
         endIndexExclusive: int,
@@ -241,7 +243,7 @@ class IByteArray(JavaObject, Protocol):
     #
     @abstractmethod
     @overload
-    def countMatches(self, searchTerm: "IByteArray") -> int:
+    def countMatches(self, searchTerm: IByteArray) -> int:
         """generated source for method countMatches"""
 
     #
@@ -266,7 +268,7 @@ class IByteArray(JavaObject, Protocol):
     #
     @abstractmethod
     @overload
-    def countMatches(self, searchTerm: "IByteArray", caseSensitive: bool) -> int:
+    def countMatches(self, searchTerm: IByteArray, caseSensitive: bool) -> int:
         """generated source for method countMatches_1"""
 
     #
@@ -296,7 +298,7 @@ class IByteArray(JavaObject, Protocol):
     @overload
     def countMatches(
         self,
-        searchTerm: "IByteArray",
+        searchTerm: IByteArray,
         caseSensitive: bool,
         startIndexInclusive: int,
         endIndexExclusive: int,
@@ -339,7 +341,7 @@ class IByteArray(JavaObject, Protocol):
     #      * @param data The byte[] or sequence of bytes to append.
     #
     @abstractmethod
-    def withAppended(self, *data: int) -> "IByteArray":
+    def withAppended(self, *data: int) -> IByteArray:
         """generated source for method withAppended"""
 
     #
@@ -350,7 +352,7 @@ class IByteArray(JavaObject, Protocol):
 
     #
     @abstractmethod
-    def byteArrayOfLength(self, length: int) -> "IByteArray":
+    def byteArrayOfLength(self, length: int) -> IByteArray:
         """generated source for method byteArrayOfLength"""
 
     #
@@ -362,7 +364,7 @@ class IByteArray(JavaObject, Protocol):
     #
     # @abstractmethod
     @abstractmethod
-    def byteArray(self, data: bytes | JavaBytes | list[int] | str) -> "IByteArray":
+    def byteArray(self, data: bytes | JavaBytes | list[int] | str) -> IByteArray:
         """generated source for method byteArray"""
 
     #

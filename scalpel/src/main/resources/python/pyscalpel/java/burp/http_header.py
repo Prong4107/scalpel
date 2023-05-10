@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # pylint: disable=invalid-name
 #
 #  * Burp HTTP header able to retrieve to hold details about an HTTP header.
@@ -46,7 +48,7 @@ class IHttpHeader(JavaObject, Protocol, metaclass=ABCMeta):
     #
     @abstractmethod
     @overload
-    def httpHeader(self, name: str, value: str) -> "IHttpHeader":
+    def httpHeader(self, name: str, value: str) -> IHttpHeader:
         """generated source for method httpHeader"""
 
     #
@@ -59,7 +61,7 @@ class IHttpHeader(JavaObject, Protocol, metaclass=ABCMeta):
     #
     @abstractmethod
     @overload
-    def httpHeader(self, header: str) -> "IHttpHeader":
+    def httpHeader(self, header: str) -> IHttpHeader:
         """generated source for method httpHeader_0"""
 
 
