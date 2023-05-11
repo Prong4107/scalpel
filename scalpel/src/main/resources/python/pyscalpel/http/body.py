@@ -30,8 +30,11 @@ from pyscalpel.http.mime import (
     update_header_param,
 )
 
-# TODO: Unit tests
+# Define constants to avoid typos.
+CONTENT_TYPE_KEY = "Content-Type"
+CONTENT_DISPOSITION_KEY = "Content-Disposition"
 
+# TODO: Unit tests
 
 # Multipart needs the Content-Type header for the boundary parameter
 # So Serializer needs an object that references the header
@@ -133,8 +136,8 @@ class MultiPartFormField:
     ) -> MultiPartFormField:
         urlencoded_name: str = urllibquote(name)
         urlencoded_content_type = urllibquote(content_type)
-        content = f'Content-Disposition: form-data; name="{urlencoded_name}"'
-        content += f"\r\nContent-Type: {urlencoded_content_type}\r\n\r\n"
+        content = f'{CONTENT_DISPOSITION_KEY}: form-data; name="{urlencoded_name}"'
+        content += f"\r\n{CONTENT_TYPE_KEY}: {urlencoded_content_type}\r\n\r\n"
         encoded_content: bytes = content.encode(encoding) + body
         body_part = BodyPart(encoded_content, encoding)
         return cls(body_part)
@@ -185,27 +188,24 @@ class MultiPartFormField:
 
     @property
     def content_type(self) -> str | None:
-        return self.headers.get("Content-Type")
+        return self.headers.get(CONTENT_TYPE_KEY)
 
     @content_type.setter
     def content_type(self, content_type: str | None) -> None:
         headers = self.headers
         if content_type is None:
-            del headers["Content-Type"]
+            del headers[CONTENT_TYPE_KEY]
         else:
-            headers["Content-Type"] = content_type
+            headers[CONTENT_TYPE_KEY] = content_type
 
     def _parse_disposition(self) -> list[tuple[str, str]]:
-        header_key = "Content-Disposition"
+        header_key = CONTENT_DISPOSITION_KEY
         header_value = self.headers[header_key]
         return parse_header(header_key, header_value)
 
     def _unparse_disposition(self, parsed_header: list[tuple[str, str]]):
         unparsed = unparse_header_value(parsed_header)
-        print("UNPARSED:", unparsed)
-        print("DISP BEFORE:", self.headers["Content-Disposition"])
-        self.headers["Content-Disposition"] = unparsed
-        print("DISP AFTER:", self.headers["Content-Disposition"])
+        self.headers[CONTENT_DISPOSITION_KEY] = unparsed
 
     def get_disposition_param(self, key: str) -> tuple[str, str | None] | None:
         parsed_disposition = self._parse_disposition()
@@ -359,7 +359,7 @@ class MultiPartFormSerializer(Serializer):
     def serialize(
         self, deserialized_body: MultiPartForm, req: ObjectWithHeaders
     ) -> bytes:
-        content_type: str | None = req.headers.get("Content-Type")
+        content_type: str | None = req.headers.get(CONTENT_TYPE_KEY)
 
         if content_type:
             deserialized_body.content_type = content_type
@@ -367,7 +367,7 @@ class MultiPartFormSerializer(Serializer):
         return bytes(deserialized_body)
 
     def deserialize(self, body: bytes, req: ObjectWithHeaders) -> MultiPartForm:
-        content_type: str | None = req.headers.get("Content-Type")
+        content_type: str | None = req.headers.get(CONTENT_TYPE_KEY)
 
         assert content_type
 
