@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import urllib.parse
+import re
+
 from typing import Iterable, Literal, cast, Sequence, Protocol, Any, TypeVar, Type
 from copy import deepcopy
 from pyscalpel.java.burp.http_request import IHttpRequest, HttpRequest
@@ -10,6 +12,7 @@ from pyscalpel.java.burp.byte_array import IByteArray
 from pyscalpel.java.scalpel_types.utils import PythonUtils
 from pyscalpel.encoding import always_bytes, always_str
 from pyscalpel.http.headers import Headers
+from pyscalpel.http.mime import parse_mime_header_value
 from mitmproxy.coretypes import multidict
 from mitmproxy.net.http.url import (
     parse as url_parse,
@@ -23,6 +26,8 @@ from pyscalpel.http.body import (
     JSONFormSerializer,
     URLEncodedFormSerializer,
     OctetStreamSerializer,
+    MultiPartFormSerializer,
+    MultiPartForm,
     QueryParamsView,
     QueryParams,
     JSON_KEY_TYPES,
@@ -65,9 +70,9 @@ class Request:
 
     http_version: _HttpVersion
     headers: Headers
-    _content: _Content | None
     _serializer: Serializer = OctetStreamSerializer()
     _deserialized_content: Any = None
+    _content: _Content | None
     _old_deserialized_content: Any = None
     _is_form_initialized: bool = False
 
@@ -169,7 +174,7 @@ class Request:
         :param request: The Burp suite HttpRequest to convert.
         :return: A Request with the same data as the Burp suite HttpRequest.
         """
-        srv: IHttpService = request.httpService()
+        service: IHttpService = request.httpService()
         body = get_bytes(request.body())
         # Burp will give you lowercased and pseudo headers when using HTTP/2.
         # https://portswigger.net/burp/documentation/desktop/http2/http2-normalization-in-the-message-editor#sending-requests-without-any-normalization:~:text=are%20converted%20to-,lowercase,-.
@@ -190,10 +195,10 @@ class Request:
         host = ""
         port = 0
         scheme = "http"
-        if srv is not None:
-            host = srv.host()
-            port = srv.port()
-            scheme = "https" if srv.secure else "http"
+        if service:
+            host = service.host()
+            port = service.port()
+            scheme = "https" if service.secure else "http"
 
         return cls(
             method=request.method(),
@@ -340,12 +345,16 @@ class Request:
         return self._deserialized_content != self._old_deserialized_content
 
     def _serialize_content(self):
+        if self._deserialized_content is None:
+            self._content = None
+            return
+
         self._update_serialized_content(
             self._serializer.serialize(self._deserialized_content, req=self)
         )
 
-    def _update_serialized_content(self, serialized: bytes | None):
-        self._deserialized_content = self._serializer.deserialize(serialized)
+    def _update_serialized_content(self, serialized: bytes):
+        self._deserialized_content = self._serializer.deserialize(serialized, self)
         self._old_deserialized_content = deepcopy(self._deserialized_content)
         self._content = serialized
 
@@ -363,7 +372,7 @@ class Request:
             return
 
         self._deserialized_content = deserialized
-        self._content = self._serializer.serialize(deserialized)
+        self._content = self._serializer.serialize(deserialized, self)
 
     @property
     def content(self) -> bytes | None:
@@ -375,8 +384,14 @@ class Request:
 
     @content.setter
     def content(self, value: bytes | str | None):
-        if isinstance(value, str):
-            value = value.encode()
+        match value:
+            case None:
+                self._content = None
+                self._deserialized_content = None
+                return
+            case str():
+                value = value.encode()
+
         self._update_serialized_content(value)
 
     def update_form_content_type(self, content_type: str | None = None):
@@ -397,6 +412,10 @@ class Request:
         self._serialize_content()
 
     def _set_serializer(self, serializer: Serializer):
+        if self._serializer == serializer or self._content is None:
+            self._serializer = serializer
+            return
+
         self._serialize_content()
         self._serializer = serializer
         self._update_serialized_content(self._content)
@@ -421,7 +440,10 @@ class Request:
 
     @property
     def json_form(self) -> dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]:
-        return self._update_serializer_and_get_form(JSONFormSerializer())
+        if self._update_serializer_and_get_form(JSONFormSerializer()) is None:
+            self._deserialized_content = dict()
+
+        return self._deserialized_content
 
     @json_form.setter
     def json_form(self, form: dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]):
@@ -434,3 +456,45 @@ class Request:
     @raw_form.setter
     def raw_form(self, form: bytes):
         self._update_serializer_and_set_form(OctetStreamSerializer(), form)
+
+    def _ensure_multipart_content_type(self) -> str:
+        content_types_headers = self.headers.get_all("Content-Type")
+        pattern = re.compile(
+            r"^multipart/form-data;\s*boundary=([^;\s]+)", re.IGNORECASE
+        )
+
+        matched_content_type: str | None = None
+        for content_type in content_types_headers:
+            if pattern.match(content_type):
+                matched_content_type = content_type
+                break
+
+        if matched_content_type is None:
+            # TODO: Randomly generate this
+            new_content_type = (
+                "multipart/form-data; boundary=----WebKitFormBoundaryy6klzjxzTk68s1dI"
+            )
+            self.headers["Content-Type"] = new_content_type
+            return new_content_type
+
+        return matched_content_type
+
+    @property
+    def multipart_form(self) -> MultiPartForm:
+        # Keep boundary even if content-type has changed
+        if isinstance(self._deserialized_content, MultiPartForm):
+            return self._deserialized_content
+
+        content_type = self._ensure_multipart_content_type()
+
+        if self._update_serializer_and_get_form(MultiPartFormSerializer()) is None:
+            self._update_deserialized_content(MultiPartForm(tuple(), content_type))
+
+        return self._deserialized_content
+
+    @multipart_form.setter
+    def multipart_form(self, form: MultiPartForm):
+        if not isinstance(self._deserialized_content, MultiPartForm):
+            self._ensure_multipart_content_type()
+
+        return self._update_serializer_and_set_form(MultiPartFormSerializer(), form)

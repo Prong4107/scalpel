@@ -63,6 +63,7 @@ def create(path: str) -> int:
 
 
 def create_default() -> str:
+    # TODO: Handke this for windows
     root = (
         f"{os.environ['HOME']}/.scalpel" if os.environ.get("HOME") else "/tmp/.scalpel"
     )
