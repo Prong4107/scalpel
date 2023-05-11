@@ -1,4 +1,3 @@
-from urllib.parse import unquote_to_bytes as urllibdecode
 from typing import TypeVar, cast
 from functools import singledispatch
 from collections.abc import Iterable
@@ -75,16 +74,6 @@ def to_bytes(obj: ByteArraySerialisable | JavaBytes) -> bytes:
         return bytes([b & 0xFF for b in cast(JavaBytes, obj)])
 
     return get_bytes(cast(ByteArraySerialisable, obj).toByteArray())
-
-
-def urlencode_all(data: bytes | str) -> bytes:
-    """URL Encode all bytes in the given bytes object"""
-    return "".join(f"%{b:02X}" for b in always_bytes(data)).encode()
-
-
-def urldecode(data: bytes | str) -> bytes:
-    """URL Decode all bytes in the given bytes object"""
-    return urllibdecode(always_bytes(data))
 
 
 def update_header(

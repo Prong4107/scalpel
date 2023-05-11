@@ -1,4 +1,5 @@
 from mitmproxy.utils import strutils
+from urllib.parse import unquote_to_bytes as urllibdecode
 
 
 # str/bytes conversion helpers from mitmproxy/http.py:
@@ -18,3 +19,13 @@ def always_str(x: str | bytes | int) -> str:
 def native(x: bytes) -> str:
     # While headers _should_ be ASCII, it's not uncommon for certain headers to be utf-8 encoded.
     return x.decode("utf-8", "surrogateescape")
+
+
+def urlencode_all(data: bytes | str) -> bytes:
+    """URL Encode all bytes in the given bytes object"""
+    return "".join(f"%{b:02X}" for b in always_bytes(data)).encode()
+
+
+def urldecode(data: bytes | str) -> bytes:
+    """URL Decode all bytes in the given bytes object"""
+    return urllibdecode(always_bytes(data))
