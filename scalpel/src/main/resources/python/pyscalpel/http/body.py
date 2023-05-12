@@ -5,8 +5,8 @@ import unittest
 from typing import Sequence, Protocol, Any, Iterator
 from abc import ABC, abstractmethod
 from requests.structures import CaseInsensitiveDict
-
-
+from io import TextIOWrapper, BufferedReader, IOBase
+import mimetypes
 from mitmproxy.coretypes import multidict
 
 from .headers import Headers
@@ -14,7 +14,11 @@ from pyscalpel.encoding import always_bytes, always_str
 import json
 
 from typing import cast, Mapping, Protocol, Mapping, Any
-from requests_toolbelt.multipart.decoder import BodyPart, MultipartDecoder
+from requests_toolbelt.multipart.decoder import (
+    BodyPart,
+    MultipartDecoder,
+    ImproperBodyPartContentException,
+)
 from requests_toolbelt.multipart.encoder import MultipartEncoder, encode_with
 from email.message import Message
 from email.parser import Parser
@@ -36,6 +40,7 @@ CONTENT_DISPOSITION_KEY = "Content-Disposition"
 
 # TODO: Unit tests
 
+
 # Multipart needs the Content-Type header for the boundary parameter
 # So Serializer needs an object that references the header
 # This is also used as a Forward
@@ -44,13 +49,21 @@ class ObjectWithHeaders(Protocol):
 
 
 # Abstract base class
-class Serializer(ABC):
+class FormSerializer(ABC):
     @abstractmethod
     def serialize(self, deserialized_body: Any, req: ObjectWithHeaders) -> bytes:
         ...
 
     @abstractmethod
     def deserialize(self, body: bytes, req: ObjectWithHeaders) -> Any:
+        ...
+
+    @abstractmethod
+    def get_empty_form(self, req: ObjectWithHeaders) -> Any:
+        ...
+
+    @abstractmethod
+    def deserialized_type(self) -> type:
         ...
 
 
@@ -70,7 +83,7 @@ class QueryParams(multidict.MultiDict[bytes, bytes]):
         super().__setitem__(always_bytes(key), always_bytes(value))
 
 
-class URLEncodedFormSerializer(Serializer):
+class URLEncodedFormSerializer(FormSerializer):
     def serialize(
         self, deserialized_body: multidict.MultiDict[bytes, bytes], req=...
     ) -> bytes:
@@ -79,6 +92,12 @@ class URLEncodedFormSerializer(Serializer):
     def deserialize(self, body: bytes, req=...) -> QueryParams:
         fields = urllib.parse.parse_qsl(body) if isinstance(body, bytes) else tuple()
         return QueryParams(fields)
+
+    def get_empty_form(self, req=...) -> Any:
+        return QueryParams(tuple())
+
+    def deserialized_type(self) -> type[QueryParams]:
+        return QueryParams
 
 
 JSON_KEY_TYPES = str | int | float
@@ -93,19 +112,27 @@ JSON_VALUE_TYPES = (
 )
 
 
-class JSONFormSerializer(Serializer):
+class JSONForm(dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]):
+    pass
+
+
+class JSONFormSerializer(FormSerializer):
     def serialize(
         self, deserialized_body: Mapping[JSON_KEY_TYPES, JSON_VALUE_TYPES], req=...
     ) -> bytes:
         return json.dumps(deserialized_body).encode("utf-8")
 
-    def deserialize(
-        self, body: bytes, req=...
-    ) -> dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]:
-        return json.loads(body) if body else dict()
+    def deserialize(self, body: bytes, req=...) -> JSONForm:
+        return JSONForm(json.loads(body)) if body else JSONForm()
+
+    def get_empty_form(self, req=...) -> JSONForm:
+        return JSONForm()
+
+    def deserialized_type(self) -> type[JSONForm]:
+        return JSONForm
 
 
-class OctetStreamSerializer(Serializer):
+class OctetStreamSerializer(FormSerializer):
     """Does nothing"""
 
     def serialize(self, deserialized_body: bytes, req=...) -> bytes:
@@ -114,33 +141,87 @@ class OctetStreamSerializer(Serializer):
     def deserialize(self, body: bytes, req=...) -> bytes:
         return body
 
+    def get_empty_form(self, req=...) -> bytes:
+        return b""
+
+    def deserialized_type(self) -> type[bytes]:
+        return bytes
+
 
 class MultiPartFormField:
     headers: CaseInsensitiveDict[str]
     content: bytes
     encoding: str
 
-    def __init__(self, body_part: BodyPart):
-        self.headers = MultiPartFormField._fix_headers(
-            cast(Mapping[bytes, bytes], body_part.headers)
-        )
-        self.content = body_part.content
+    def __init__(
+        self,
+        headers: CaseInsensitiveDict[str],
+        content: bytes = b"",
+        encoding: str = "utf-8",
+    ):
+        self.headers = headers
+        self.content = content
+        self.encoding = encoding
+
+    @classmethod
+    def from_body_part(cls, body_part: BodyPart):
+        headers = cls._fix_headers(cast(Mapping[bytes, bytes], body_part.headers))
+        return cls(headers, body_part.content, body_part.encoding)
 
     @classmethod
     def make(
         cls,
         name: str,
+        filename: str | None = None,
         body: bytes = b"",
         content_type: str = "application/octet-stream",
         encoding: str = "utf-8",
     ) -> MultiPartFormField:
         urlencoded_name: str = urllibquote(name)
         urlencoded_content_type = urllibquote(content_type)
-        content = f'{CONTENT_DISPOSITION_KEY}: form-data; name="{urlencoded_name}"'
-        content += f"\r\n{CONTENT_TYPE_KEY}: {urlencoded_content_type}\r\n\r\n"
-        encoded_content: bytes = content.encode(encoding) + body
-        body_part = BodyPart(encoded_content, encoding)
-        return cls(body_part)
+
+        disposition = f'form-data; name="{urlencoded_name}"'
+        if filename is not None:
+            disposition += f'; filename="{urllibquote(filename)}"'
+
+        headers = CaseInsensitiveDict(
+            {
+                CONTENT_DISPOSITION_KEY: disposition,
+                CONTENT_TYPE_KEY: urlencoded_content_type,
+            }
+        )
+
+        return cls(headers, body, encoding)
+
+    @staticmethod
+    def from_file(
+        name: str,
+        file: TextIOWrapper | BufferedReader | str,
+        encoding: str | None = None,
+    ):
+        if isinstance(file, str):
+            file = open(file, mode="rb")
+
+        # Guess the MIME content-type from the file extension
+        content_type = mimetypes.guess_type(file.name)[0] or "application/octet-stream"
+
+        # Read the whole file into memory
+        content: bytes
+        match file:
+            case TextIOWrapper():
+                content = file.read(-1).encode(file.encoding)
+                # Override file.encoding if provided.
+                encoding = encoding or file.encoding
+            case BufferedReader():
+                content = file.read(-1)
+
+        return MultiPartFormField.make(
+            name,
+            filename=file.name,
+            body=content,
+            content_type=content_type,
+            encoding=encoding or "utf-8",
+        )
 
     @staticmethod
     def __serialize_content(
@@ -263,7 +344,7 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
         decoder = MultipartDecoder(content, content_type, encoding=encoding)
         parts: tuple[BodyPart] = decoder.parts
         fields: tuple[MultiPartFormField, ...] = tuple(
-            MultiPartFormField(body_part) for body_part in parts
+            MultiPartFormField.from_body_part(body_part) for body_part in parts
         )
         return cls(fields, content_type, encoding)
 
@@ -271,6 +352,7 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
     def boundary(self) -> bytes:
         return extract_boundary(self.content_type, self.encoding)
 
+    # TODO: Unit test this
     def __bytes__(self) -> bytes:
         boundary = self.boundary
         serialized = b""
@@ -282,7 +364,6 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
                 serialized += (
                     key.encode(encoding) + b": " + val.encode(encoding) + b"\r\n"
                 )
-
             serialized += b"\r\n" + field.content + b"\r\n"
 
         serialized += boundary + b"\r\n\r\n"
@@ -296,6 +377,51 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
         """
         return [field for field in self.fields if key == field.name]
 
+    def get(
+        self, key: str, default: MultiPartFormField | None = None
+    ) -> MultiPartFormField | None:
+        values = self.get_all(key)
+        if not values:
+            return default
+
+        return values[0]
+
+    def del_all(self, key: str):
+        # Mutate object to avoid invalidating user references to fields
+        for field in self.fields:
+            if key == field.name:
+                self.fields.remove(field)
+
+    def __delitem__(self, key: str):
+        self.del_all(key)
+
+    def set(
+        self,
+        key: str,
+        value: TextIOWrapper | BufferedReader | MultiPartFormField | bytes | None,
+    ) -> None:
+        new_field: MultiPartFormField
+        match value:
+            case MultiPartFormField():
+                new_field = value
+            case bytes():
+                new_field = MultiPartFormField.make(key)
+                new_field.content = value
+            case IOBase():
+                new_field = MultiPartFormField.from_file(key, value)
+            case None:
+                self.del_all(key)
+                return
+            case _:
+                raise RuntimeError("Wrong type was passed to MultiPartForm.set")
+
+        for i, field in enumerate(self.fields):
+            if field.name == key:
+                self.fields[i] = new_field
+                return
+
+        self.add(new_field)
+
     def setdefault(
         self, key: str, default: MultiPartFormField | None = None
     ) -> MultiPartFormField:
@@ -307,18 +433,12 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
 
         return found
 
-    def __setitem__(self, key: str, value: MultiPartFormField | bytes) -> None:
-        if isinstance(value, bytes):
-            field = MultiPartFormField.make(key)
-            field.content = value
-            value = field
-
-        for i, field in enumerate(self.fields):
-            if field.name == key:
-                self.fields[i] = value
-                return
-
-        self.add(value)
+    def __setitem__(
+        self,
+        key: str,
+        value: TextIOWrapper | BufferedReader | MultiPartFormField | bytes | None,
+    ) -> None:
+        self.set(key, value)
 
     def __getitem__(self, key: str) -> MultiPartFormField:
         values = self.get_all(key)
@@ -355,7 +475,7 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
         return f"{type(self).__name__}[{', '.join(fields)}]"
 
 
-class MultiPartFormSerializer(Serializer):
+class MultiPartFormSerializer(FormSerializer):
     def serialize(
         self, deserialized_body: MultiPartForm, req: ObjectWithHeaders
     ) -> bytes:
@@ -374,10 +494,23 @@ class MultiPartFormSerializer(Serializer):
         if not body:
             return MultiPartForm(tuple(), content_type)
 
-        return MultiPartForm.from_bytes(body, content_type)
+        try:
+            return MultiPartForm.from_bytes(body, content_type)
+        except ImproperBodyPartContentException:
+            return self.get_empty_form(req)
+
+    def get_empty_form(self, req: ObjectWithHeaders) -> Any:
+        content_type: str | None = req.headers.get(CONTENT_TYPE_KEY)
+
+        assert content_type
+
+        return MultiPartForm(tuple(), content_type)
+
+    def deserialized_type(self) -> type[MultiPartForm]:
+        return MultiPartForm
 
 
-CONTENT_TYPE_TO_SERIALIZER: CaseInsensitiveDict[Serializer] = CaseInsensitiveDict(
+CONTENT_TYPE_TO_SERIALIZER: CaseInsensitiveDict[FormSerializer] = CaseInsensitiveDict(
     {
         "application/x-www-form-urlencoded": URLEncodedFormSerializer(),
         "application/json": JSONFormSerializer(),

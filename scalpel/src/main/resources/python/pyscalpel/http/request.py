@@ -3,7 +3,14 @@ from __future__ import annotations
 import urllib.parse
 import re
 
-from typing import Iterable, Literal, cast, Sequence, Protocol, Any, TypeVar, Type
+from typing import (
+    Iterable,
+    Literal,
+    cast,
+    Sequence,
+    Any,
+    MutableMapping,
+)
 from copy import deepcopy
 from pyscalpel.java.burp.http_request import IHttpRequest, HttpRequest
 from pyscalpel.java.burp.http_service import IHttpService, HttpService
@@ -12,7 +19,7 @@ from pyscalpel.java.burp.byte_array import IByteArray
 from pyscalpel.java.scalpel_types.utils import PythonUtils
 from pyscalpel.encoding import always_bytes, always_str
 from pyscalpel.http.headers import Headers
-from pyscalpel.http.mime import parse_mime_header_value
+from pyscalpel.http.mime import get_header_value_without_params
 from mitmproxy.coretypes import multidict
 from mitmproxy.net.http.url import (
     parse as url_parse,
@@ -22,7 +29,7 @@ from mitmproxy.net.http.url import (
 )
 
 from pyscalpel.http.body import (
-    Serializer,
+    FormSerializer,
     JSONFormSerializer,
     URLEncodedFormSerializer,
     OctetStreamSerializer,
@@ -33,6 +40,7 @@ from pyscalpel.http.body import (
     JSON_KEY_TYPES,
     JSON_VALUE_TYPES,
     CONTENT_TYPE_TO_SERIALIZER,
+    JSONForm,
 )
 
 
@@ -70,11 +78,10 @@ class Request:
 
     http_version: _HttpVersion
     headers: Headers
-    _serializer: Serializer = OctetStreamSerializer()
+    _serializer: FormSerializer = OctetStreamSerializer()
     _deserialized_content: Any = None
     _content: _Content | None
     _old_deserialized_content: Any = None
-    _is_form_initialized: bool = False
 
     def __init__(
         self,
@@ -100,13 +107,9 @@ class Request:
         self.headers = headers if isinstance(headers, Headers) else Headers(headers)
         self._content = content
 
-        match self.headers.get("content-type"):
-            case "application/x-www-form-urlencoded":
-                self._serializer = URLEncodedFormSerializer()
-            case "application/json":
-                self._serializer = JSONFormSerializer()
-            case _:
-                self._serializer = OctetStreamSerializer()
+        self.update_form_content_type(
+            self.headers.get("Content-Type"), fail_silently=True
+        )
 
     @staticmethod
     def _parse_qs(qs: str) -> _ParsedQuery:
@@ -354,8 +357,11 @@ class Request:
         )
 
     def _update_serialized_content(self, serialized: bytes):
+        # Update the parsed form
         self._deserialized_content = self._serializer.deserialize(serialized, self)
         self._old_deserialized_content = deepcopy(self._deserialized_content)
+
+        # Set the raw content directly
         self._content = serialized
 
     def _deserialize_content(self):
@@ -394,14 +400,36 @@ class Request:
 
         self._update_serialized_content(value)
 
-    def update_form_content_type(self, content_type: str | None = None):
-        _content_type: str = content_type or self.headers.get("Content-Type") or ""
+    def update_form_content_type(
+        self, content_type: str | None = None, fail_silently: bool = False
+    ):
+        # Strip the boundary param so we can use our content-type to serializer map
+        _content_type: str = get_header_value_without_params(
+            content_type or self.headers.get("Content-Type") or ""
+        )
 
-        serializer = CONTENT_TYPE_TO_SERIALIZER.get(_content_type, self._serializer)
+        serializer = CONTENT_TYPE_TO_SERIALIZER.get(_content_type)
+
+        if serializer is None:
+            if fail_silently:
+                serializer = self._serializer
+            else:
+                raise RuntimeError(f"Unimplemented form content-type: {_content_type}")
         self._set_serializer(serializer)
 
+    # TODO: Add an initialize_form() method that create an empty form using serialier.get_empty() if content is None
+
+    # Creates the form if it does not exist
+    def create_defaultform(self) -> MutableMapping | bytes | Any:
+        if not isinstance(
+            self._deserialized_content, self._serializer.deserialized_type()
+        ):
+            self._deserialized_content = self._serializer.get_empty_form(self)
+        return self._deserialized_content
+
+    # _deserialized_content type is statically unknown because it depends on the serializer which can create anything
     @property
-    def form(self) -> Any:
+    def form(self) -> MutableMapping | bytes | Any | None:
         return self._deserialized_content
 
     @form.setter
@@ -411,21 +439,29 @@ class Request:
         # Update raw _content
         self._serialize_content()
 
-    def _set_serializer(self, serializer: Serializer):
-        if self._serializer == serializer or self._content is None:
+    def _set_serializer(self, serializer: FormSerializer):
+        if self._deserialized_content is None:
+            # We don't have any content to update.
             self._serializer = serializer
             return
 
+        # Update the raw content with the former serializer
         self._serialize_content()
-        self._serializer = serializer
-        self._update_serialized_content(self._content)
 
-    def _update_serializer_and_get_form(self, serializer: Serializer) -> Any:
+        # Update the deserialized and serialized content with the new serializer
+        self._serializer = serializer
+        self._update_serialized_content(cast(bytes, self._content))
+
+    def _update_serializer_and_get_form(self, serializer: FormSerializer) -> Any:
+        # Set the serializer and update the content
         self._set_serializer(serializer)
 
+        # Return the new form
         return self._deserialized_content
 
-    def _update_serializer_and_set_form(self, serializer: Serializer, form: Any) -> Any:
+    def _update_serializer_and_set_form(
+        self, serializer: FormSerializer, form: Any
+    ) -> Any:
         self._set_serializer(serializer)
 
         self._update_deserialized_content(form)
@@ -441,13 +477,13 @@ class Request:
     @property
     def json_form(self) -> dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]:
         if self._update_serializer_and_get_form(JSONFormSerializer()) is None:
-            self._deserialized_content = dict()
+            self._deserialized_content = self._serializer.get_empty_form(self)
 
         return self._deserialized_content
 
     @json_form.setter
     def json_form(self, form: dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]):
-        self._update_serializer_and_set_form(JSONFormSerializer(), form)
+        self._update_serializer_and_set_form(JSONFormSerializer(), JSONForm(form))
 
     @property
     def raw_form(self) -> bytes:
@@ -463,12 +499,16 @@ class Request:
             r"^multipart/form-data;\s*boundary=([^;\s]+)", re.IGNORECASE
         )
 
+        # Find a valid multipart content-type header with a valid boundary
         matched_content_type: str | None = None
         for content_type in content_types_headers:
             if pattern.match(content_type):
                 matched_content_type = content_type
                 break
 
+        # If no boundary was found, overwrite the Content-Type header
+        # If an user wants to avoid this behaviour,they should manually create a MultiPartForm(), convert it to bytes
+        #   and pass it as raw_form()
         if matched_content_type is None:
             # TODO: Randomly generate this
             new_content_type = (
@@ -485,16 +525,16 @@ class Request:
         if isinstance(self._deserialized_content, MultiPartForm):
             return self._deserialized_content
 
-        content_type = self._ensure_multipart_content_type()
+        # We do not have an existing form, so we have to ensure we have a content-type header with a boundary
+        self._ensure_multipart_content_type()
 
-        if self._update_serializer_and_get_form(MultiPartFormSerializer()) is None:
-            self._update_deserialized_content(MultiPartForm(tuple(), content_type))
-
-        return self._deserialized_content
+        # Serialize the current form and try to parse it with the new serializer
+        return self._update_serializer_and_get_form(MultiPartFormSerializer())
 
     @multipart_form.setter
     def multipart_form(self, form: MultiPartForm):
         if not isinstance(self._deserialized_content, MultiPartForm):
+            # Generate a multipart header because we don't have any boundary to format the multipart.
             self._ensure_multipart_content_type()
 
         return self._update_serializer_and_set_form(MultiPartFormSerializer(), form)
