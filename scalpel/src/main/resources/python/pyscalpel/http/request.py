@@ -82,6 +82,7 @@ class Request:
     _deserialized_content: Any = None
     _content: _Content | None
     _old_deserialized_content: Any = None
+    _is_form_initialized: bool = False
 
     def __init__(
         self,
@@ -400,6 +401,19 @@ class Request:
 
         self._update_serialized_content(value)
 
+    @property
+    def body(self) -> bytes | None:
+        """Alias for content()
+
+        Returns:
+            bytes | None: The request body / content
+        """
+        return self.content
+
+    @body.setter
+    def body(self, value: bytes | str | None):
+        self.content = value
+
     def update_form_content_type(
         self, content_type: str | None = None, fail_silently: bool = False
     ):
@@ -417,8 +431,6 @@ class Request:
                 raise RuntimeError(f"Unimplemented form content-type: {_content_type}")
         self._set_serializer(serializer)
 
-    # TODO: Add an initialize_form() method that create an empty form using serialier.get_empty() if content is None
-
     # Creates the form if it does not exist
     def create_defaultform(self) -> MutableMapping | bytes | Any:
         if not isinstance(
@@ -430,10 +442,18 @@ class Request:
     # _deserialized_content type is statically unknown because it depends on the serializer which can create anything
     @property
     def form(self) -> MutableMapping | bytes | Any | None:
+        if not self._is_form_initialized:
+            self.update_form_content_type()
+            self._is_form_initialized = True
+
         return self._deserialized_content
 
     @form.setter
     def form(self, form: Any):
+        if not self._is_form_initialized:
+            self.update_form_content_type()
+            self._is_form_initialized = True
+
         self._deserialized_content = form
 
         # Update raw _content
@@ -468,14 +488,17 @@ class Request:
 
     @property
     def urlencoded_form(self) -> QueryParams:
+        self._is_form_initialized = True
         return self._update_serializer_and_get_form(URLEncodedFormSerializer())
 
     @urlencoded_form.setter
     def urlencoded_form(self, form: QueryParams):
+        self._is_form_initialized = True
         self._update_serializer_and_set_form(JSONFormSerializer(), form)
 
     @property
     def json_form(self) -> dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]:
+        self._is_form_initialized = True
         if self._update_serializer_and_get_form(JSONFormSerializer()) is None:
             self._deserialized_content = self._serializer.get_empty_form(self)
 
@@ -483,14 +506,17 @@ class Request:
 
     @json_form.setter
     def json_form(self, form: dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]):
+        self._is_form_initialized = True
         self._update_serializer_and_set_form(JSONFormSerializer(), JSONForm(form))
 
     @property
     def raw_form(self) -> bytes:
+        self._is_form_initialized = True
         return self._update_serializer_and_get_form(OctetStreamSerializer())
 
     @raw_form.setter
     def raw_form(self, form: bytes):
+        self._is_form_initialized = True
         self._update_serializer_and_set_form(OctetStreamSerializer(), form)
 
     def _ensure_multipart_content_type(self) -> str:
@@ -521,6 +547,8 @@ class Request:
 
     @property
     def multipart_form(self) -> MultiPartForm:
+        self._is_form_initialized = True
+
         # Keep boundary even if content-type has changed
         if isinstance(self._deserialized_content, MultiPartForm):
             return self._deserialized_content
@@ -533,6 +561,7 @@ class Request:
 
     @multipart_form.setter
     def multipart_form(self, form: MultiPartForm):
+        self._is_form_initialized = True
         if not isinstance(self._deserialized_content, MultiPartForm):
             # Generate a multipart header because we don't have any boundary to format the multipart.
             self._ensure_multipart_content_type()
