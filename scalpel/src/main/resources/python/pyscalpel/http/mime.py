@@ -53,11 +53,13 @@ def parse_header(key: str, value: str) -> list[tuple[str, str]]:
     return parsed_header
 
 
+# Taken from requests_toolbelt
 def _split_on_find(content, bound):
     point = content.find(bound)
     return content[:point], content[point + len(bound) :]
 
 
+# Taken from requests_toolbelt
 def extract_boundary(content_type: str, encoding: str) -> bytes:
     ct_info = tuple(x.strip() for x in content_type.split(";"))
     mimetype = ct_info[0]
@@ -79,7 +81,6 @@ def find_header_param(
         return None
 
 
-@staticmethod
 def update_header_param(
     params: Sequence[tuple[str, str | None]], key: str, value: str | None
 ) -> list[tuple[str, str | None]]:
@@ -96,6 +97,10 @@ def update_header_param(
         new_params.append((key, value))
 
     return new_params
+
+
+def get_header_value_without_params(header_value: str) -> str:
+    return header_value.split(";", maxsplit=1)[0].strip()
 
 
 class ParseMimeHeaderTestCase(unittest.TestCase):
