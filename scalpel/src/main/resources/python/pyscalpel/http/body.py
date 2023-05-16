@@ -402,7 +402,12 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
     def set(
         self,
         key: str,
-        value: TextIOWrapper | BufferedReader | MultiPartFormField | bytes | None,
+        value: TextIOWrapper
+        | BufferedReader
+        | IOBase
+        | MultiPartFormField
+        | bytes
+        | None,
     ) -> None:
         new_field: MultiPartFormField
         match value:
@@ -440,7 +445,12 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
     def __setitem__(
         self,
         key: str,
-        value: TextIOWrapper | BufferedReader | MultiPartFormField | bytes | None,
+        value: TextIOWrapper
+        | BufferedReader
+        | MultiPartFormField
+        | IOBase
+        | bytes
+        | None,
     ) -> None:
         self.set(key, value)
 
