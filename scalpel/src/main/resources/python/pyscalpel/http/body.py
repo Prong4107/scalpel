@@ -511,18 +511,18 @@ class MultiPartFormSerializer(FormSerializer):
 
         return bytes(deserialized_body)
 
-    def deserialize(self, body: bytes, req: ObjectWithHeaders) -> MultiPartForm:
+    def deserialize(self, body: bytes, req: ObjectWithHeaders) -> MultiPartForm | None:
         content_type: str | None = req.headers.get(CONTENT_TYPE_KEY)
 
         assert content_type
 
         if not body:
-            return MultiPartForm(tuple(), content_type)
+            return None
 
         try:
             return MultiPartForm.from_bytes(body, content_type)
         except ImproperBodyPartContentException:
-            return self.get_empty_form(req)
+            return None
 
     def get_empty_form(self, req: ObjectWithHeaders) -> Any:
         content_type: str | None = req.headers.get(CONTENT_TYPE_KEY)
