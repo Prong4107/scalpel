@@ -197,13 +197,17 @@ class MultiPartFormField:
     def from_file(
         name: str,
         file: TextIOWrapper | BufferedReader | str,
+        content_type: str | None = None,
         encoding: str | None = None,
     ):
         if isinstance(file, str):
             file = open(file, mode="rb")
 
         # Guess the MIME content-type from the file extension
-        content_type = mimetypes.guess_type(file.name)[0] or "application/octet-stream"
+        if content_type is None:
+            content_type = (
+                mimetypes.guess_type(file.name)[0] or "application/octet-stream"
+            )
 
         # Read the whole file into memory
         content: bytes
