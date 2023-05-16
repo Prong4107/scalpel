@@ -219,13 +219,17 @@ class MultiPartFormField:
             case BufferedReader():
                 content = file.read(-1)
 
-        return MultiPartFormField.make(
+        instance = MultiPartFormField.make(
             name,
             filename=os.path.basename(file.name),
             body=content,
             content_type=content_type,
             encoding=encoding or "utf-8",
         )
+
+        file.close()
+
+        return instance
 
     @staticmethod
     def __serialize_content(
