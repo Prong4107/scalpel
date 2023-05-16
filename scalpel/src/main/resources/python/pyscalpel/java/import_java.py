@@ -1,12 +1,14 @@
+import os
+
 from typing import cast, Type, TypeVar
 from functools import cache
+from sys import modules
+
 from pyscalpel.java.object import JavaObject
 
 
 @cache
 def _is_pdoc() -> bool:
-    from sys import modules  # pylint: disable=import-outside-toplevel
-
     return "pdoc" in modules
 
 
@@ -23,7 +25,7 @@ def import_java(
     :param expected_type: The expected type of the class. (e.g. JavaObject)
     :return: The imported class.
     """
-    if _is_pdoc():
+    if _is_pdoc() or os.environ.get("_DO_NOT_IMPORT_JAVA") is not None:
         return cast(expected_type, None)  # type: ignore
     try:
         module = __import__(module, fromlist=[name])
