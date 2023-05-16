@@ -221,7 +221,7 @@ class MultiPartFormField:
 
         return MultiPartFormField.make(
             name,
-            filename=file.name,
+            filename=os.path.basename(file.name),
             body=content,
             content_type=content_type,
             encoding=encoding or "utf-8",
