@@ -192,17 +192,25 @@ class MultiPartFormField:
     @staticmethod
     def from_file(
         name: str,
-        file: TextIOWrapper | BufferedReader | str,
+        file: TextIOWrapper | BufferedReader | str | IOBase,
+        filename: str | None = None,
         content_type: str | None = None,
         encoding: str | None = None,
     ):
         if isinstance(file, str):
             file = open(file, mode="rb")
 
+        if filename is None:
+            match file:
+                case TextIOWrapper() | BufferedReader():
+                    filename = file.name
+                case _:
+                    filename = name
+
         # Guess the MIME content-type from the file extension
         if content_type is None:
             content_type = (
-                mimetypes.guess_type(file.name)[0] or "application/octet-stream"
+                mimetypes.guess_type(filename)[0] or "application/octet-stream"
             )
 
         # Read the whole file into memory
@@ -212,12 +220,12 @@ class MultiPartFormField:
                 content = file.read(-1).encode(file.encoding)
                 # Override file.encoding if provided.
                 encoding = encoding or file.encoding
-            case BufferedReader():
+            case BufferedReader() | IOBase():
                 content = file.read(-1)
 
         instance = MultiPartFormField.make(
             name,
-            filename=os.path.basename(file.name),
+            filename=os.path.basename(filename),
             body=content,
             content_type=content_type,
             encoding=encoding or "utf-8",
