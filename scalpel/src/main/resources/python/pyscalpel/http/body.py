@@ -1,29 +1,25 @@
 from __future__ import annotations
 
+import os
 import urllib.parse
-import unittest
-from typing import Sequence, Protocol, Any, Iterator
+from typing import Sequence, Protocol, Any, Iterator, TypeVar
 from abc import ABC, abstractmethod
 from requests.structures import CaseInsensitiveDict
 from io import TextIOWrapper, BufferedReader, IOBase
 import mimetypes
 from mitmproxy.coretypes import multidict
+from abc import ABCMeta
 
-from .headers import Headers
+from pyscalpel.http.headers import Headers
 from pyscalpel.encoding import always_bytes, always_str
 import json
 
-from typing import cast, Mapping, Protocol, Mapping, Any
+from typing import cast, MutableMapping, Protocol, Mapping, Any, Literal
 from requests_toolbelt.multipart.decoder import (
     BodyPart,
     MultipartDecoder,
     ImproperBodyPartContentException,
 )
-from requests_toolbelt.multipart.encoder import MultipartEncoder, encode_with
-from email.message import Message
-from email.parser import Parser
-from email.header import decode_header, make_header
-from email.headerregistry import ContentDispositionHeader
 from urllib.parse import quote as urllibquote
 from pyscalpel.http.mime import parse_mime_header_value
 from pyscalpel.http.mime import (
