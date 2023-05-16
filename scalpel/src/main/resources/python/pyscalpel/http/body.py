@@ -478,6 +478,17 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
         fields = (repr(field) for field in self.fields)
         return f"{type(self).__name__}[{', '.join(fields)}]"
 
+    def items(self) -> tuple[tuple[str, MultiPartFormField], ...]:
+        fields = self.fields
+        items = ((i.name, i) for i in fields)
+        return tuple(items)
+
+    def keys(self) -> tuple[str, ...]:
+        return tuple(field.name for field in self.fields)
+
+    def values(self) -> tuple[MultiPartFormField, ...]:
+        return tuple(self.fields)
+
 
 class MultiPartFormSerializer(FormSerializer):
     def serialize(
