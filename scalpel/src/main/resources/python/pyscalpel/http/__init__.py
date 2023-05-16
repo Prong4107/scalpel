@@ -1,6 +1,5 @@
-from .request import Request
+from .request import Request, Headers
 from .response import Response
-from .headers import Headers
 
 # from .body import Serializer, JSONFormSerializer, URLEncodedFormSerializer
 
