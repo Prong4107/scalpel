@@ -16,6 +16,7 @@ if __name__ == "__main__":
         URLEncodedFormSerializer,
         multidict,
         os,
+        ObjectWithHeaders,
     )
 
     class MultiPartFormTestCase(unittest.TestCase):
@@ -305,5 +306,46 @@ if __name__ == "__main__":
             self.assertEqual(form_field.content, b"This is the content of the file.")
 
             os.remove(filename)
+
+    class FormConversionsTestCase(unittest.TestCase):
+        def test_JSON_to_URLEncode(self):
+            json_serializer = JSONFormSerializer()
+            urlencode_serializer = URLEncodedFormSerializer()
+
+            json_form = {
+                "key1": [1, 2, 3, 4, 5.0],
+                "key2": "2",
+                "level0": {"level1": {"level2": "nested"}},
+            }
+
+            form = JSONForm(json_form.items())
+
+            self.assertDictEqual(json_form, form)
+
+            exported = json_serializer.export_form_to_dict(form)
+
+            self.assertDictEqual(exported, json_form)
+
+            imported = urlencode_serializer.import_form(
+                exported, cast(ObjectWithHeaders, None)
+            )
+
+            expected_fields = (
+                (b"key1[]", b"1"),
+                (b"key1[]", b"2"),
+                (b"key1[]", b"3"),
+                (b"key1[]", b"4"),
+                (b"key1[]", b"5.0"),
+                (b"key2", b"2"),
+                (b"level0[level1][level2]", b"nested"),
+            )
+
+            self.assertTupleEqual(imported.fields, expected_fields)
+
+            serialized = urlencode_serializer.serialize(imported)
+
+            expected_serialized = b"key1[]=1&key1[]=2&key1[]=3&key1[]=4&key1[]=5.0&key2=2&level0[level1][level2]=nested"
+
+            self.assertEqual(expected_serialized, serialized, "Failed")
 
     unittest.main()
