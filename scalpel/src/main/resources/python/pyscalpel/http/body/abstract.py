@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Protocol, TypeVar, Sequence, Any, TypeAlias
+from typing import Protocol, TypeVar, Sequence, Any, TypeAlias, Literal
 from abc import ABC, abstractmethod, ABCMeta
 
 from collections.abc import MutableMapping, Mapping
@@ -23,11 +23,16 @@ class Form(MutableMapping[KT, VT], metaclass=ABCMeta):
     pass
 
 
-TupleExportedForm = tuple[
-    tuple[str | bytes | int | bool, str | bytes | int | bool | None], ...
+Scalars: TypeAlias = str | bytes | int | bool | float
+
+TupleExportedForm: TypeAlias = tuple[
+    tuple[Scalars, Scalars | None],
+    ...,
 ]
 
-ExportedForm: TypeAlias = Mapping | TupleExportedForm
+DictExportedForm: TypeAlias = dict[Scalars, Scalars | None]
+
+ExportedForm: TypeAlias = DictExportedForm | TupleExportedForm
 
 
 # Abstract base class
@@ -75,39 +80,73 @@ class FormSerializer(ABC):
             type[Form]: The form concrete type
         """
 
-    # @abstractmethod
-    # def import_form(self, exported: ExportedForm) -> Form:
-    #     """Imports a form exported by a serializer
-    #         Used to convert a form from a Content-Type to another
-    #         Information may be lost in the process
+    @abstractmethod
+    def prefered_imports(self) -> set[Literal["tuple"] | Literal["dict"]]:
+        """Get the prefered import formats
+        Some formats map well to dict (JSON) so they prefer it.
+        Some formats do not map to dict (e.g: allowed duplicates key) so they prefer a (key,val) tuple
+        Some formats can both map to dict and tuple so they specify both
+            (e.g.: PHP style urlencoded maps to dict, but can also uses duplicates keys in other contexts)
+        The conversion algorithm/format is chosen depending on the best pair (prefered_import,prefered_export)
+        """
 
-    #     Args:
-    #         exported (ExportedForm): The exported form
+    # It is possible to hardcode the conversion cases in Request
+    # (i.e. checking if the former serializer is JSON and next is URLEncoded and changing the conversion
+    #   algorithm depending on the result, but Request should be serializer agnostic so that an user can
+    #   implement their own serializer for their own form data format
+    #   and have it work without modifying any library code.
 
-    #     Returns:
-    #         Form: The form converted to this serializer's format
-    #     """
+    #   Pair ranking:
+    #
+    # 1: (tuple,tuple) -> tuple
+    # 2: (dict,dict) -> dict (e.g. JSON/URLEncoded)
+    # 3: (dict,tuple) -> tuple
+    # 4: (tuple,dict) -> tuple
 
-    # @abstractmethod
-    # def export_form_to_tuple(self, source: Form) -> TupleExportedForm:
-    #     """Formats a form so it can be imported by another serializer
-    #         Information may be lost in the process
+    @abstractmethod
+    def prefered_exports(self) -> set[Literal["tuple"] | Literal["dict"]]:
+        """Get the prefered export formats
+        Some formats map well to dict (JSON) so they prefer it.
+        Some formats may not map to dict (e.g: allowed duplicates key) so they prefer a (key,val) tuple
+        Some formats may both map to dict and tuple so they specify both
+            (e.g.: PHP style urlencoded maps to dict, but can also uses duplicates keys in other contexts)
+        The conversion algorithm/format is chosen depending on the best pair (prefered_import,prefered_export)
+        """
 
-    #     Args:
-    #         form (Form): The form to export
+    @abstractmethod
+    def import_form(self, exported: ExportedForm, req: ObjectWithHeaders) -> Form:
+        """Imports a form exported by a serializer
+            Used to convert a form from a Content-Type to another
+            Information may be lost in the process
 
-    #     Returns:
-    #         ExportedForm: The exported form
-    #     """
+        Args:
+            exported (ExportedForm): The exported form
+            req: (ObjectWithHeaders): Used to get multipart boundary
 
-    # @abstractmethod
-    # def export_form_to_dict(self, source: Form) -> Mapping:
-    #     """Formats a form so it can be imported by another serializer
-    #         Enforces the type to be dict, used when
+        Returns:
+            Form: The form converted to this serializer's format
+        """
 
-    #     Args:
-    #         form (Form): The form to export
+    @abstractmethod
+    def export_form_to_tuple(self, source: Form) -> TupleExportedForm:
+        """Formats a form so it can be imported by another serializer
+            Information may be lost in the process
 
-    #     Returns:
-    #         ExportedForm: The exported form
-    #     """
+        Args:
+            form (Form): The form to export
+
+        Returns:
+            ExportedForm: The exported form
+        """
+
+    @abstractmethod
+    def export_form_to_dict(self, source: Form) -> Mapping[Scalars, Scalars | None]:
+        """Formats a form so it can be imported by another serializer
+            Enforces the type to be dict, used when
+
+        Args:
+            form (Form): The form to export
+
+        Returns:
+            ExportedForm: The exported form
+        """
