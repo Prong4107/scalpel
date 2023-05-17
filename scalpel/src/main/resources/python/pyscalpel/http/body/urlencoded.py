@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import urllib.parse
 import qs
 
-from typing import Sequence, Any, Mapping
+from typing import Sequence, Any, Mapping, Literal
 from mitmproxy.coretypes import multidict
 
 
@@ -58,7 +58,7 @@ class URLEncodedFormSerializer(FormSerializer):
     def deserialized_type(self) -> type[QueryParams]:
         return QueryParams
 
-    def import_form(self, exported: ExportedForm) -> QueryParams:
+    def import_form(self, exported: ExportedForm, req=...) -> QueryParams:
         match exported:
             case tuple():
                 fields = list()
@@ -72,7 +72,7 @@ class URLEncodedFormSerializer(FormSerializer):
                         (convert_for_urlencode(key), convert_for_urlencode(val))
                     )
                 return QueryParams(fields)
-            case Mapping():
+            case dict():
                 mapped_qs = qs.build_qs(exported)
                 return self.deserialize(mapped_qs.encode())
 
@@ -83,3 +83,9 @@ class URLEncodedFormSerializer(FormSerializer):
         serialized = self.serialize(source)
         parsed = qs.qs_parse(serialized.decode())
         return parsed
+
+    def prefered_exports(self) -> set[Literal["dict", "tuple"]]:
+        return set(("dict", "tuple"))
+
+    def prefered_imports(self) -> set[Literal["dict", "tuple"]]:
+        return set(("dict", "tuple"))

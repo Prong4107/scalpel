@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import os
-from typing import Sequence, Any, Iterator
+from typing import Literal, Sequence, Any, Iterator
 from requests.structures import CaseInsensitiveDict
 from io import TextIOWrapper, BufferedReader, IOBase
 import mimetypes
 
-from collections.abc import Mapping
+from collections.abc import Mapping, MutableMapping
 
 from pyscalpel.encoding import always_bytes, always_str
 
-from typing import cast, Any
+from typing import cast, Any, Iterable
 from requests_toolbelt.multipart.decoder import (
     BodyPart,
     MultipartDecoder,
@@ -24,8 +24,13 @@ from pyscalpel.http.mime import (
     find_header_param,
     update_header_param,
 )
+from pyscalpel.http.body.abstract import (
+    ExportedForm,
+    Form,
+    TupleExportedForm,
+)
 
-from .abstract import FormSerializer, ObjectWithHeaders
+from .abstract import FormSerializer, ObjectWithHeaders, Scalars
 
 # Define constants to avoid typos.
 CONTENT_TYPE_KEY = "Content-Type"
@@ -399,6 +404,30 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
         return tuple(self.fields)
 
 
+def scalar_to_bytes(scalar: Scalars | None) -> bytes:
+    match scalar:
+        case str() | bytes():
+            return always_bytes(scalar)
+        case int() | float():
+            return always_bytes(str(scalar))
+        case bool():
+            return b"1" if scalar else b"0"
+        case _:
+            return b""
+
+
+def scalar_to_str(scalar: Scalars | None) -> str:
+    match scalar:
+        case str() | bytes():
+            return always_str(scalar)
+        case int() | float():
+            return str(scalar)
+        case bool():
+            return "1" if scalar else "0"
+        case _:
+            return ""
+
+
 class MultiPartFormSerializer(FormSerializer):
     def serialize(
         self, deserialized_body: MultiPartForm, req: ObjectWithHeaders
@@ -432,3 +461,37 @@ class MultiPartFormSerializer(FormSerializer):
 
     def deserialized_type(self) -> type[MultiPartForm]:
         return MultiPartForm
+
+    def import_form(
+        self, exported: ExportedForm, req: ObjectWithHeaders
+    ) -> MultiPartForm:
+        content_type = req.headers.get("Content-Type")
+        assert content_type
+
+        sequence: Iterable[tuple[Scalars, Scalars | None]]
+        match exported:
+            case dict():
+                sequence = exported.items()
+            case tuple():
+                sequence = exported
+
+        fields = tuple(
+            MultiPartFormField.make(scalar_to_str(name), body=scalar_to_bytes(body))
+            for name, body in sequence
+        )
+        return MultiPartForm(fields, content_type)
+
+    def export_form_to_dict(self, source: MultiPartForm) -> Mapping[str, bytes]:
+        # Only retain name and content
+        return {key: field.content for key, field in source.items()}
+
+    def export_form_to_tuple(self, source: Form) -> tuple[tuple[str, bytes]]:
+        # Only retain name and content
+        return tuple((key, field.content) for key, field in source.items())
+
+    # Mapping to dict has no value.
+    def prefered_exports(self) -> set[Literal["tuple"]]:
+        return set(("tuple",))
+
+    def prefered_imports(self) -> set[Literal["tuple"]]:
+        return set(("tuple",))
