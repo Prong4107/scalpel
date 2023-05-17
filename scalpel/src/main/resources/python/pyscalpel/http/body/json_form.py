@@ -7,11 +7,11 @@ import json
 from typing import Literal, cast
 import string
 
-from pyscalpel.http.body.abstract import FormSerializer, TupleExportedForm, ExportedForm
 from pyscalpel.http.body.abstract import (
+    FormSerializer,
+    TupleExportedForm,
     ExportedForm,
-    Form,
-    ObjectWithHeaders,
+    DictExportedForm,
 )
 
 
@@ -83,9 +83,9 @@ class JSONFormSerializer(FormSerializer):
 
         return tuple(exported)
 
-    def export_form_to_dict(self, source: JSONForm) -> Mapping:
+    def export_form_to_dict(self, source: JSONForm) -> DictExportedForm:
         # Form is already a plain dict
-        return source
+        return cast(DictExportedForm, dict(source))
 
     def prefered_imports(self) -> set[Literal["dict"]]:
         return set(("dict",))
