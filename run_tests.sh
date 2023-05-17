@@ -1,6 +1,7 @@
 SRC="
 pyscalpel/http/mime.py
 pyscalpel/http/body/tests.py
+pyscalpel/http/request.py
 qs/qs.py
 "
 
