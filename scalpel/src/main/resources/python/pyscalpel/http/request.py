@@ -34,6 +34,7 @@ from pyscalpel.http.body import (
     URLEncodedFormSerializer,
     MultiPartFormSerializer,
     MultiPartForm,
+    MultiPartFormField,
     QueryParamsView,
     QueryParams,
     JSON_KEY_TYPES,
@@ -57,7 +58,7 @@ class Request:
 
     _Port = int
     _QueryParam = tuple[str, str]
-    _ParsedQuery = list[_QueryParam]
+    _ParsedQuery = tuple[_QueryParam]
     _HttpVersion = str
     _HeaderKey = str
     _HeaderValue = str
@@ -119,13 +120,17 @@ class Request:
 
     @staticmethod
     def _parse_qs(qs: str) -> _ParsedQuery:
-        return urllib.parse.parse_qsl(qs)
+        return tuple(urllib.parse.parse_qsl(qs))
 
     @staticmethod
     def _parse_url(
         url: str,
     ) -> tuple[_Scheme, _Host, _Port, _Path]:
-        return cast(tuple[str, str, int, str], url_parse(url))
+        scheme, host, port, path = url_parse(url)
+        return cast(
+            tuple[str, str, int, str],
+            (scheme.decode("ascii"), host.decode("idna"), port, path.decode("ascii")),
+        )
 
     @staticmethod
     def _unparse_url(scheme: _Scheme, host: _Host, port: _Port, path: _Path) -> str:
@@ -139,6 +144,8 @@ class Request:
         content: bytes | str = "",
         headers: Headers
         | dict[str | bytes, str | bytes]
+        | dict[str, str]
+        | dict[bytes, bytes]
         | Iterable[tuple[bytes, bytes]] = (),
     ) -> "Request":
         scalpel_headers: Headers
@@ -160,7 +167,13 @@ class Request:
         scheme, host, port, path = Request._parse_url(url)
         http_version = "HTTP/1.1"
 
-        authority: str = scalpel_headers["Host"] or ""
+        # Inferr missing Host header from URL
+        host_header = scalpel_headers.get("Host")
+        if host_header is None:
+            host_header = host
+            scalpel_headers["Host"] = host_header
+
+        authority: str = host_header
         encoded_content = always_bytes(content)
 
         assert isinstance(host, str)
@@ -339,7 +352,7 @@ class Request:
 
     def _get_query(self) -> _ParsedQuery:
         query = urllib.parse.urlparse(self.url).query
-        return url_decode(query)
+        return tuple(url_decode(query))
 
     def _set_query(self, query_data: Sequence[_QueryParam]):
         query = url_encode(query_data)
@@ -374,7 +387,7 @@ class Request:
 
     def _update_serialized_content(self, serialized: bytes):
         if self._serializer is None:
-            self.content = serialized
+            self._content = serialized
             return
 
         # Update the parsed form
@@ -424,6 +437,7 @@ class Request:
                 return
             case str():
                 value = value.encode()
+        # FIXME: Infinite loop here ?
         self._update_serialized_content(value)
 
     @property
@@ -585,7 +599,10 @@ class Request:
     @property
     def urlencoded_form(self) -> QueryParams:
         self._is_form_initialized = True
-        return self._update_serializer_and_get_form(URLEncodedFormSerializer())
+        return cast(
+            QueryParams,
+            self._update_serializer_and_get_form(URLEncodedFormSerializer()),
+        )
 
     @urlencoded_form.setter
     def urlencoded_form(self, form: QueryParams):
@@ -666,4 +683,7 @@ class Request:
             # Generate a multipart header because we don't have any boundary to format the multipart.
             self._ensure_multipart_content_type()
 
-        return self._update_serializer_and_set_form(MultiPartFormSerializer(), form)
+        return self._update_serializer_and_set_form(
+            MultiPartFormSerializer(), cast(MutableMapping, form)
+        )
+
