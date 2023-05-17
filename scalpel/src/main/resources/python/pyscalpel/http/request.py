@@ -687,3 +687,188 @@ class Request:
             MultiPartFormSerializer(), cast(MutableMapping, form)
         )
 
+
+import unittest
+
+
+class RequestTestCase(unittest.TestCase):
+    def test_init(self):
+        method = "GET"
+        scheme = "https"
+        host = "example.com"
+        port = 443
+        path = "/path"
+        http_version = "HTTP/1.1"
+        headers = Headers([(b"Content-Type", b"application/json")])
+        content = b'{"key": "value"}'
+
+        request = Request(
+            method=method,
+            scheme=scheme,
+            host=host,
+            port=port,
+            path=path,
+            http_version=http_version,
+            headers=headers,
+            content=content,
+            authority="",
+        )
+
+        self.assertEqual(request.method, method)
+        self.assertEqual(request.scheme, scheme)
+        self.assertEqual(request.host, host)
+        self.assertEqual(request.port, port)
+        self.assertEqual(request.path, path)
+        self.assertEqual(request.http_version, http_version)
+        self.assertEqual(request.headers, headers)
+        self.assertEqual(request.content, content)
+
+    def test_make(self):
+        method = "POST"
+        url = "http://example.com/path"
+        content = '{"key": "value"}'
+        headers = {
+            "Content-Type": "application/json",
+            "X-Custom-Header": "custom",
+        }
+
+        request = Request.make(method, url, content, headers)
+
+        self.assertEqual(request.method, method)
+        self.assertEqual(request.url, url)
+        self.assertEqual(request.content, content.encode())
+        self.assertEqual(request.headers.get("Content-Type"), "application/json")
+        self.assertEqual(request.headers.get("X-Custom-Header"), "custom")
+
+    def create_request(self) -> Request:
+        method = "POST"
+        scheme = "https"
+        host = "example.com"
+        port = 443
+        path = "/path"
+        http_version = "HTTP/1.1"
+        headers = Headers(
+            [
+                (b"Content-Type", b"application/json; charset=utf-8"),
+                (b"X-Custom-Header", b"custom"),
+            ]
+        )
+        content = b'{"key": "value"}'
+
+        return Request(
+            method=method,
+            scheme=scheme,
+            host=host,
+            port=port,
+            path=path,
+            http_version=http_version,
+            headers=headers,
+            content=content,
+            authority="",
+        )
+
+    def test_set_url(self):
+        request = Request.make("GET", "http://example.com/path")
+
+        request.url = "https://example.com/new-path?param=value"
+
+        self.assertEqual(request.scheme, "https")
+        self.assertEqual(request.host, "example.com")
+        self.assertEqual(request.port, 443)
+        self.assertEqual(request.path, "/new-path?param=value")
+        self.assertEqual(request.url, "https://example.com/new-path?param=value")
+
+    def test_query_params(self):
+        request = Request.make(
+            "GET", "http://example.com/path?param1=value1&param2=value2"
+        )
+
+        self.assertEqual(
+            request.query.get_all("param1"),
+            ["value1"],
+            "Failed to get query parameter 'param1'",
+        )
+        self.assertEqual(
+            request.query.get_all("param2"),
+            ["value2"],
+            "Failed to get query parameter 'param2'",
+        )
+
+        request.query.set_all("param1", ["new_value1", "new_value2"])
+        self.assertEqual(
+            request.query.get_all("param1"),
+            ["new_value1", "new_value2"],
+            "Failed to set query parameter 'param1'",
+        )
+
+        request.query.add("param3", "value3")
+        self.assertEqual(
+            request.query.get_all("param3"),
+            ["value3"],
+            "Failed to add query parameter 'param3'",
+        )
+
+        # TODO: Handle remove via None, del ,remove_all
+        del request.query["param2"]
+        self.assertEqual(
+            request.query.get_all("param2"),
+            [],
+            "Failed to remove query parameter 'param2'",
+        )
+
+        query_params = request.query.items()
+        self.assertEqual(
+            list(query_params),
+            [("param1", "new_value1"), ("param3", "value3")],
+            "Failed to get query parameters as items()",
+        )
+
+    def test_body_content(self):
+        request = Request.make(
+            "POST", "http://example.com/path", content=b"request body"
+        )
+
+        self.assertEqual(request.content, b"request body", "Failed to get request body")
+
+        request.content = b"new content"
+        self.assertEqual(request.content, b"new content", "Failed to set request body")
+
+    def test_headers(self):
+        request = Request.make(
+            "GET",
+            "http://example.com/path",
+            headers={"Content-Type": "application/json"},
+        )
+
+        self.assertEqual(
+            request.headers.get("Content-Type"),
+            "application/json",
+            "Failed to get header 'Content-Type'",
+        )
+
+        request.headers["Content-Type"] = "text/html"
+        self.assertEqual(
+            request.headers.get("Content-Type"),
+            "text/html",
+            "Failed to set header 'Content-Type'",
+        )
+
+        del request.headers["Content-Type"]
+        self.assertIsNone(
+            request.headers.get("Content-Type"),
+            "Failed to delete header 'Content-Type'",
+        )
+
+    def test_http_version(self):
+        request = Request.make("GET", "http://example.com/path")
+
+        self.assertEqual(request.http_version, "HTTP/1.1", "Failed to get HTTP version")
+
+        request.http_version = "HTTP/2.0"
+        self.assertEqual(request.http_version, "HTTP/2.0", "Failed to set HTTP version")
+
+
+
+
+if __name__ == "__main__":
+    unittest.main()
