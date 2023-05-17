@@ -46,7 +46,7 @@ class URLEncodedFormSerializer(FormSerializer):
     def serialize(
         self, deserialized_body: multidict.MultiDict[bytes, bytes], req=...
     ) -> bytes:
-        return b"&".join(b"=".join(field) for field in deserialized_body.items())
+        return b"&".join(b"=".join(field) for field in deserialized_body.fields)
 
     def deserialize(self, body: bytes, req=...) -> QueryParams:
         fields = urllib.parse.parse_qsl(body)
