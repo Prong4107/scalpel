@@ -45,6 +45,36 @@ def json_convert(value) -> JSON_VALUE_TYPES:
     return json.loads(json.dumps(value, cls=PrintableJsonEncoder))
 
 
+def transform_tuple_to_dict(tup):
+    """Transforms duplicates keys to list
+
+    E.g:
+    (("key_duplicate", 1),("key_duplicate", 2),("key_duplicate", 3),
+    ("key_duplicate", 4),("key_uniq": "val") ,
+    ("key_duplicate", 5),("key_duplicate", 6))
+    ->
+    {"key_duplicate": [1,2,3,4,5], "key_uniq": "val"}
+
+
+    Args:
+        tup (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
+    result_dict = {}
+    for pair in tup:
+        key, value = pair
+        if key in result_dict:
+            if isinstance(result_dict[key], list):
+                result_dict[key].append(value)
+            else:
+                result_dict[key] = [result_dict[key], value]
+        else:
+            result_dict[key] = value
+    return result_dict
+
+
 class JSONFormSerializer(FormSerializer):
     def serialize(
         self, deserialized_body: Mapping[JSON_KEY_TYPES, JSON_VALUE_TYPES], req=...
@@ -102,8 +132,11 @@ class JSONFormSerializer(FormSerializer):
                 return JSONForm(
                     cast(dict[JSON_KEY_TYPES, JSON_VALUE_TYPES], json_convert(exported))
                 )
+
             case tuple():
+                # TODO: Duplicates should be converted to lists
+                converted = transform_tuple_to_dict(exported)
                 return JSONForm(
                     (cast(JSON_KEY_TYPES, json_convert(key)), json_convert(value))
-                    for key, value in exported
+                    for key, value in converted.items()
                 )
