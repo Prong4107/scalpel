@@ -348,4 +348,52 @@ if __name__ == "__main__":
 
             self.assertEqual(expected_serialized, serialized, "Failed")
 
+        def test_URLEncode_To_JSON_tuple(self):
+            json_serializer = JSONFormSerializer()
+            urlencode_serializer = URLEncodedFormSerializer()
+
+            form = QueryParams(
+                [
+                    (b"key1[]", b"1"),
+                    (b"key1[]", b"2"),
+                    (b"key1[]", b"3"),
+                    (b"key1[]", b"4"),
+                    (b"key1[]", b"5.0"),
+                    (b"key2", b"2"),
+                    (b"level0[level1][level2]", b"nested"),
+                ]
+            )
+
+            exported = urlencode_serializer.export_form_to_tuple(form)
+
+            expected_exported = (
+                (b"key1", b"1"),
+                (b"key1", b"2"),
+                (b"key1", b"3"),
+                (b"key1", b"4"),
+                (b"key1", b"5.0"),
+                (b"key2", b"2"),
+                (b"level0[level1][level2]", b"nested"),
+            )
+
+            self.assertTupleEqual(
+                exported,
+                expected_exported,
+                "Failed to export URL-encoded form to tuple",
+            )
+
+            imported = json_serializer.import_form(exported)
+
+            expected_imported = {
+                "key1": ["1", "2", "3", "4", "5.0"],
+                "key2": "2",
+                "level0[level1][level2]": "nested",  # This is why we need a dict export to convert to JSON
+            }
+
+            self.assertDictEqual(
+                imported,
+                expected_imported,
+                "Failed to convert URL-encoded form to JSON",
+            )
+# TODO dict import test
     unittest.main()
