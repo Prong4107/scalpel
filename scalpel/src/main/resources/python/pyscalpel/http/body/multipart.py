@@ -266,7 +266,7 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
         serialized = b""
         encoding = self.encoding
         for field in self.fields:
-            serialized += boundary + b"\r\n"
+            serialized += b"--" + boundary + b"\r\n"
 
             for key, val in field.headers.items():
                 serialized += (
@@ -274,7 +274,7 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
                 )
             serialized += b"\r\n" + field.content + b"\r\n"
 
-        serialized += boundary + b"\r\n\r\n"
+        serialized += b"--" + boundary + b"--\r\n\r\n"
         return serialized
 
     # Override
