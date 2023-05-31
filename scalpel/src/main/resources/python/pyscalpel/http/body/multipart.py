@@ -69,19 +69,25 @@ class MultiPartFormField:
         content_type: str = "application/octet-stream",
         encoding: str = "utf-8",
     ) -> MultiPartFormField:
-        urlencoded_name: str = urllibquote(name)
+        urlencoded_name: str = urllibquote(name, safe="[]{}/.;,?!§:@#~^$*")
         urlencoded_content_type = urllibquote(content_type)
 
         disposition = f'form-data; name="{urlencoded_name}"'
         if filename is not None:
+            # When the param is a file, add a filename MIME param and a content-type header
             disposition += f'; filename="{urllibquote(filename)}"'
-
-        headers = CaseInsensitiveDict(
-            {
-                CONTENT_DISPOSITION_KEY: disposition,
-                CONTENT_TYPE_KEY: urlencoded_content_type,
-            }
-        )
+            headers = CaseInsensitiveDict(
+                {
+                    CONTENT_DISPOSITION_KEY: disposition,
+                    CONTENT_TYPE_KEY: urlencoded_content_type,
+                }
+            )
+        else:
+            headers = CaseInsensitiveDict(
+                {
+                    CONTENT_DISPOSITION_KEY: disposition,
+                }
+            )
 
         return cls(headers, body, encoding)
 
