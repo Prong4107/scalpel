@@ -27,17 +27,17 @@ class QueryParamsView(multidict.MultiDictView[str, str]):
 
 
 class QueryParams(multidict.MultiDict[bytes, bytes]):
-    def __init__(self, fields: Sequence[tuple[bytes, bytes]]) -> None:
+    def __init__(self, fields: Sequence[tuple[str | bytes, str | bytes]]) -> None:
         super().__init__(fields)
 
     def __setitem__(self, key: int | str | bytes, value: int | str | bytes) -> None:
         super().__setitem__(always_bytes(key), always_bytes(value))
 
 
-def convert_for_urlencode(val: str | float | bool | bytes | int):
+def convert_for_urlencode(val: str | float | bool | bytes | int) -> str | bytes:
     match val:
         case bytes():
-            return val.decode()
+            return val
         case bool():
             return "1" if val else "0"
         case _:
@@ -80,7 +80,10 @@ class URLEncodedFormSerializer(FormSerializer):
 
     def export_form_to_tuple(self, source: QueryParams) -> TupleExportedForm:
         # Remove [] on duplicated keys
-        return tuple((key.removesuffix(b"[]"), value) for key, value in source.fields)
+        return tuple(
+            (key.removesuffix("[]" if isinstance(key, str) else b"[]"), value)  # type: ignore
+            for key, value in source.fields
+        )
 
     def export_form_to_dict(self, source: QueryParams) -> DictExportedForm:
         serialized = self.serialize(source)
