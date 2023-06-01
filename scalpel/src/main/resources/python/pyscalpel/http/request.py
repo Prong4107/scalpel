@@ -993,22 +993,22 @@ class RequestTestCase(unittest.TestCase):
         request.multipart_form["query"] = "inserer"
         self.assertEqual(request.multipart_form["query"].content, b"inserer")
 
-        request.multipart_form["formulaireQuestionReponses[0][idQuestion]"] = 1091
+        request.multipart_form["formulaireQuestionReponses[0][idQuestion]"] = 2081
         self.assertEqual(
             request.multipart_form["formulaireQuestionReponses[0][idQuestion]"].content,
-            b"1091",
+            b"2081",
         )
 
-        request.multipart_form["formulaireQuestionReponses[0][idReponse]"] = 3027
+        request.multipart_form["formulaireQuestionReponses[0][idReponse]"] = 1027
         self.assertEqual(
             request.multipart_form["formulaireQuestionReponses[0][idReponse]"].content,
-            b"3027",
+            b"1027",
         )
 
-        request.multipart_form["idQuestionnaire"] = 893
+        request.multipart_form["idQuestionnaire"] = 89
         self.assertEqual(
             request.multipart_form["idQuestionnaire"].content,
-            b"893",
+            b"89",
         )
 
         request.multipart_form["emptyParam"] = ""
