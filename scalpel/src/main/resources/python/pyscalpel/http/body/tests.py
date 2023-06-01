@@ -217,18 +217,11 @@ class URLEncodedFormSerializerTestCase(unittest.TestCase):
         items = list(imported_form.items())
         self.assertEqual(items, expected_fields)
 
-    def test_export_form_to_tuple(self):
+    def test_export_form(self):
         form = QueryParams([(b"key1", b"value1"), (b"key2", b"value2")])
         serializer = URLEncodedFormSerializer()
-        exported_form = serializer.export_form_to_tuple(form)
+        exported_form = serializer.export_form(form)
         expected_exported_form = ((b"key1", b"value1"), (b"key2", b"value2"))
-        self.assertEqual(exported_form, expected_exported_form)
-
-    def test_export_form_to_dict(self):
-        form = QueryParams([(b"key1", b"value1"), (b"key2", b"value2")])
-        serializer = URLEncodedFormSerializer()
-        exported_form = serializer.export_form_to_dict(form)
-        expected_exported_form = {"key1": "value1", "key2": "value2"}
         self.assertEqual(exported_form, expected_exported_form)
 
 
@@ -325,11 +318,23 @@ class FormConversionsTestCase(unittest.TestCase):
 
         form = JSONForm(json_form.items())
 
-        self.assertDictEqual(json_form, form)
+        self.assertDictEqual(json_form, form, "JSON constructor is broken")
 
-        exported = json_serializer.export_form_to_dict(form)
+        # TODO: dict should be replaced with tuple
+        exported = json_serializer.export_form(form)
+        expected_exported = (
+            (b"key1[]", b"1"),
+            (b"key1[]", b"2"),
+            (b"key1[]", b"3"),
+            (b"key1[]", b"4"),
+            (b"key1[]", b"5.0"),
+            (b"key2", b"2"),
+            (b"level0[level1][level2]", b"nested"),
+        )
 
-        self.assertDictEqual(exported, json_form)
+        self.assertTupleEqual(
+            expected_exported, exported, "JSON tuple export is broken"
+        )
 
         imported = urlencode_serializer.import_form(
             exported, cast(ObjectWithHeaders, None)
@@ -345,13 +350,17 @@ class FormConversionsTestCase(unittest.TestCase):
             (b"level0[level1][level2]", b"nested"),
         )
 
-        self.assertTupleEqual(imported.fields, expected_fields)
+        self.assertTupleEqual(
+            expected_fields, imported.fields, "URLEncode import is broken"
+        )
 
         serialized = urlencode_serializer.serialize(imported)
 
         expected_serialized = b"key1[]=1&key1[]=2&key1[]=3&key1[]=4&key1[]=5.0&key2=2&level0[level1][level2]=nested"
 
-        self.assertEqual(expected_serialized, serialized, "Failed")
+        self.assertEqual(
+            expected_serialized, serialized, "Urlencode serialize is broken"
+        )
 
     def test_URLEncode_To_JSON_tuple(self):
         json_serializer = JSONFormSerializer()
@@ -369,14 +378,14 @@ class FormConversionsTestCase(unittest.TestCase):
             ]
         )
 
-        exported = urlencode_serializer.export_form_to_tuple(form)
+        exported = urlencode_serializer.export_form(form)
 
         expected_exported = (
-            (b"key1", b"1"),
-            (b"key1", b"2"),
-            (b"key1", b"3"),
-            (b"key1", b"4"),
-            (b"key1", b"5.0"),
+            (b"key1[]", b"1"),
+            (b"key1[]", b"2"),
+            (b"key1[]", b"3"),
+            (b"key1[]", b"4"),
+            (b"key1[]", b"5.0"),
             (b"key2", b"2"),
             (b"level0[level1][level2]", b"nested"),
         )
@@ -392,7 +401,7 @@ class FormConversionsTestCase(unittest.TestCase):
         expected_imported = {
             "key1": ["1", "2", "3", "4", "5.0"],
             "key2": "2",
-            "level0[level1][level2]": "nested",  # This is why we need a dict export to convert to JSON
+            "level0": {"level1": {"level2": "nested"}},
         }
 
         self.assertDictEqual(
@@ -405,30 +414,25 @@ class FormConversionsTestCase(unittest.TestCase):
         json_serializer = JSONFormSerializer()
         urlencode_serializer = URLEncodedFormSerializer()
 
-        form = QueryParams(
-            [
-                (b"key1[]", b"1"),
-                (b"key1[]", b"2"),
-                (b"key1[]", b"3"),
-                (b"key1[]", b"4"),
-                (b"key1[]", b"5.0"),
-                (b"key2", b"2"),
-                (b"level0[level1][level2]", b"nested"),
-            ]
+        tupled_form = (
+            (b"key1[]", b"1"),
+            (b"key1[]", b"2"),
+            (b"key1[]", b"3"),
+            (b"key1[]", b"4"),
+            (b"key1[]", b"5.0"),
+            (b"key2", b"2"),
+            (b"level0[level1][level2]", b"nested"),
         )
 
-        exported = urlencode_serializer.export_form_to_dict(form)
+        form = QueryParams(list(tupled_form))
 
-        expected_exported = {
-            "key1": ["1", "2", "3", "4", "5.0"],
-            "key2": "2",
-            "level0": {"level1": {"level2": "nested"}},
-        }
+        exported = urlencode_serializer.export_form(form)
 
-        self.assertDictEqual(
-            exported,
+        expected_exported = tupled_form
+        self.assertTupleEqual(
             expected_exported,
-            "Failed to export URL-encoded form to dict",
+            exported,
+            "Failed to export URL-encoded form",
         )
 
         imported = json_serializer.import_form(exported)
@@ -440,9 +444,9 @@ class FormConversionsTestCase(unittest.TestCase):
         }
 
         self.assertDictEqual(
-            imported,
             expected_imported,
-            "Failed to convert URL-encoded form to JSON (dict)",
+            imported,
+            "Failed to import nested values to JSON",
         )
 
     def test_URLEncode_To_multipart(self):
@@ -461,14 +465,14 @@ class FormConversionsTestCase(unittest.TestCase):
             ]
         )
 
-        exported = urlencode_serializer.export_form_to_tuple(form)
+        exported = urlencode_serializer.export_form(form)
 
         expected_exported = (
-            (b"key1", b"1"),
-            (b"key1", b"2"),
-            (b"key1", b"3"),
-            (b"key1", b"4"),
-            (b"key1", b"5.0"),
+            (b"key1[]", b"1"),
+            (b"key1[]", b"2"),
+            (b"key1[]", b"3"),
+            (b"key1[]", b"4"),
+            (b"key1[]", b"5.0"),
             (b"key2", b"2"),
             (b"level0[level1][level2]", b"nested"),
         )
@@ -485,23 +489,23 @@ class FormConversionsTestCase(unittest.TestCase):
         multipart_data = multipart_serializer.import_form(exported, req)
         multipart_bytes = bytes(multipart_data)
         expected_multipart_bytes = b"""--f0f056705fd4c99a5f41f9fa87c334d5\r
-Content-Disposition: form-data; name="key1"\r
+Content-Disposition: form-data; name="key1[]"\r
 \r
 1\r
 --f0f056705fd4c99a5f41f9fa87c334d5\r
-Content-Disposition: form-data; name="key1"\r
+Content-Disposition: form-data; name="key1[]"\r
 \r
 2\r
 --f0f056705fd4c99a5f41f9fa87c334d5\r
-Content-Disposition: form-data; name="key1"\r
+Content-Disposition: form-data; name="key1[]"\r
 \r
 3\r
 --f0f056705fd4c99a5f41f9fa87c334d5\r
-Content-Disposition: form-data; name="key1"\r
+Content-Disposition: form-data; name="key1[]"\r
 \r
 4\r
 --f0f056705fd4c99a5f41f9fa87c334d5\r
-Content-Disposition: form-data; name="key1"\r
+Content-Disposition: form-data; name="key1[]"\r
 \r
 5.0\r
 --f0f056705fd4c99a5f41f9fa87c334d5\r
@@ -561,13 +565,12 @@ nested\r
             }
         )
 
-        # FIXME?: Keys are converted to strings, should they be bytes ? OSEF?
         multipart_form = multipart_serializer.deserialize(multipart_data_bytes, req=req)
 
         self.assertIsNotNone(multipart_form)
         assert multipart_form
 
-        exported = multipart_serializer.export_form_to_tuple(cast(Form, multipart_form))
+        exported = multipart_serializer.export_form(cast(Form, multipart_form))
         expected_exported = (
             ("key1", b"1"),
             ("key1", b"2"),
@@ -582,16 +585,21 @@ nested\r
         imported = urlencode_serializer.import_form(exported, req=req)
 
         expected_imported = QueryParams(expected_exported)
-        # FIXME: values ares converted to strings, shouldn't they stay as bytes ?
+
         self.assertEqual(expected_imported, imported)
 
-        exported_urlencoded = urlencode_serializer.export_form_to_tuple(imported)
+        exported_urlencoded = urlencode_serializer.export_form(imported)
         expected_exported_urlencoded = expected_exported
 
-        # TODO: Keep values as bytes?
         self.assertTupleEqual(expected_exported_urlencoded, exported_urlencoded)
 
+    # def test_Multipart_to_URLEncode(self):
+    #     # Init multipart form
+    #     multipart_form =
+
     # TODO: TEST multipart <-> json, the php syntax should work the same way than with urlencoded, see lequipe.fr concours_upload request for example
+    # TODO: export should:
+    #       1) Always export to tuple to the php syntax form
 
 
 unittest.main()

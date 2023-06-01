@@ -11,7 +11,6 @@ from mitmproxy.coretypes import multidict
 from pyscalpel.encoding import always_bytes, always_str
 from pyscalpel.http.body.abstract import (
     ExportedForm,
-    DictExportedForm,
     TupleExportedForm,
 )
 
@@ -78,20 +77,5 @@ class URLEncodedFormSerializer(FormSerializer):
                 mapped_qs = qs.build_qs(exported)
                 return self.deserialize(mapped_qs.encode())
 
-    def export_form_to_tuple(self, source: QueryParams) -> TupleExportedForm:
-        # Remove [] on duplicated keys
-        return tuple(
-            (key.removesuffix("[]" if isinstance(key, str) else b"[]"), value)  # type: ignore
-            for key, value in source.fields
-        )
-
-    def export_form_to_dict(self, source: QueryParams) -> DictExportedForm:
-        serialized = self.serialize(source)
-        parsed = qs.qs_parse(serialized.decode())
-        return parsed
-
-    def prefered_exports(self) -> set[Literal["dict", "tuple"]]:
-        return set(("dict", "tuple"))
-
-    def prefered_imports(self) -> set[Literal["dict", "tuple"]]:
-        return set(("dict", "tuple"))
+    def export_form(self, source: QueryParams) -> TupleExportedForm:
+        return source.fields

@@ -26,13 +26,12 @@ class Form(MutableMapping[KT, VT], metaclass=ABCMeta):
 Scalars: TypeAlias = str | bytes | int | bool | float
 
 TupleExportedForm: TypeAlias = tuple[
-    tuple[Scalars, Scalars | None],
+    tuple[str | bytes, str | bytes | None],
     ...,
 ]
 
-DictExportedForm: TypeAlias = dict[Scalars, Scalars | None]
 
-ExportedForm: TypeAlias = DictExportedForm | TupleExportedForm
+ExportedForm: TypeAlias = TupleExportedForm
 
 
 # Abstract base class
@@ -81,39 +80,6 @@ class FormSerializer(ABC):
         """
 
     @abstractmethod
-    def prefered_imports(self) -> set[Literal["tuple"] | Literal["dict"]]:
-        """Get the prefered import formats
-        Some formats map well to dict (JSON) so they prefer it.
-        Some formats do not map to dict (e.g: allowed duplicates key) so they prefer a (key,val) tuple
-        Some formats can both map to dict and tuple so they specify both
-            (e.g.: PHP style urlencoded maps to dict, but can also uses duplicates keys in other contexts)
-        The conversion algorithm/format is chosen depending on the best pair (prefered_import,prefered_export)
-        """
-
-    # It is possible to hardcode the conversion cases in Request
-    # (i.e. checking if the former serializer is JSON and next is URLEncoded and changing the conversion
-    #   algorithm depending on the result, but Request should be serializer agnostic so that an user can
-    #   implement their own serializer for their own form data format
-    #   and have it work without modifying any library code.
-
-    #   Pair ranking:
-    #
-    # 1: (tuple,tuple) -> tuple
-    # 2: (dict,dict) -> dict (e.g. JSON/URLEncoded)
-    # 3: (dict,tuple) -> tuple
-    # 4: (tuple,dict) -> tuple
-
-    @abstractmethod
-    def prefered_exports(self) -> set[Literal["tuple"] | Literal["dict"]]:
-        """Get the prefered export formats
-        Some formats map well to dict (JSON) so they prefer it.
-        Some formats may not map to dict (e.g: allowed duplicates key) so they prefer a (key,val) tuple
-        Some formats may both map to dict and tuple so they specify both
-            (e.g.: PHP style urlencoded maps to dict, but can also uses duplicates keys in other contexts)
-        The conversion algorithm/format is chosen depending on the best pair (prefered_import,prefered_export)
-        """
-
-    @abstractmethod
     def import_form(self, exported: ExportedForm, req: ObjectWithHeaders) -> Form:
         """Imports a form exported by a serializer
             Used to convert a form from a Content-Type to another
@@ -128,21 +94,9 @@ class FormSerializer(ABC):
         """
 
     @abstractmethod
-    def export_form_to_tuple(self, source: Form) -> TupleExportedForm:
+    def export_form(self, source: Form) -> TupleExportedForm:
         """Formats a form so it can be imported by another serializer
             Information may be lost in the process
-
-        Args:
-            form (Form): The form to export
-
-        Returns:
-            ExportedForm: The exported form
-        """
-
-    @abstractmethod
-    def export_form_to_dict(self, source: Form) -> Mapping[Scalars, Scalars | None]:
-        """Formats a form so it can be imported by another serializer
-            Enforces the type to be dict, used when
 
         Args:
             form (Form): The form to export
