@@ -26,7 +26,7 @@ class Form(MutableMapping[KT, VT], metaclass=ABCMeta):
 Scalars: TypeAlias = str | bytes | int | bool | float
 
 TupleExportedForm: TypeAlias = tuple[
-    tuple[str | bytes, str | bytes | None],
+    tuple[bytes, bytes | None],
     ...,
 ]
 

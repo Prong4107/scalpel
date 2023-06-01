@@ -570,15 +570,15 @@ nested\r
         self.assertIsNotNone(multipart_form)
         assert multipart_form
 
-        exported = multipart_serializer.export_form(cast(Form, multipart_form))
+        exported = multipart_serializer.export_form(multipart_form)
         expected_exported = (
-            ("key1", b"1"),
-            ("key1", b"2"),
-            ("key1", b"3"),
-            ("key1", b"4"),
-            ("key1", b"5.0"),
-            ("key2", b"2"),
-            ("level0[level1][level2]", b"nested"),
+            (b"key1", b"1"),
+            (b"key1", b"2"),
+            (b"key1", b"3"),
+            (b"key1", b"4"),
+            (b"key1", b"5.0"),
+            (b"key2", b"2"),
+            (b"level0[level1][level2]", b"nested"),
         )
         self.assertTupleEqual(expected_exported, exported)
 
@@ -593,13 +593,161 @@ nested\r
 
         self.assertTupleEqual(expected_exported_urlencoded, exported_urlencoded)
 
-    # def test_Multipart_to_URLEncode(self):
-    #     # Init multipart form
-    #     multipart_form =
+    def test_Multipart_to_URLEncode(self):
+        # Init multipart form
+        multipart_bytes = b"""--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+1\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+2\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+3\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+4\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+5.0\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key2"\r
+\r
+2\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="level0[level1][level2]"\r
+\r
+nested\r
+--f0f056705fd4c99a5f41f9fa87c334d5--\r
+\r
+"""
 
-    # TODO: TEST multipart <-> json, the php syntax should work the same way than with urlencoded, see lequipe.fr concours_upload request for example
-    # TODO: export should:
-    #       1) Always export to tuple to the php syntax form
+        multipart_form = MultiPartForm.from_bytes(
+            multipart_bytes,
+            "multipart/form-data; boundary=f0f056705fd4c99a5f41f9fa87c334d5",
+        )
+
+        # Export form to tuple
+        exported = MultiPartFormSerializer().export_form(multipart_form)
+        expected_exported = (
+            (b"key1[]", b"1"),
+            (b"key1[]", b"2"),
+            (b"key1[]", b"3"),
+            (b"key1[]", b"4"),
+            (b"key1[]", b"5.0"),
+            (b"key2", b"2"),
+            (b"level0[level1][level2]", b"nested"),
+        )
+
+        # Ensure export works as expected
+        self.assertTupleEqual(
+            expected_exported, exported, "Could not export MultiPartForm"
+        )
+
+        # Convert form to URLEncoded
+        imported = URLEncodedFormSerializer().import_form(exported)
+        expected_imported = QueryParams(expected_exported)
+
+        self.assertTupleEqual(expected_imported.fields, imported.fields)
+
+    def test_Multipart_to_JSON(self):
+        json_serializer = JSONFormSerializer()
+        multipart_serializer = MultiPartFormSerializer()
+
+        # Example multipart form data
+        multipart_data_bytes = b"""--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+1\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+2\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+3\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+4\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+5.0\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key2"\r
+\r
+2\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="level0[level1][level2]"\r
+\r
+nested\r
+--f0f056705fd4c99a5f41f9fa87c334d5--\r
+\r
+"""
+
+        FakeRequestTp = namedtuple("FakeRequest", ["headers"])
+        req = FakeRequestTp(
+            headers={
+                "Content-Type": "multipart/form-data; boundary=f0f056705fd4c99a5f41f9fa87c334d5"
+            }
+        )
+
+        multipart_form = multipart_serializer.deserialize(multipart_data_bytes, req=req)
+
+        self.assertIsNotNone(multipart_form)
+        assert multipart_form
+
+        exported = multipart_serializer.export_form(multipart_form)
+        expected_exported = (
+            (b"key1[]", b"1"),
+            (b"key1[]", b"2"),
+            (b"key1[]", b"3"),
+            (b"key1[]", b"4"),
+            (b"key1[]", b"5.0"),
+            (b"key2", b"2"),
+            (b"level0[level1][level2]", b"nested"),
+        )
+
+        self.assertTupleEqual(expected_exported, exported)
+
+        imported = json_serializer.import_form(exported)
+
+        expected_imported = {
+            "key1": ["1", "2", "3", "4", "5.0"],
+            "key2": "2",
+            "level0": {"level1": {"level2": "nested"}},
+        }
+
+        self.assertDictEqual(
+            imported,
+            expected_imported,
+            "Failed to convert multipart form data to JSON",
+        )
+
+        exported = json_serializer.export_form(imported)
+
+        expected_exported = (
+            (b"key1[]", b"1"),
+            (b"key1[]", b"2"),
+            (b"key1[]", b"3"),
+            (b"key1[]", b"4"),
+            (b"key1[]", b"5.0"),
+            (b"key2", b"2"),
+            (b"level0[level1][level2]", b"nested"),
+        )
+
+        self.assertTupleEqual(
+            exported,
+            expected_exported,
+            "Failed to export JSON form to tuple",
+        )
 
 
 unittest.main()
