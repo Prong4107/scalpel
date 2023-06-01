@@ -487,6 +487,8 @@ class MultiPartFormSerializer(FormSerializer):
         )
         return MultiPartForm(fields, content_type)
 
-    def export_form(self, source: Form) -> tuple[tuple[str, bytes]]:
+    def export_form(self, source: MultiPartForm) -> tuple[tuple[bytes, bytes]]:
         # Only retain name and content
-        return tuple((key, field.content) for key, field in source.items())
+        return tuple(
+            (always_bytes(key), field.content) for key, field in source.items()
+        )
