@@ -33,13 +33,13 @@ class JSONForm(dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]):
 
 
 class PrintableJsonEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, bytes):
+    def default(self, o):
+        if isinstance(o, bytes):
             return "".join(
                 ch if ch in string.printable else "\\u{:04x}".format(ord(ch))
-                for ch in obj.decode("latin-1")
+                for ch in o.decode("latin-1")
             )
-        return super().default(obj)
+        return super().default(o)
 
 
 def json_convert(value) -> JSON_VALUE_TYPES:
