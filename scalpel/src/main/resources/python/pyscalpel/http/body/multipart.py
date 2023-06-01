@@ -487,17 +487,6 @@ class MultiPartFormSerializer(FormSerializer):
         )
         return MultiPartForm(fields, content_type)
 
-    def export_form_to_dict(self, source: MultiPartForm) -> Mapping[str, bytes]:
-        # Only retain name and content
-        return {key: field.content for key, field in source.items()}
-
-    def export_form_to_tuple(self, source: Form) -> tuple[tuple[str, bytes]]:
+    def export_form(self, source: Form) -> tuple[tuple[str, bytes]]:
         # Only retain name and content
         return tuple((key, field.content) for key, field in source.items())
-
-    # Mapping to dict has no value.
-    def prefered_exports(self) -> set[Literal["tuple"]]:
-        return set(("tuple",))
-
-    def prefered_imports(self) -> set[Literal["tuple"]]:
-        return set(("tuple",))

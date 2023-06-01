@@ -6,14 +6,15 @@ from collections.abc import Mapping
 import json
 from typing import Literal, cast
 import string
+import qs
 
 from pyscalpel.http.body.abstract import (
     FormSerializer,
     TupleExportedForm,
     ExportedForm,
-    DictExportedForm,
 )
-
+from pyscalpel.encoding import always_bytes, always_str
+from pyscalpel.http.body.urlencoded import URLEncodedFormSerializer
 
 JSON_KEY_TYPES = str | int | float
 JSON_VALUE_TYPES = (
@@ -65,13 +66,22 @@ def transform_tuple_to_dict(tup):
     result_dict = {}
     for pair in tup:
         key, value = pair
-        if key in result_dict:
-            if isinstance(result_dict[key], list):
-                result_dict[key].append(value)
+        converted_key: bytes | str
+        match key:
+            case bytes():
+                converted_key = key.removesuffix(b"[]")
+            case str():
+                converted_key = key.removesuffix("[]")
+            case _:
+                converted_key = key
+
+        if converted_key in result_dict:
+            if isinstance(result_dict[converted_key], list):
+                result_dict[converted_key].append(value)
             else:
-                result_dict[key] = [result_dict[key], value]
+                result_dict[converted_key] = [result_dict[converted_key], value]
         else:
-            result_dict[key] = value
+            result_dict[converted_key] = value
     return result_dict
 
 
@@ -95,48 +105,24 @@ class JSONFormSerializer(FormSerializer):
     def deserialized_type(self) -> type[JSONForm]:
         return JSONForm
 
-    def export_form_to_tuple(self, source: JSONForm) -> TupleExportedForm:
-        # Roughly convert non scalar values to string
-        exported: list[
-            tuple[
-                str | bytes | int | bool | float,
-                str | bytes | int | bool | float | None,
-            ]
-        ] = list()
-        for key, val in source.items():
-            match val:
-                case int() | bool() | float() | str() | bytes() | None:
-                    exported.append((key, val))
-                case _:
-                    str_val = json.dumps(val)
-                    exported.append((key, str_val))
+    def export_form(self, source: JSONForm) -> TupleExportedForm:
+        # Transform the dict to a php style query string
+        serialized_to_qs = qs.build_qs(source)
 
-        return tuple(exported)
+        # Parse the query string
+        qs_parser = URLEncodedFormSerializer()
+        parsed_qs = qs_parser.deserialize(always_bytes(serialized_to_qs))
 
-    def export_form_to_dict(self, source: JSONForm) -> DictExportedForm:
-        # Form is already a plain dict
-        return cast(DictExportedForm, dict(source))
-
-    def prefered_imports(self) -> set[Literal["dict"]]:
-        return set(("dict",))
-
-    def prefered_exports(self) -> set[Literal["dict"]]:
-        return set(("dict",))
+        # Export the parsed query string to the tuple format
+        tupled_form = qs_parser.export_form(parsed_qs)
+        return tupled_form
 
     def import_form(self, exported: ExportedForm, req=...) -> JSONForm:
-        match exported:
-            case dict():
-                # Convert bytes values to string
-                # handle non printable using \u
-                #   https://www.json.org/json-en.html
-                return JSONForm(
-                    cast(dict[JSON_KEY_TYPES, JSON_VALUE_TYPES], json_convert(exported))
-                )
+        qs_serializer = URLEncodedFormSerializer()
+        parsed_qs = qs_serializer.import_form(exported)
+        serialized_qs: bytes = qs_serializer.serialize(parsed_qs)
 
-            case tuple():
-                # TODO: Duplicates should be converted to lists
-                converted = transform_tuple_to_dict(exported)
-                return JSONForm(
-                    (cast(JSON_KEY_TYPES, json_convert(key)), json_convert(value))
-                    for key, value in converted.items()
-                )
+        # TODO: Implem qs_parse for bytes
+        dict_form = qs.qs_parse(always_str(serialized_qs))
+        json_form = JSONForm(dict_form.items())
+        return json_form
