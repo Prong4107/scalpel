@@ -317,15 +317,20 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
         | IOBase
         | MultiPartFormField
         | bytes
+        | str
+        | int
+        | float
         | None,
     ) -> None:
         new_field: MultiPartFormField
         match value:
             case MultiPartFormField():
                 new_field = value
-            case bytes():
+            case int() | float():
+                return self.set(key, str(value))
+            case bytes() | str():
                 new_field = MultiPartFormField.make(key)
-                new_field.content = value
+                new_field.content = always_bytes(value)
             case IOBase():
                 new_field = MultiPartFormField.from_file(key, value)
             case None:
@@ -360,6 +365,9 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
         | MultiPartFormField
         | IOBase
         | bytes
+        | str
+        | int
+        | float
         | None,
     ) -> None:
         self.set(key, value)
