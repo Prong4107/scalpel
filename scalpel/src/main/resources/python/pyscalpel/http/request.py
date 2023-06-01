@@ -472,7 +472,9 @@ class Request:
             if fail_silently:
                 serializer = self._serializer
             else:
-                raise RuntimeError(f"Unimplemented form content-type: {_content_type}")
+                raise FormNotParsedException(
+                    f"Unimplemented form content-type: {_content_type}"
+                )
         self._set_serializer(serializer)
 
     @property
