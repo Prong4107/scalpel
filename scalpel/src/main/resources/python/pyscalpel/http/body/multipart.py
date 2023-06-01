@@ -35,9 +35,18 @@ from .abstract import FormSerializer, ObjectWithHeaders, Scalars
 # Define constants to avoid typos.
 CONTENT_TYPE_KEY = "Content-Type"
 CONTENT_DISPOSITION_KEY = "Content-Disposition"
+DEFAULT_CONTENT_TYPE = "application/octet-stream"
 
 
-# def
+def get_mime(filename):
+    if filename is None:
+        return DEFAULT_CONTENT_TYPE
+
+    mime_type, _ = mimetypes.guess_type(filename)
+    if mime_type is not None:
+        return mime_type
+    else:
+        return DEFAULT_CONTENT_TYPE
 
 
 class MultiPartFormField:
@@ -66,10 +75,16 @@ class MultiPartFormField:
         name: str,
         filename: str | None = None,
         body: bytes = b"",
-        content_type: str = "application/octet-stream",
+        content_type: str | None = None,
         encoding: str = "utf-8",
     ) -> MultiPartFormField:
+        # Ensure the form won't break if someone includes quotes
+        # TODO: escape using backslashes
         urlencoded_name: str = urllibquote(name, safe="[]{}/.;,?!§:@#~^$*")
+
+        if content_type is None:
+            content_type = get_mime(filename)
+
         urlencoded_content_type = urllibquote(content_type)
 
         disposition = f'form-data; name="{urlencoded_name}"'
