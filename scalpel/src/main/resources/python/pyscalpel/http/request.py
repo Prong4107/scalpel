@@ -881,7 +881,161 @@ class RequestTestCase(unittest.TestCase):
         request.http_version = "HTTP/2.0"
         self.assertEqual(request.http_version, "HTTP/2.0", "Failed to set HTTP version")
 
+    def test_update_serializer_from_content_type(self):
+        request = self.create_request()
 
+        # Test existing content-type
+        request.update_serializer_from_content_type()
+        self.assertIsInstance(request._serializer, JSONFormSerializer)
+
+        # Test custom content-type
+        request.headers["Content-Type"] = "application/x-www-form-urlencoded"
+        request.update_serializer_from_content_type()
+        self.assertIsInstance(request._serializer, URLEncodedFormSerializer)
+
+        # Test unimplemented content-type
+        request.headers["Content-Type"] = "application/xml"
+        with self.assertRaises(FormNotParsedException):
+            request.update_serializer_from_content_type()
+
+        # Test fail_silently=True
+        request.update_serializer_from_content_type(fail_silently=True)
+        self.assertIsInstance(request._serializer, URLEncodedFormSerializer)
+
+    def test_create_defaultform(self):
+        request = self.create_request()
+
+        # Test with existing form
+        request.form = {"key": "value"}
+        form = request.create_defaultform()
+        self.assertEqual(form, {"key": "value"})
+        self.assertIsInstance(request._serializer, JSONFormSerializer)
+
+        # Test without existing form
+        request.content = None
+        form = request.create_defaultform()
+        self.assertEqual(form, {})
+        self.assertIsInstance(request._serializer, JSONFormSerializer)
+
+        # Test unimplemented content-type
+        with self.assertRaises(FormNotParsedException):
+            request.update_serializer_from_content_type("application/xml")
+
+        # Test fail_silently=True
+        request.create_defaultform(update_header=True)
+        self.assertIsInstance(request._serializer, JSONFormSerializer)
+
+    def test_urlencoded_form(self):
+        request = self.create_request()
+
+        # Test getter
+        request._deserialized_content = QueryParams([(b"key1", b"value1")])
+        request.headers["Content-Type"] = "application/x-www-form-urlencoded"
+        request._serializer = URLEncodedFormSerializer()
+        form = request.urlencoded_form
+        self.assertEqual(form, QueryParams([(b"key1", b"value1")]))
+        self.assertIsInstance(request._serializer, URLEncodedFormSerializer)
+
+        # Test setter
+        request.urlencoded_form = QueryParams([(b"key2", b"value2")])
+
+        # WARNING: Previous form has been invalidated
+        # self.assertEqual(form, QueryParams([(b"key2", b"value2")]))
+
+        form = request.form
+        self.assertEqual(form, QueryParams([(b"key2", b"value2")]))
+
+        self.assertIsInstance(request._serializer, URLEncodedFormSerializer)
+
+    def test_json_form(self):
+        request = self.create_request()
+
+        # Test getter
+        request._deserialized_content = {"key1": "value1"}
+        form = request.json_form
+        self.assertEqual(form, {"key1": "value1"})
+        self.assertIsInstance(request._serializer, JSONFormSerializer)
+
+        # Test setter
+        request.json_form = {"key2": "value2"}
+
+        # WARNING: Previous form has been invalidated
+        # self.assertEqual(form, {"key2": "value2"})
+
+        form = request.form
+        self.assertEqual(form, {"key2": "value2"})
+
+        self.assertIsInstance(request._serializer, JSONFormSerializer)
+
+    def test_multipart_form(self):
+        request = self.create_request()
+
+        # Test getter
+        request.headers[
+            "Content-Type"
+        ] = "multipart/form-data; boundary=----WebKitFormBoundaryy6klzjxzTk68s1dI"
+        form = request.multipart_form
+        self.assertIsInstance(form, MultiPartForm)
+        self.assertIsInstance(request._serializer, MultiPartFormSerializer)
+
+        # Test setter
+        request.multipart_form = MultiPartForm(
+            (MultiPartFormField.make("key", body=b"val"),),
+            content_type=request.headers["Content-Type"],
+        )
+        self.assertIsInstance(form, MultiPartForm)
+        self.assertIsInstance(request._serializer, MultiPartFormSerializer)
+
+    def test_multipart_complex(self):
+        # Real use-case test
+        request = Request.make("POST", "http://localhost:3000/upload")
+
+        request.multipart_form["query"] = "inserer"
+        self.assertEqual(request.multipart_form["query"].content, b"inserer")
+
+        request.multipart_form["formulaireQuestionReponses[0][idQuestion]"] = 1091
+        self.assertEqual(
+            request.multipart_form["formulaireQuestionReponses[0][idQuestion]"].content,
+            b"1091",
+        )
+
+        request.multipart_form["formulaireQuestionReponses[0][idReponse]"] = 3027
+        self.assertEqual(
+            request.multipart_form["formulaireQuestionReponses[0][idReponse]"].content,
+            b"3027",
+        )
+
+        request.multipart_form["idQuestionnaire"] = 893
+        self.assertEqual(
+            request.multipart_form["idQuestionnaire"].content,
+            b"893",
+        )
+
+        request.multipart_form["emptyParam"] = ""
+        self.assertEqual(
+            request.multipart_form["emptyParam"].content,
+            b"",
+        )
+
+        from base64 import b64decode
+
+        zip_data = b64decode(
+            """UEsDBBQAAAAIAFpPvlYQIK6pcAAAACMBAAAHABwAbG9sLnBocFVUCQADu6x1ZNBwd2R1eAsAAQTo
+AwAABOgDAACzsS/IKOAqSCwqTo0vLinSUM9OrTSMBhJGsSDSGEyaxEbH2mbkq+GWS63ELZmckZ+M
+Uy+QNAUpykstLsGvBkiaxdqmpKYWEDIrMSc/L52gYabxhiCH5+Tkq+soqOSXlhSUlmhacxUUZeaV
+xBdpIEQAUEsBAh4DFAAAAAgAWk++VhAgrqlwAAAAIwEAAAcAGAAAAAAAAQAAALSBAAAAAGxvbC5w
+aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
+        )
+
+        request.multipart_form["image"] = MultiPartFormField.make(
+            "image", "shell.jpg", zip_data
+        )
+
+        self.assertEqual(request.multipart_form["image"].name, "image")
+        self.assertEqual(request.multipart_form["image"].filename, "shell.jpg")
+        self.assertEqual(request.multipart_form["image"].content_type, "image/jpeg")
+        self.assertEqual(request.multipart_form["image"].content, zip_data)
+        # print("\n" + bytes(request.multipart_form).decode("latin-1"))
 
 
 if __name__ == "__main__":
