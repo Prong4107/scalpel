@@ -567,18 +567,30 @@ class Request:
 
     # TODO: Convert from the previous form mapping
     def _set_serializer(self, serializer: FormSerializer | None):
-        if self._deserialized_content is None:
+        # Update the serializer
+        old_serializer = self._serializer
+        self._serializer = serializer
+
+        if old_serializer is None or serializer == old_serializer or serializer is None:
             # We don't have any content to update.
-            self._serializer = serializer
             return
 
-        # # Update the raw content with the former serializer
-        # self._serialize_content()
+        if old_serializer is None:
+            if self.content is not None:
+                self._deserialized_content = serializer.deserialize(self.content, self)
+            return
 
-        # # Update the deserialized and serialized content with the new serializer
-        # self._serializer = serializer
+        old_form = self._deserialized_content
 
-        self._update_serialized_content(cast(bytes, self._content))
+        if old_form is None:
+            return
+
+        # Convert the form to an intermediate format for easier conversion
+        exported_form = old_serializer.export_form(old_form)
+
+        # Parse the intermediate data to the new serializer format
+        imported_form = serializer.import_form(exported_form, self)
+        self._deserialized_content = imported_form
 
     def _update_serializer_and_get_form(
         self, serializer: FormSerializer
