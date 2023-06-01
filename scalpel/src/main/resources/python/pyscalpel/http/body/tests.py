@@ -733,6 +733,38 @@ nested\r
 
         exported = json_serializer.export_form(imported)
 
+        # Should not change
+        # expected_exported = (
+        #     (b"key1[]", b"1"),
+        #     (b"key1[]", b"2"),
+        #     (b"key1[]", b"3"),
+        #     (b"key1[]", b"4"),
+        #     (b"key1[]", b"5.0"),
+        #     (b"key2", b"2"),
+        #     (b"level0[level1][level2]", b"nested"),
+        # )
+
+        self.assertTupleEqual(
+            exported,
+            expected_exported,
+            "Failed to export JSON form to tuple",
+        )
+
+    def test_JSON_to_multipart(self):
+        json_serializer = JSONFormSerializer()
+        multipart_serializer = MultiPartFormSerializer()
+
+        json_form = {
+            "key1": [1, 2, 3, 4, 5.0],
+            "key2": "2",
+            "level0": {"level1": {"level2": "nested"}},
+        }
+
+        form = JSONForm(json_form.items())
+
+        self.assertDictEqual(json_form, form, "JSON constructor is broken")
+
+        exported = json_serializer.export_form(form)
         expected_exported = (
             (b"key1[]", b"1"),
             (b"key1[]", b"2"),
@@ -744,10 +776,51 @@ nested\r
         )
 
         self.assertTupleEqual(
-            exported,
-            expected_exported,
-            "Failed to export JSON form to tuple",
+            expected_exported, exported, "JSON tuple export is broken"
         )
+
+        FakeRequestTp = namedtuple("FakeRequest", ["headers"])
+        req = FakeRequestTp(
+            headers={
+                "Content-Type": "multipart/form-data; boundary=f0f056705fd4c99a5f41f9fa87c334d5"
+            }
+        )
+
+        multipart_data = multipart_serializer.import_form(exported, req)
+        multipart_bytes = bytes(multipart_data)
+        expected_multipart_bytes = b"""--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+1\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+2\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+3\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+4\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key1[]"\r
+\r
+5.0\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="key2"\r
+\r
+2\r
+--f0f056705fd4c99a5f41f9fa87c334d5\r
+Content-Disposition: form-data; name="level0[level1][level2]"\r
+\r
+nested\r
+--f0f056705fd4c99a5f41f9fa87c334d5--\r
+\r
+"""
+
+        self.assertEqual(multipart_bytes, expected_multipart_bytes)
 
 
 unittest.main()
