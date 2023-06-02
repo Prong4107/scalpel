@@ -45,6 +45,7 @@ from pyscalpel.http.body import (
     ImplementedContentTypesTp,
     json_escape_bytes,
     json_unescape,
+    json_unescape_bytes,
 )
 
 
@@ -1105,7 +1106,7 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         }
 
         # Assert that the binary data isn't destroyed
-        self.assertEqual(zip_data, json_unescape(expected_json_form["image"]))
+        self.assertEqual(zip_data, json_unescape_bytes(expected_json_form["image"]))
 
         self.assertEqual(json_form, expected_json_form)
 
