@@ -43,6 +43,8 @@ from pyscalpel.http.body import (
     JSONForm,
     IMPLEMENTED_CONTENT_TYPES,
     ImplementedContentTypesTp,
+    json_escape_bytes,
+    json_unescape,
 )
 
 
@@ -1036,6 +1038,64 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         self.assertEqual(request.multipart_form["image"].content_type, "image/jpeg")
         self.assertEqual(request.multipart_form["image"].content, zip_data)
         # print("\n" + bytes(request.multipart_form).decode("latin-1"))
+
+    def test_multipart_to_JSON(self):
+        request = Request.make("POST", "http://localhost:3000/upload")
+        request.multipart_form["query"] = "inserer"
+        request.multipart_form["formulaireQuestionReponses[0][idQuestion]"] = 2081
+        request.multipart_form["formulaireQuestionReponses[0][idReponse]"] = 1027
+        request.multipart_form["idQuestionnaire"] = 89
+        request.multipart_form["answer"] = "Hello\nWorld\n!"
+
+        from base64 import b64decode
+
+        zip_data = b64decode(
+            """UEsDBBQAAAAIAFpPvlYQIK6pcAAAACMBAAAHABwAbG9sLnBocFVUCQADu6x1ZNBwd2R1eAsAAQTo
+        AwAABOgDAACzsS/IKOAqSCwqTo0vLinSUM9OrTSMBhJGsSDSGEyaxEbH2mbkq+GWS63ELZmckZ+M
+        Uy+QNAUpykstLsGvBkiaxdqmpKYWEDIrMSc/L52gYabxhiCH5+Tkq+soqOSXlhSUlmhacxUUZeaV
+        xBdpIEQAUEsBAh4DFAAAAAgAWk++VhAgrqlwAAAAIwEAAAcAGAAAAAAAAQAAALSBAAAAAGxvbC5w
+        aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
+        )
+
+        request.multipart_form["image"] = MultiPartFormField.make(
+            "image", "shell.jpg", zip_data
+        )
+
+        # Convert form to JSON
+        json_form = request.json_form
+        # print("JSON_FORM:", json_form)
+        self.assertEqual(json_form["query"], "inserer")
+        self.assertEqual(
+            json_form["formulaireQuestionReponses"]["0"]["idQuestion"], "2081"
+        )
+        self.assertEqual(
+            json_form["formulaireQuestionReponses"]["0"]["idReponse"], "1027"
+        )
+        self.assertEqual(json_form["idQuestionnaire"], "89")
+        self.assertEqual(json_form["answer"], "Hello\nWorld\n!")
+
+        # Assert the form is converted to JSON correctly
+        expected_json_form = {
+            "query": "inserer",
+            "formulaireQuestionReponses": {
+                # - PHP arrays are actually maps, so this maps to a dict because it is the same data structure
+                #   -> Even if the array keys are only int, it can map non contiguously (like having values for indexes 1,2 and 5 but not 3 and 4)
+                #   -> Keys map to string because PHP would map it thay way.
+                #
+                # We can imagine alternate conversion mode where digit only keys would be converted to int
+                # and contigous integer arrays starting from 0 would be mapped to list
+                # but it could be inconsistent on many edge cases and harder to implement
+                "0": {"idQuestion": "2081", "idReponse": "1027"}
+            },
+            "idQuestionnaire": "89",
+            "image": json_escape_bytes(zip_data),
+            "answer": "Hello\nWorld\n!",
+        }
+
+        # Assert that the binary data isn't destroyed
+        self.assertEqual(zip_data, json_unescape(expected_json_form["image"]))
+
+        self.assertEqual(json_form, expected_json_form)
 
 
 if __name__ == "__main__":
