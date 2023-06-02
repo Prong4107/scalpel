@@ -529,8 +529,10 @@ class Request:
             )
 
         # Create default form.
-        if self._content is None:
+        if not self.content:
             self._deserialized_content = serializer.get_empty_form(self)
+        elif self._deserialized_content is None:
+            self._deserialize_content()
 
         if self._deserialized_content is None:
             raise FormNotParsedException(
