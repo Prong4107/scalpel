@@ -1389,6 +1389,61 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
 
         self.assertEqual(expected, req.content)
 
+        ########## Déduire la sérialisation ##########
+        ############### URLENCODED ####################
+        req.content = None
+        req.update_serializer_from_content_type("application/x-www-form-urlencoded")
+        req.create_defaultform()
+
+        req.form["a"] = "b"
+        req.form["c"] = "d"
+
+        self.assertEqual(b"a=b&c=d", req.content)
+        ########## MULTIPART ##########
+        req.content = None
+
+        req.update_serializer_from_content_type(
+            "multipart/form-data; boundary=--------------------2763ba3527064667e1c4f57ca596c055"
+        )
+        req.create_defaultform()
+
+        req.form[b"a"] = b"b"
+        req.form[b"c"] = b"d"
+        req.form[b"e"] = b"f"
+
+        expected = b'-----Boundary\r\nContent-Disposition: form-data; name="a"'
+        expected += (
+            b'\r\n\r\nb\r\n-----Boundary\r\nContent-Disposition: form-data; name="c"'
+        )
+        expected += (
+            b'\r\n\r\nd\r\n-----Boundary\r\nContent-Disposition: form-data; name="e"'
+        )
+        expected += b"\r\n\r\nf\r\n-----Boundary--\r\n\r\n"
+        self.assertEqual(expected, req.content)
+
+        # ("############# JSON ##############")
+
+        req.content = None
+        req.update_serializer_from_content_type("application/json")
+
+        req.create_defaultform()
+        req.form["a"] = "chocolat"
+        req.form["b"] = 3
+        req.form["c"] = True
+        req.form["d"] = None
+        req.form["e"] = [1, 2, 3]
+        req.form["f"] = {"a": 1, "b": 2, "c": 3}
+
+        expected = b'{"a": "chocolat", "b": 3, "c": true, "d": null, "e": [1, 2, 3], "f": {"a": 1, "b": 2, "c": 3}}'
+        self.assertEqual(expected, req.content)
+        req.content = None
+
+        # Test that the seriailizer has been deducted from content-type
+        req.create_defaultform("application/json")
+        req.form["obj"] = {"sub1": [1, 2, 3], "sub2": 4}
+        self.assertEqual(b'{"obj": {"sub1": [1, 2, 3], "sub2": 4}}', req.content)
+
 
 if __name__ == "__main__":
+    # RequestTestCase().test_all_use_cases()
     unittest.main()
