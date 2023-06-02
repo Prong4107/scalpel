@@ -463,7 +463,7 @@ class Request:
     # TODO: Convert former mappings
     def update_serializer_from_content_type(
         self,
-        content_type: ImplementedContentTypesTp | None = None,
+        content_type: ImplementedContentTypesTp | str | None = None,
         fail_silently: bool = False,
     ):
         # Strip the boundary param so we can use our content-type to serializer map
@@ -499,7 +499,7 @@ class Request:
 
     def create_defaultform(
         self,
-        content_type: ImplementedContentTypesTp | None = None,
+        content_type: ImplementedContentTypesTp | str | None = None,
         update_header: bool = True,
     ) -> MutableMapping[Any, Any]:
         """Creates the form if it doesn't exist, else returns the existing one
@@ -518,8 +518,8 @@ class Request:
         if not self._is_form_initialized or content_type:
             self.update_serializer_from_content_type(content_type)
 
-            # By default, set content-type if it does not exist
-            if update_header and not self.headers.get_all("Content-Type"):
+            # Set content-type if it does not exist
+            if update_header or not self.headers.get_all("Content-Type"):
                 self.headers["Content-Type"] = content_type
 
         serializer = self._serializer
@@ -536,7 +536,7 @@ class Request:
 
         if self._deserialized_content is None:
             raise FormNotParsedException(
-                f"Could not parse content to {serializer.deserialized_type()}"
+                f"Could not parse content to {serializer.deserialized_type()}\nContent:{self._content}"
             )
 
         if not isinstance(self._deserialized_content, serializer.deserialized_type()):
@@ -582,7 +582,11 @@ class Request:
         old_serializer = self._serializer
         self._serializer = serializer
 
-        if old_serializer is None or serializer == old_serializer or serializer is None:
+        if (
+            old_serializer is None
+            or type(serializer) == type(old_serializer)
+            or serializer is None
+        ):
             # We don't have any content to update.
             return
 
@@ -615,6 +619,7 @@ class Request:
     def _update_serializer_and_set_form(
         self, serializer: FormSerializer, form: MutableMapping[Any, Any]
     ) -> None:
+        # NOOP when the serializer is the same
         self._set_serializer(serializer)
 
         self._update_deserialized_content(form)
@@ -663,7 +668,7 @@ class Request:
         # If an user wants to avoid this behaviour,they should manually create a MultiPartForm(), convert it to bytes
         #   and pass it as raw_form()
         if matched_content_type is None:
-            # TODO: Randomly generate this
+            # TODO: Randomly generate this?
             new_content_type = (
                 "multipart/form-data; boundary=----WebKitFormBoundaryy6klzjxzTk68s1dI"
             )
