@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+import re
+import string
 import json
 from typing import Literal, cast
 import string
@@ -32,13 +34,24 @@ class JSONForm(dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]):
     pass
 
 
+def json_escape_bytes(data: bytes) -> str:
+    return "".join(
+        ch if ch in string.printable else "\\u{:04x}".format(ord(ch))
+        for ch in data.decode("latin-1")
+    )
+
+
+def json_unescape(escaped: str) -> bytes:
+    def decode_match(match):
+        return chr(int(match.group(1), 16))
+
+    return re.sub(r"\\u([0-9a-fA-F]{4})", decode_match, escaped).encode("latin-1")
+
+
 class PrintableJsonEncoder(json.JSONEncoder):
     def default(self, o):
         if isinstance(o, bytes):
-            return "".join(
-                ch if ch in string.printable else "\\u{:04x}".format(ord(ch))
-                for ch in o.decode("latin-1")
-            )
+            return json_escape_bytes(o)
         return super().default(o)
 
 
@@ -85,6 +98,26 @@ def transform_tuple_to_dict(tup):
     return result_dict
 
 
+def json_encode_exported_form(
+    exported: TupleExportedForm,
+) -> tuple[tuple[str, str], ...]:
+    """Unicode escape (\uXXXX) non printable bytes
+
+    Args:
+        exported (TupleExportedForm): The exported form tuple
+
+    Returns:
+        tuple[tuple[str, str], ...]: exported with every values as escaped strings
+    """
+    return tuple(
+        (
+            json_escape_bytes(key),
+            json_escape_bytes(val or b""),
+        )
+        for key, val in exported
+    )
+
+
 class JSONFormSerializer(FormSerializer):
     def serialize(
         self, deserialized_body: Mapping[JSON_KEY_TYPES, JSON_VALUE_TYPES], req=...
@@ -118,11 +151,8 @@ class JSONFormSerializer(FormSerializer):
         return tupled_form
 
     def import_form(self, exported: ExportedForm, req=...) -> JSONForm:
-        qs_serializer = URLEncodedFormSerializer()
-        parsed_qs = qs_serializer.import_form(exported)
-        serialized_qs: bytes = qs_serializer.serialize(parsed_qs)
-
-        # TODO: Implem qs_parse for bytes
-        dict_form = qs.qs_parse(always_str(serialized_qs))
+        # Parse array keys like "key1[key2][key3]" and place value to the correct path
+        # e.g: ("key1[key2][key3]", "nested_value") -> {"key1": {"key2" : {"key3" : "nested_value"}}}
+        dict_form = qs.qs_parse_pairs(list(json_encode_exported_form(exported)))
         json_form = JSONForm(dict_form.items())
         return json_form
