@@ -212,7 +212,7 @@ class URLEncodedFormSerializerTestCase(unittest.TestCase):
             ("key3", "value3"),
         ]
         serializer = URLEncodedFormSerializer()
-        imported_form = serializer.import_form(exported_form)
+        imported_form = serializer.import_form(exported_form)  # type: ignore
         self.assertIsInstance(imported_form, QueryParams)
         items = list(imported_form.items())
         self.assertEqual(items, expected_fields)
@@ -306,7 +306,7 @@ class MultiPartFormFieldTestCase(unittest.TestCase):
 
 
 class FormConversionsTestCase(unittest.TestCase):
-    def test_JSON_to_URLEncode(self):
+    def test_json_to_urlencode(self):
         json_serializer = JSONFormSerializer()
         urlencode_serializer = URLEncodedFormSerializer()
 
@@ -320,7 +320,6 @@ class FormConversionsTestCase(unittest.TestCase):
 
         self.assertDictEqual(json_form, form, "JSON constructor is broken")
 
-        # TODO: dict should be replaced with tuple
         exported = json_serializer.export_form(form)
         expected_exported = (
             (b"key1[]", b"1"),
@@ -362,7 +361,7 @@ class FormConversionsTestCase(unittest.TestCase):
             expected_serialized, serialized, "Urlencode serialize is broken"
         )
 
-    def test_URLEncode_To_JSON_tuple(self):
+    def test_urlencode_to_json_tuple(self):
         json_serializer = JSONFormSerializer()
         urlencode_serializer = URLEncodedFormSerializer()
 
@@ -410,7 +409,7 @@ class FormConversionsTestCase(unittest.TestCase):
             "Failed to convert URL-encoded form to JSON",
         )
 
-    def test_URLEncode_To_JSON_dict(self):
+    def test_urlencode_to_json_dict(self):
         json_serializer = JSONFormSerializer()
         urlencode_serializer = URLEncodedFormSerializer()
 
@@ -449,7 +448,7 @@ class FormConversionsTestCase(unittest.TestCase):
             "Failed to import nested values to JSON",
         )
 
-    def test_URLEncode_To_multipart(self):
+    def test_urlencode_to_multipart(self):
         urlencode_serializer = URLEncodedFormSerializer()
         multipart_serializer = MultiPartFormSerializer()
 
@@ -522,7 +521,7 @@ nested\r
 
         self.assertEqual(multipart_bytes, expected_multipart_bytes)
 
-    def test_Multipart_to_URLEncoded(self):
+    def test_multipart_to_urlencoded(self):
         urlencode_serializer = URLEncodedFormSerializer()
         multipart_serializer = MultiPartFormSerializer()
 
@@ -593,7 +592,7 @@ nested\r
 
         self.assertTupleEqual(expected_exported_urlencoded, exported_urlencoded)
 
-    def test_Multipart_to_URLEncode(self):
+    def test_multipart_to_urlencode(self):
         # Init multipart form
         multipart_bytes = b"""--f0f056705fd4c99a5f41f9fa87c334d5\r
 Content-Disposition: form-data; name="key1[]"\r
@@ -655,7 +654,7 @@ nested\r
 
         self.assertTupleEqual(expected_imported.fields, imported.fields)
 
-    def test_Multipart_to_JSON(self):
+    def test_multipart_to_json(self):
         json_serializer = JSONFormSerializer()
         multipart_serializer = MultiPartFormSerializer()
 
@@ -750,7 +749,7 @@ nested\r
             "Failed to export JSON form to tuple",
         )
 
-    def test_JSON_to_multipart(self):
+    def test_json_to_multipart(self):
         json_serializer = JSONFormSerializer()
         multipart_serializer = MultiPartFormSerializer()
 
