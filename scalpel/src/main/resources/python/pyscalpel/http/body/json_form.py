@@ -6,10 +6,9 @@ from collections.abc import Mapping
 import re
 import string
 import json
-from typing import Literal, cast
-import string
 import qs
 
+from typing import Literal, cast
 from pyscalpel.http.body.abstract import (
     FormSerializer,
     TupleExportedForm,
@@ -30,6 +29,8 @@ JSON_VALUE_TYPES = (
 )
 
 
+# TODO: JSON keys are actually only strings, so we should wrap
+#   getter and setter  to always convert the keys to string.
 class JSONForm(dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]):
     pass
 
@@ -41,11 +42,15 @@ def json_escape_bytes(data: bytes) -> str:
     )
 
 
-def json_unescape(escaped: str) -> bytes:
+def json_unescape(escaped: str) -> str:
     def decode_match(match):
         return chr(int(match.group(1), 16))
 
-    return re.sub(r"\\u([0-9a-fA-F]{4})", decode_match, escaped).encode("latin-1")
+    return re.sub(r"\\u([0-9a-fA-F]{4})", decode_match, escaped)
+
+
+def json_unescape_bytes(escaped: str) -> bytes:
+    return json_unescape(escaped).encode("latin-1")
 
 
 class PrintableJsonEncoder(json.JSONEncoder):
@@ -101,7 +106,7 @@ def transform_tuple_to_dict(tup):
 def json_encode_exported_form(
     exported: TupleExportedForm,
 ) -> tuple[tuple[str, str], ...]:
-    """Unicode escape (\uXXXX) non printable bytes
+    """Unicode escape (\\uXXXX) non printable bytes
 
     Args:
         exported (TupleExportedForm): The exported form tuple
@@ -116,6 +121,22 @@ def json_encode_exported_form(
         )
         for key, val in exported
     )
+
+
+def encode_JSON_form(
+    d: dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]
+) -> dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]:
+    new_dict = {}
+    for k, v in d.items():
+        new_key = json_unescape(k) if isinstance(k, str) else k
+        if isinstance(v, dict):
+            new_value = encode_JSON_form(v)
+        elif isinstance(v, str):
+            new_value = json_unescape(v)
+        else:
+            new_value = v
+        new_dict[new_key] = new_value
+    return new_dict
 
 
 class JSONFormSerializer(FormSerializer):
@@ -139,8 +160,9 @@ class JSONFormSerializer(FormSerializer):
         return JSONForm
 
     def export_form(self, source: JSONForm) -> TupleExportedForm:
+        unescaped_source = encode_JSON_form(source)
         # Transform the dict to a php style query string
-        serialized_to_qs = qs.build_qs(source)
+        serialized_to_qs = qs.build_qs(unescaped_source)
 
         # Parse the query string
         qs_parser = URLEncodedFormSerializer()
