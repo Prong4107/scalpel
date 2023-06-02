@@ -1052,7 +1052,7 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         self.assertEqual(request.multipart_form["image"].content, zip_data)
         # print("\n" + bytes(request.multipart_form).decode("latin-1"))
 
-    def test_multipart_to_JSON(self):
+    def test_multipart_to_json(self):
         request = Request.make("POST", "http://localhost:3000/upload")
         request.multipart_form["query"] = "inserer"
         request.multipart_form["formulaireQuestionReponses[0][idQuestion]"] = 2081
