@@ -172,7 +172,12 @@ class Request:
         # Inferr missing Host header from URL
         host_header = scalpel_headers.get("Host")
         if host_header is None:
-            host_header = host
+            match (scheme, port):
+                case ("http", 80) | ("https", 443):
+                    host_header = host
+                case _:
+                    host_header = f"{host}:{port}"
+
             scalpel_headers["Host"] = host_header
 
         authority: str = host_header
