@@ -1,6 +1,6 @@
 from __future__ import annotations
 from collections.abc import Mapping
-
+import sys
 import urllib.parse
 import qs
 
@@ -50,8 +50,27 @@ class URLEncodedFormSerializer(FormSerializer):
         return b"&".join(b"=".join(field) for field in deserialized_body.fields)
 
     def deserialize(self, body: bytes, req=...) -> QueryParams:
-        fields = urllib.parse.parse_qsl(body)
-        return QueryParams(fields)
+        try:
+            # XXX: urllib is broken when passing bytes to parse_qsl because it tries to decode it
+            # but doesn't pass the specified encoding and instead the internal one is used (i.e: ascii, which can't decode some bytes)
+            # This should be enough:
+            # fields = urllib.parse.parse_qsl(body)
+
+            # But because urllib is broken we need all of this:
+            # (I may be wrong)
+            decoded = body.decode("latin-1")
+            parsed = urllib.parse.parse_qsl(decoded)
+            fields = tuple(
+                (
+                    key.encode("latin-1"),
+                    val.encode("latin-1"),
+                )
+                for key, val in parsed
+            )
+            return QueryParams(fields)
+        except UnicodeEncodeError as exc:
+            print("Query string crashed urrlib parser:", body, file=sys.stderr)
+            raise exc
 
     def get_empty_form(self, req=...) -> Any:
         return QueryParams(tuple())
