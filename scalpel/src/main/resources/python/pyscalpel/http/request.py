@@ -934,7 +934,7 @@ class RequestTestCase(unittest.TestCase):
 
         # Test unimplemented content-type
         with self.assertRaises(FormNotParsedException):
-            request.update_serializer_from_content_type("application/xml")
+            request.update_serializer_from_content_type("application/xml")  # type: ignore
 
         # Test fail_silently=True
         request.create_defaultform(update_header=True)
@@ -1079,10 +1079,10 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         # print("JSON_FORM:", json_form)
         self.assertEqual(json_form["query"], "inserer")
         self.assertEqual(
-            json_form["formulaireQuestionReponses"]["0"]["idQuestion"], "2081"
+            json_form["formulaireQuestionReponses"]["0"]["idQuestion"], "2081"  # type: ignore
         )
         self.assertEqual(
-            json_form["formulaireQuestionReponses"]["0"]["idReponse"], "1027"
+            json_form["formulaireQuestionReponses"]["0"]["idReponse"], "1027"  # type: ignore
         )
         self.assertEqual(json_form["idQuestionnaire"], "89")
         self.assertEqual(json_form["answer"], "Hello\nWorld\n!")
