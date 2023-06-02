@@ -1110,6 +1110,285 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
 
         self.assertEqual(json_form, expected_json_form)
 
+    def test_json_to_multipart(self):
+        req = Request.make("POST", "http://localhost:3000/upload")
+
+        # Create JSON form
+        req.json_form = {
+            "query": "inserer",
+            "formulaireQuestionReponses": {
+                "0": {"idQuestion": "2081", "idReponse": "1027"}
+            },
+            "idQuestionnaire": "89",
+            "answer": "Hello\nWorld\n!",
+        }
+
+        from base64 import b64decode
+
+        zip_data = b64decode(
+            """UEsDBBQAAAAIAFpPvlYQIK6pcAAAACMBAAAHABwAbG9sLnBocFVUCQADu6x1ZNBwd2R1eAsAAQTo
+            AwAABOgDAACzsS/IKOAqSCwqTo0vLinSUM9OrTSMBhJGsSDSGEyaxEbH2mbkq+GWS63ELZmckZ+M
+            Uy+QNAUpykstLsGvBkiaxdqmpKYWEDIrMSc/L52gYabxhiCH5+Tkq+soqOSXlhSUlmhacxUUZeaV
+            xBdpIEQAUEsBAh4DFAAAAAgAWk++VhAgrqlwAAAAIwEAAAcAGAAAAAAAAQAAALSBAAAAAGxvbC5w
+            aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
+        )
+
+        req.json_form["image"] = json_escape_bytes(zip_data)
+
+        # Convert JSON form to multipart form
+        self.assertIsInstance(req.multipart_form, MultiPartForm)
+
+        # Check values
+        self.assertEqual(req.multipart_form["query"].content, b"inserer")
+        self.assertEqual(
+            req.multipart_form["formulaireQuestionReponses[0][idQuestion]"].content,
+            b"2081",
+        )
+        self.assertEqual(
+            req.multipart_form["formulaireQuestionReponses[0][idReponse]"].content,
+            b"1027",
+        )
+        self.assertEqual(req.multipart_form["idQuestionnaire"].content, b"89")
+        self.assertEqual(req.multipart_form["answer"].content, b"Hello\nWorld\n!")
+        self.assertEqual(req.multipart_form["image"].content, zip_data)
+
+    def test_urlencoded_to_multipart(self):
+        request = self.create_request()
+
+        # Set urlencoded form
+        request.headers["Content-Type"] = "application/x-www-form-urlencoded"
+        request.urlencoded_form = QueryParams(
+            [(b"key1", b"value1"), (b"key2", b"value2")]
+        )
+
+        # Check urlencoded form
+        self.assertEqual(
+            request.urlencoded_form,
+            QueryParams([(b"key1", b"value1"), (b"key2", b"value2")]),
+        )
+
+        # Transform urlencoded form to multipart form
+        request.headers[
+            "Content-Type"
+        ] = "multipart/form-data; boundary=4N_4RB17R4RY_57R1NG"
+        request.update_serializer_from_content_type()
+
+        multipart_form = request.multipart_form
+        self.assertIsInstance(multipart_form, MultiPartForm)
+        self.assertIsInstance(request._serializer, MultiPartFormSerializer)
+
+        # Check multipart form
+        self.assertEqual(len(multipart_form.fields), 2)
+        self.assertEqual(multipart_form.fields[0].name, "key1")
+        self.assertEqual(multipart_form.fields[0].content, b"value1")
+        self.assertEqual(multipart_form.fields[1].name, "key2")
+        self.assertEqual(multipart_form.fields[1].content, b"value2")
+
+        # Check byte serialization
+        expected_bytes = b"--4N_4RB17R4RY_57R1NG\r\n"
+        expected_bytes += b'Content-Disposition: form-data; name="key1"'
+        expected_bytes += b"\r\n\r\nvalue1\r\n"
+        expected_bytes += b"--4N_4RB17R4RY_57R1NG\r\n"
+        expected_bytes += b'Content-Disposition: form-data; name="key2"'
+        expected_bytes += b"\r\n\r\nvalue2\r\n"
+        expected_bytes += b"--4N_4RB17R4RY_57R1NG--\r\n\r\n"
+        multipart_bytes = bytes(multipart_form)
+        self.assertEqual(expected_bytes, multipart_bytes)
+
+    def test_urlencoded_to_json(self):
+        request = Request.make("GET", "http://localhost")
+
+        # Initialize JSON form data
+        request.urlencoded_form = QueryParams(
+            [(b"key1", b"value1"), (b"key2", b"value2")]
+        )
+
+        # Check initial form data
+        form = request.urlencoded_form
+        self.assertEqual(
+            form, QueryParams([(b"key1", b"value1"), (b"key2", b"value2")])
+        )
+        self.assertIsInstance(request._serializer, URLEncodedFormSerializer)
+
+        # Convert form to JSON
+        json_form = request.json_form
+
+        # Validate the JSON form
+        self.assertEqual(json_form, {"key1": "value1", "key2": "value2"})
+        self.assertIsInstance(request._serializer, JSONFormSerializer)
+
+    def test_json_to_urlencoded(self):
+        request = Request.make("GET", "http://localhost")
+
+        # Initialize JSON form data
+        request.json_form = {"key1": "value1", "key2": "value2"}
+
+        # Check initial JSON form data
+        json_form = request.json_form
+        self.assertEqual(json_form, {"key1": "value1", "key2": "value2"})
+        self.assertIsInstance(request._serializer, JSONFormSerializer)
+
+        # Convert JSON to URL-encoded form
+        urlencoded_form = request.urlencoded_form
+
+        # Validate the URL-encoded form
+        self.assertEqual(
+            urlencoded_form,
+            QueryParams([(b"key1", b"value1"), (b"key2", b"value2")]),
+        )
+        self.assertIsInstance(request._serializer, URLEncodedFormSerializer)
+
+    def test_all_use_cases(self):
+        req = Request.make(
+            "GET",
+            "http://localhost:3000/echo?filename=28.jpg&username=wiener&password=peter",
+            headers=Headers(
+                (
+                    (b"X-Duplicate", b"A"),
+                    (b"X-Duplicate", b"B"),
+                )
+            ),
+        )
+
+        # Ensure initial data is correct.
+        self.assertEqual("GET", req.method)
+        self.assertEqual(
+            "/echo?filename=28.jpg&username=wiener&password=peter", req.path
+        )
+        self.assertEqual("localhost", req.host)
+        self.assertEqual(3000, req.port)
+        self.assertEqual("localhost:3000", req.headers["Host"])
+        self.assertEqual("A, B", req.headers["X-Duplicate"])
+        self.assertListEqual(["A", "B"], req.headers.get_all("X-Duplicate"))
+
+        # Input parameters
+
+        # Raw edit query string
+        new_qs = "saucisse=poulet&chocolat=blanc#"
+        req.path = req.path.split("?")[0] + "?" + new_qs
+        self.assertEqual("/echo?saucisse=poulet&chocolat=blanc#", req.path)
+
+        # Dict edit query string
+        # Implemented by mitmproxy
+        req.query["saucisse"] = "test123"
+        self.assertDictEqual(
+            {"saucisse": "test123", "chocolat": "blanc"}, dict(req.query)
+        )
+        self.assertEqual("/echo?saucisse=test123&chocolat=blanc", req.path)
+
+        req.query["saucisse"] = "123"
+        req.query["number"] = 123
+        req.query[4] = 123
+
+        self.assertEqual("/echo?saucisse=123&chocolat=blanc&number=123&4=123", req.path)
+
+        ### SERIALISATION POST ###
+
+        # application/x-www-form-urlencoded
+        req.create_defaultform("application/x-www-form-urlencoded")
+        req.urlencoded_form[b"abc"] = b"def"
+        req.urlencoded_form["mark"] = "jkl"
+
+        req.urlencoded_form[b"mark2"] = "jkl"
+        req.urlencoded_form["marl3"] = "kkk"
+        # req.urlencoded_form["123"] = "kkk"
+        req.urlencoded_form["VACHE"] = "leet"
+
+        req.urlencoded_form[999] = 1337
+
+        expected = b"abc=def&mark=jkl&mark2=jkl&marl3=kkk&VACHE=leet&999=1337"
+        self.assertEqual(expected, req.content)
+
+        req.content = None
+        self.assertIsNone(req.content)
+
+        # application/json
+        (req.json_form)[1] = "test"
+
+        self.assertIsInstance(req._serializer, JSONFormSerializer)
+        self.assertIsInstance(req.form, JSONForm)
+        self.assertEqual(
+            "test", req.form.get(1), f"Broken JSON form: {req._deserialized_content}"
+        )
+
+        req.json_form[1.5] = "test"
+
+        self.assertEqual("test", req.form[1.5])
+
+        req.json_form["test"] = 1
+        req.json_form["test2"] = True
+        req.json_form["test3"] = None
+        req.json_form["test4"] = [1, 2, 3]
+        req.json_form["test5"] = {"a": 1, "b": 2, "c": 3}
+
+        # TODO: JSON keys should probably be converted to strings
+        expected = {
+            1: "test",
+            1.5: "test",
+            "test": 1,
+            "test2": True,
+            "test3": None,
+            "test4": [1, 2, 3],
+            "test5": {"a": 1, "b": 2, "c": 3},
+        }
+        self.assertDictEqual(expected, req.form)
+        self.assertDictEqual(expected, req.json_form)
+        expected = b'{"1": "test", "1.5": "test", "test": 1, "test2": true, "test3": null, "test4": [1, 2, 3], "test5": {"a": 1, "b": 2, "c": 3}}'
+        self.assertEqual(expected, req.content)
+
+        # multipart/form-data
+        req.content = None
+        req.create_defaultform("multipart/form-data ; boundary=---Boundary")
+
+        # Ensure the Content-Type has been updated (required for multipart)
+        self.assertEqual(
+            "multipart/form-data ; boundary=---Boundary", req.headers["Content-Type"]
+        )
+
+        req.multipart_form["a"] = b"test default"
+        req.multipart_form["file2"] = b"<html>test html</html>"
+        req.multipart_form["file2"].filename = "index.html"
+        req.multipart_form["file2"].content_type = "text/html"
+
+        # Sample data to be written
+        data = {"name": "John", "age": 30, "city": "New York"}
+
+        import tempfile
+        import json
+        from os.path import basename
+        from urllib.parse import quote_plus
+
+        # Create a temporary file and write some JSON to it
+        with tempfile.NamedTemporaryFile(
+            mode="w+", delete=False, suffix=".json"
+        ) as temp:
+            json.dump(data, temp)
+
+            first_name = temp.name
+            req.multipart_form["data.json"] = open(temp.name, "rb")
+
+        # Create an empty temporary file with a malicious name
+        with tempfile.NamedTemporaryFile(
+            mode="w+", delete=False, suffix='sp0;0fed"\\'
+        ) as temp:
+            second_name = temp.name
+            req.multipart_form["spoofed"] = open(temp.name, "r", encoding="utf-8")
+
+        expected = '-----Boundary\r\nContent-Disposition: form-data; name="a"\r\n\r\n'
+        expected += "test default\r\n"
+        expected += "-----Boundary\r\n"
+        expected += 'Content-Disposition: form-data; name="file2"; name="file2"; filename="index.html"\r\n'
+        expected += "Content-Type: text/html\r\n\r\n<html>test html</html>\r\n"
+        expected += "-----Boundary\r\n"
+        expected += f'Content-Disposition: form-data; name="data.json"; filename="{basename(first_name)}"\r\n'
+        expected += "Content-Type: application/json\r\n\r\n\r\n"
+        expected += f'-----Boundary\r\nContent-Disposition: form-data; name="spoofed"; filename="{quote_plus(basename(second_name))}"\r\n'
+        expected += "Content-Type: application/octet-stream\r\n\r\n\r\n"
+        expected += "-----Boundary--\r\n\r\n"
+        expected = expected.encode("latin-1")
+
+        self.assertEqual(expected, req.content)
+
 
 if __name__ == "__main__":
     unittest.main()
