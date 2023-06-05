@@ -833,6 +833,24 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         req.update_content_length = True
         self.assertEqual(11, req.content_length)
 
+    def test_host_is(self):
+        req = Request.make("GET", "http://mail.int.google.com")
+
+        self.assertTrue(req.host_is("mail.int.google.com"))
+        self.assertTrue(req.host_is("*.google.com"))
+        self.assertTrue(req.host_is("*google.com"))
+        self.assertTrue(req.host_is("mail.*"))
+        self.assertTrue(req.host_is("*.com"))
+        self.assertTrue(req.host_is("*.*gle.*"))
+        self.assertTrue(req.host_is("mail.*.*.com"))
+        self.assertTrue(req.host_is("mail.*.com"))
+
+        self.assertFalse(req.host_is("google"))
+        self.assertFalse(req.host_is("mail.int.google.fr"))
+        self.assertFalse(req.host_is("*.gle.*"))
+        self.assertFalse(req.host_is(".com"))
+
 
 # RequestTestCase().test_all_use_cases()
-unittest.main(argv=["ignored", "-v"], exit=False)
+# unittest.main(argv=["ignored", "-v"], exit=False)
+RequestTestCase().test_host_is()

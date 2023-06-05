@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import urllib.parse
 import re
+import fnmatch
 
 from typing import (
     Iterable,
@@ -53,6 +54,11 @@ from pyscalpel.http.body import (
 
 class FormNotParsedException(Exception):
     pass
+
+
+# https://research.swtch.com/glob
+def host_is(host: str, pattern: str) -> bool:
+    return fnmatch.fnmatch(host, pattern)
 
 
 class Request:
@@ -802,3 +808,16 @@ class Request:
             value = str(value)
 
         self._headers["Content-Length"] = value
+
+    @property
+    def pretty_host(self) -> str:
+        """Returns the most approriate host
+        Returns self.host when it exists, else it returns self.host_header
+
+        Returns:
+            str: The request target host
+        """
+        return self.host or self.headers.get("Host") or ""
+
+    def host_is(self, pattern: str) -> bool:
+        return host_is(self.pretty_host, pattern)
