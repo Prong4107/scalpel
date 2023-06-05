@@ -281,7 +281,6 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
     def boundary(self) -> bytes:
         return extract_boundary(self.content_type, self.encoding)
 
-    # TODO: Unit test this
     def __bytes__(self) -> bytes:
         boundary = self.boundary
         serialized = b""

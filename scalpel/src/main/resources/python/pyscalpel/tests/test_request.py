@@ -608,13 +608,15 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         self.assertDictEqual(
             {"saucisse": "test123", "chocolat": "blanc"}, dict(req.query)
         )
-        self.assertEqual("/echo?saucisse=test123&chocolat=blanc", req.path)
+        expected = "/echo?saucisse=test123&chocolat=blanc"
+        self.assertEqual(expected, req.path)
 
         req.query["saucisse"] = "123"
         req.query["number"] = 123
         req.query[4] = 123
 
-        self.assertEqual("/echo?saucisse=123&chocolat=blanc&number=123&4=123", req.path)
+        expected = "/echo?saucisse=123&chocolat=blanc&number=123&4=123"
+        self.assertEqual(expected, req.path)
 
         ### SERIALISATION POST ###
 
@@ -632,6 +634,7 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
 
         expected = b"abc=def&mark=jkl&mark2=jkl&marl3=kkk&VACHE=leet&999=1337"
         self.assertEqual(expected, req.content)
+        self.assertEqual(len(expected), req.content_length, "Wrong content-lenght")
 
         req.content = None
         self.assertIsNone(req.content)
@@ -669,6 +672,7 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         self.assertDictEqual(expected, req.json_form)
         expected = b'{"1": "test", "1.5": "test", "test": 1, "test2": true, "test3": null, "test4": [1, 2, 3], "test5": {"a": 1, "b": 2, "c": 3}}'
         self.assertEqual(expected, req.content)
+        self.assertEqual(len(expected), req.content_length, "Wrong content-lenght")
 
         # multipart/form-data
         req.content = None
@@ -722,6 +726,7 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         expected = expected.encode("latin-1")
 
         self.assertEqual(expected, req.content)
+        self.assertEqual(len(expected), req.content_length, "Wrong content-lenght")
 
         ########## Déduire la sérialisation ##########
         ############### URLENCODED ####################
@@ -754,6 +759,7 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         )
         expected += b"\r\n\r\nf\r\n-----Boundary--\r\n\r\n"
         self.assertEqual(expected, req.content)
+        self.assertEqual(len(expected), req.content_length, "Wrong content-lenght")
 
         # ("############# JSON ##############")
 
@@ -806,6 +812,26 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         self.assertTrue(req.query.get("hello"))
         self.assertFalse(req.query.get("absent"))
 
+    def test_content_length(self):
+        req = Request.make("GET", "http://localhost?hello=world")
+        self.assertEqual(0, req.content_length)
+
+        req.content = b"lol"
+        self.assertEqual(3, req.content_length)
+
+        with self.assertRaises(RuntimeError):
+            req.content_length = 1337
+
+        req.update_content_length = False
+
+        req.content_length = 1337
+        self.assertEqual(1337, req.content_length)
+
+        req.content = b"Hello World"
+        self.assertEqual(1337, req.content_length)
+
+        req.update_content_length = True
+        self.assertEqual(11, req.content_length)
 
 
 # RequestTestCase().test_all_use_cases()
