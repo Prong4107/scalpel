@@ -1,13 +1,2 @@
-SRC="
-pyscalpel/http/mime.py
-pyscalpel/http/body/tests.py
-pyscalpel/http/request.py
-qs/qs.py
-"
-
-export _DO_NOT_IMPORT_JAVA="yes"
-for file in $SRC;do
-    echo "$file":
-    path="scalpel/src/main/resources/python/$file"
-    python3 "$path"  #|| break
-done
+PREFIX=scalpel/src/main/resources/python
+python3 -m unittest $PREFIX/pyscalpel/tests/*.py $PREFIX/qs/qs.py 
