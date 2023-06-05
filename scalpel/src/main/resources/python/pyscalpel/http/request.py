@@ -27,6 +27,8 @@ from mitmproxy.net.http.url import (
     encode as url_encode,
     decode as url_decode,
 )
+from mitmproxy.net.http import cookies
+
 
 from pyscalpel.http.body import (
     FormSerializer,
@@ -715,6 +717,27 @@ class Request:
         return self._update_serializer_and_set_form(
             MultiPartFormSerializer(), cast(MutableMapping, form)
         )
+
+    @property
+    def cookies(self) -> multidict.MultiDictView[str, str]:
+        """
+        The request cookies.
+        For the most part, this behaves like a dictionary.
+        Modifications to the MultiDictView update `Request.headers`, and vice versa.
+        """
+        return multidict.MultiDictView(self._get_cookies, self._set_cookies)
+
+    def _get_cookies(self) -> tuple[tuple[str, str], ...]:
+        h = self.headers.get_all("Cookie")
+        return tuple(cookies.parse_cookie_headers(h))
+
+    def _set_cookies(self, value: tuple[tuple[str, str], ...]):
+        self.headers["cookie"] = cookies.format_cookie_header(value)
+
+    # TODO: Allow passing a dict/Mapping
+    @cookies.setter
+    def cookies(self, value: tuple[tuple[str, str], ...]):
+        self._set_cookies(value)
 
 
 import unittest
@@ -1442,6 +1465,21 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         req.create_defaultform("application/json")
         req.form["obj"] = {"sub1": [1, 2, 3], "sub2": 4}
         self.assertEqual(b'{"obj": {"sub1": [1, 2, 3], "sub2": 4}}', req.content)
+
+    def test_cookies(self):
+        req = Request.make("GET", "http://localhost")
+        token = "f37088cde673e4741fcd30882f5ccfaf"
+        req.cookies["session"] = token
+        self.assertEqual(token, req.cookies["session"])
+        self.assertEqual(f"session={token}", req.headers["Cookie"])
+        expected = {"session": token}
+        self.assertDictEqual(expected, dict(req.cookies))
+
+        req.cookies["tracking"] = "1"
+        self.assertEqual("1", req.cookies["tracking"])
+        self.assertEqual(f"session={token}; tracking=1", req.headers["Cookie"])
+        expected = {"session": token, "tracking": "1"}
+        self.assertDictEqual(expected, dict(req.cookies))
 
 
 if __name__ == "__main__":
