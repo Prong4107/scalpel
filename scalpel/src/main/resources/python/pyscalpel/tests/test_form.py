@@ -822,4 +822,4 @@ nested\r
         self.assertEqual(multipart_bytes, expected_multipart_bytes)
 
 
-unittest.main()
+unittest.main(argv=["ignored", "-v"], exit=False)
