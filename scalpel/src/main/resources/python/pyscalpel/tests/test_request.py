@@ -637,7 +637,7 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         self.assertIsNone(req.content)
 
         # application/json
-        (req.json_form)[1] = "test"
+        req.json_form[1] = "test"
 
         self.assertIsInstance(req._serializer, JSONFormSerializer)
         self.assertIsInstance(req.form, JSONForm)
@@ -799,6 +799,13 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
 
         req.host_header = "lexfo.fr"
         self.assertEqual("lexfo.fr", req.host_header)
+
+    def test_check_param(self):
+        # Easily check if a param exists
+        req = Request.make("GET", "http://localhost?hello=world")
+        self.assertTrue(req.query.get("hello"))
+        self.assertFalse(req.query.get("absent"))
+
 
 
 # RequestTestCase().test_all_use_cases()
