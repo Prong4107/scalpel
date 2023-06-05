@@ -768,6 +768,11 @@ class Request:
 
     @property
     def host_header(self) -> str | None:
+        """Host header value
+
+        Returns:
+            str | None: The host header value
+        """
         return self.headers["Host"]
 
     @host_header.setter
@@ -782,6 +787,11 @@ class Request:
 
     @property
     def headers(self) -> Headers:
+        """The request HTTP headers
+
+        Returns:
+            Headers: a case insensitive dict containing the HTTP headers
+        """
         self._update_content_length()
         return self._headers
 
@@ -792,6 +802,15 @@ class Request:
 
     @property
     def content_length(self) -> int:
+        """Returns the Content-Length header value
+           Returns 0 if the header is absent
+
+        Args:
+            value (int | str): The Content-Length value
+
+        Raises:
+            RuntimeError: Throws RuntimeError when the value is invalid
+        """
         content_length: str | None = self.headers.get("Content-Length")
         if content_length is None:
             return 0
