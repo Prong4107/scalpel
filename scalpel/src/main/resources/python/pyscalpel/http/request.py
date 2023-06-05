@@ -130,10 +130,17 @@ class Request:
             self.headers.get("Content-Type"), fail_silently=True
         )
 
+    def _del_header(self, header: str) -> bool:
+        if header in self._headers.keys():
+            del self._headers[header]
+            return True
+
+        return False
+
     def _update_content_length(self) -> None:
         if self.update_content_length:
             if self._content is None:
-                self._headers["Content-Length"] = None
+                self._del_header("Content-Length")
             else:
                 length = len(cast(bytes, self._content))
                 self._headers["Content-Length"] = str(length)
