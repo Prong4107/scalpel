@@ -8,12 +8,24 @@ from collections.abc import MutableMapping, Mapping
 from pyscalpel.http.headers import Headers
 
 
+
+class ObjectWithHeadersField(Protocol):
+    headers: Headers
+
+
+class ObjectWithHeadersProperty(Protocol):
+    @property
+    def headers(self) -> Headers:
+        ...
+
+    @headers.setter
+    def headers(self, value):
+        ...
+
 # Multipart needs the Content-Type header for the boundary parameter
 # So Serializer needs an object that references the header
 # This is used as a Forward declaration
-class ObjectWithHeaders(Protocol):
-    headers: Headers
-
+ObjectWithHeaders: TypeAlias = ObjectWithHeadersField | ObjectWithHeadersProperty
 
 KT = TypeVar("KT")
 VT = TypeVar("VT")

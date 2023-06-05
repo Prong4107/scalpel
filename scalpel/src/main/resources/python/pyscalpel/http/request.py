@@ -68,7 +68,7 @@ class Request:
     _HeaderKey = str
     _HeaderValue = str
     _Header = tuple[_HeaderKey, _HeaderValue]
-    _Headers = list[_Header]
+    # _Headers = list[_Header]
     _Host = str
     _Method = str
     _Scheme = str
@@ -88,12 +88,13 @@ class Request:
     path: _Path
 
     http_version: _HttpVersion
-    headers: Headers
+    _headers: Headers
     _serializer: FormSerializer | None = None
     _deserialized_content: Any = None
-    _content: _Content | None
+    _content: _Content | None = None
     _old_deserialized_content: Any = None
     _is_form_initialized: bool = False
+    update_content_length: bool = True
 
     def __init__(
         self,
@@ -122,6 +123,14 @@ class Request:
         self.update_serializer_from_content_type(
             self.headers.get("Content-Type"), fail_silently=True
         )
+
+    def _update_content_length(self) -> None:
+        if self.update_content_length:
+            if self._content is None:
+                self._headers["Content-Length"] = None
+            else:
+                length = len(cast(bytes, self._content))
+                self._headers["Content-Length"] = str(length)
 
     @staticmethod
     def _parse_qs(qs: str) -> _ParsedQuery:
@@ -429,12 +438,15 @@ class Request:
 
         self._deserialized_content = deserialized
         self._content = self._serializer.serialize(deserialized, self)
+        self._update_content_length()
 
     @property
     def content(self) -> bytes | None:
         if self._serializer and self._has_deserialized_content_changed():
             self._update_deserialized_content(self._deserialized_content)
             self._old_deserialized_content = deepcopy(self._deserialized_content)
+
+        self._update_content_length()
 
         return self._content
 
@@ -447,7 +459,9 @@ class Request:
                 return
             case str():
                 value = value.encode()
-        # FIXME: Infinite loop here ?
+
+        self._update_content_length()
+
         self._update_serialized_content(value)
 
     @property
@@ -753,3 +767,38 @@ class Request:
 
         return self.content.decode(encoding)
 
+    @property
+    def headers(self) -> Headers:
+        self._update_content_length()
+        return self._headers
+
+    @headers.setter
+    def headers(self, value: Headers):
+        self._headers = value
+        self._update_content_length()
+
+    @property
+    def content_length(self) -> int:
+        content_length: str | None = self.headers.get("Content-Length")
+        if content_length is None:
+            return 0
+
+        trimmed = content_length.strip()
+
+        if not trimmed.isdigit():
+            raise ValueError("Content-length do not contain only digits")
+
+        return int(trimmed)
+
+    @content_length.setter
+    def content_length(self, value: int | str):
+        if self.update_content_length:
+            # It is useless to manually set content-length because the value will be erased.
+            raise RuntimeError(
+                "Cannot set content_length when self.update_content_length is True"
+            )
+
+        if isinstance(value, int):
+            value = str(value)
+
+        self._headers["Content-Length"] = value
