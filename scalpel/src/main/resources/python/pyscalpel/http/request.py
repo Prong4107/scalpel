@@ -739,6 +739,14 @@ class Request:
     def cookies(self, value: tuple[tuple[str, str], ...]):
         self._set_cookies(value)
 
+    @property
+    def host_header(self) -> str | None:
+        return self.headers["Host"]
+
+    @host_header.setter
+    def host_header(self, value: str | None):
+        self.headers["Host"] = value
+
 
 import unittest
 
@@ -1481,6 +1489,13 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         expected = {"session": token, "tracking": "1"}
         self.assertDictEqual(expected, dict(req.cookies))
 
+    def test_host_header(self):
+        req = Request.make("GET", "http://localhost")
+        self.assertEqual("localhost", req.host_header)
+        self.assertEqual(req.headers["Host"], req.host_header)
+        
+        req.host_header = "lexfo.fr"
+        self.assertEqual("lexfo.fr", req.host_header)
 
 if __name__ == "__main__":
     # RequestTestCase().test_all_use_cases()
