@@ -748,4 +748,7 @@ class Request:
         self.headers["Host"] = value
 
     def text(self, encoding="utf-8") -> str:
+        if self.content is None:
+            return ""
+
         return self.content.decode(encoding)
