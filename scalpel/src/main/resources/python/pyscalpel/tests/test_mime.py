@@ -2,6 +2,7 @@ from pyscalpel.http.mime import *
 
 import unittest
 
+
 class ParseMimeHeaderTestCase(unittest.TestCase):
     def test_empty_string(self):
         header_str = ""
@@ -37,6 +38,7 @@ class ParseMimeHeaderTestCase(unittest.TestCase):
         result = parse_mime_header_value(header_str)
         expected = [("key", "value;with;semicolons"), ("key2", "value2")]
         self.assertEqual(result, expected)
+
 
 class HeaderParsingTestCase(unittest.TestCase):
     def test_unparse_header_value(self):
@@ -79,6 +81,7 @@ class HeaderParsingTestCase(unittest.TestCase):
         result = parse_header(key, value)
         self.assertEqual(result, expected)
 
+
 class BoundaryExtractionTestCase(unittest.TestCase):
     def test_extract_boundary(self):
         content_type = 'multipart/form-data; boundary="abcdefg12345"'
@@ -104,14 +107,15 @@ class BoundaryExtractionTestCase(unittest.TestCase):
     def test_extract_boundary_missing_boundary(self):
         content_type = "multipart/form-data; charset=utf-8"
         encoding = "utf-8"
-        with self.assertRaises(RuntimeError):
+        with self.assertRaisesRegex(RuntimeError, r"Missing boundary"):
             extract_boundary(content_type, encoding)
 
     def test_extract_boundary_unexpected_mimetype(self):
         content_type = 'application/json; boundary="abcdefg12345"'
         encoding = "utf-8"
-        with self.assertRaises(RuntimeError):
+        with self.assertRaisesRegex(RuntimeError, r"Unexpected mimetype"):
             extract_boundary(content_type, encoding)
+
 
 class TestHeaderParams(unittest.TestCase):
     def setUp(self):
@@ -144,5 +148,6 @@ class TestHeaderParams(unittest.TestCase):
         # Testing update with None value
         updated_params = update_header_param(self.params, "name", None)
         self.assertIn(("name", None), updated_params)
+
 
 unittest.main(argv=["ignored", "-v"], exit=False)
