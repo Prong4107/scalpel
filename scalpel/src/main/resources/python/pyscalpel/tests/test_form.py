@@ -830,5 +830,22 @@ nested\r
 
         self.assertEqual(multipart_bytes, expected_multipart_bytes)
 
+    def test_basename(self):
+        content_type = (
+            "multipart/form-data; boundary=----WebKitFormBoundaryy6klzjxzTk68s1dI"
+        )
+        form = MultiPartForm(tuple(), content_type)
+        form["file"] = "hello"
+
+        expected = "../../../../../../../../../../../../../../../etc/passwd"
+        form[
+            "file"
+        ].filename = "../../../../../../../../../../../../../../../etc/passwd"
+        self.assertEqual(expected, form["file"].filename)
+
+        form["file2"] = open("./README.md")
+        expected = "README.md"
+        self.assertEqual(expected, form["file2"].filename)
+
 
 unittest.main(argv=["ignored", "-v"], exit=False)

@@ -146,7 +146,7 @@ class MultiPartFormField:
         if filename is None:
             match file:
                 case TextIOWrapper() | BufferedReader():
-                    filename = file.name
+                    filename = os.path.basename(file.name)
                 case _:
                     filename = name
 
@@ -168,7 +168,7 @@ class MultiPartFormField:
 
         instance = MultiPartFormField.make(
             name,
-            filename=os.path.basename(filename),
+            filename=filename,
             body=content,
             content_type=content_type,
             encoding=encoding or "utf-8",
