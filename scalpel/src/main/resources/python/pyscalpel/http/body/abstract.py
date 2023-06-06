@@ -8,7 +8,6 @@ from collections.abc import MutableMapping, Mapping
 from pyscalpel.http.headers import Headers
 
 
-
 class ObjectWithHeadersField(Protocol):
     headers: Headers
 
@@ -21,6 +20,7 @@ class ObjectWithHeadersProperty(Protocol):
     @headers.setter
     def headers(self, value):
         ...
+
 
 # Multipart needs the Content-Type header for the boundary parameter
 # So Serializer needs an object that references the header
@@ -62,7 +62,7 @@ class FormSerializer(ABC):
 
     @abstractmethod
     def deserialize(self, body: bytes, req: ObjectWithHeaders) -> Form | None:
-        """Parses the form from it's raw bytes representation
+        """Parses the form from its raw bytes representation
 
         Args:
             body (bytes): The form as bytes
