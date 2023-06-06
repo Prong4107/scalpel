@@ -244,21 +244,39 @@ class MultiPartFormField:
         self.headers[CONTENT_DISPOSITION_KEY] = unparsed
 
     def get_disposition_param(self, key: str) -> tuple[str, str | None] | None:
+        """Get a param from the Content-Disposition header
+
+        Args:
+            key (str): the param name
+
+        Raises:
+            StopIteration: Raised when the param was not found.
+
+        Returns:
+            tuple[str, str | None] | None: Returns the param as (key, value)
+        """
+        # Parse the Content-Disposition header
         parsed_disposition = self._parse_disposition()
-        try:
-            return find_header_param(parsed_disposition, key)
-        except StopIteration as exc:
-            raise StopIteration(
-                "Content-Disposition header was not found in multipart form or could not be parsed."
-            ) from exc
+        return find_header_param(parsed_disposition, key)
 
     def set_disposition_param(self, key: str, value: str):
+        """Set a Content-Type header parameter
+
+        Args:
+            key (str): The parameter name
+            value (str): The parameter value
+        """
         parsed = self._parse_disposition()
         updated = update_header_param(parsed, key, value)
         self._unparse_disposition(cast(list[tuple[str, str]], updated))
 
     @property
     def name(self) -> str:
+        """Get the Content-Disposition header name parameter
+
+        Returns:
+            str: The Content-Disposition header name parameter value
+        """
         # Assume name is always present
         return cast(tuple[str, str], self.get_disposition_param("name"))[1]
 
@@ -268,6 +286,11 @@ class MultiPartFormField:
 
     @property
     def filename(self) -> str | None:
+        """Get the Content-Disposition header filename parameter
+
+        Returns:
+            str | None: The Content-Disposition header filename parameter value
+        """
         param = self.get_disposition_param("filename")
         return param and param[1]
 
@@ -317,6 +340,16 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
     def from_bytes(
         cls, content: bytes, content_type: str, encoding: str = "utf-8"
     ) -> MultiPartForm:
+        """Create a MultiPartForm by parsing a raw multipart form
+
+        Args:
+            content (bytes): The multipart form as raw bytes
+            content_type (str): The Content-Type header with the corresponding boundary param (required).
+            encoding (str, optional): The encoding to use (not required). Defaults to "utf-8".
+
+        Returns:
+            MultiPartForm: The parsed multipart form
+        """
         decoder = MultipartDecoder(content, content_type, encoding=encoding)
         parts: tuple[BodyPart] = decoder.parts
         fields: tuple[MultiPartFormField, ...] = tuple(
@@ -326,6 +359,11 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
 
     @property
     def boundary(self) -> bytes:
+        """Get the form multipart boundary
+
+        Returns:
+            bytes: The multipart boundary
+        """
         return extract_boundary(self.content_type, self.encoding)
 
     def __bytes__(self) -> bytes:
@@ -335,12 +373,14 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
         for field in self.fields:
             serialized += b"--" + boundary + b"\r\n"
 
+            # Format the headers
             for key, val in field.headers.items():
                 serialized += (
                     key.encode(encoding) + b": " + val.encode(encoding) + b"\r\n"
                 )
             serialized += b"\r\n" + field.content + b"\r\n"
 
+        # Format the final boundary
         serialized += b"--" + boundary + b"--\r\n\r\n"
         return serialized
 
@@ -480,6 +520,14 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
 
 
 def scalar_to_bytes(scalar: Scalars | None) -> bytes:
+    """Convert "scalar" types (str,bytes,int,float,bool) to bytes for query string conversion.
+
+    Args:
+        scalar (Scalars | None): value to convert
+
+    Returns:
+        bytes: The converted bytes
+    """
     match scalar:
         case str() | bytes():
             return always_bytes(scalar)
@@ -492,6 +540,14 @@ def scalar_to_bytes(scalar: Scalars | None) -> bytes:
 
 
 def scalar_to_str(scalar: Scalars | None) -> str:
+    """Convert "scalar" types (str,bytes,int,float,bool) to str for query string conversion.
+
+    Args:
+        scalar (Scalars | None): value to convert
+
+    Returns:
+        str: The converted str
+    """
     match scalar:
         case str() | bytes():
             return always_str(scalar)
