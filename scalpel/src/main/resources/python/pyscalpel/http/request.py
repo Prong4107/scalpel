@@ -372,7 +372,7 @@ class Request:
         """
         The full URL string, constructed from `Request.scheme`, `Request.host`, `Request.port` and `Request.path`.
 
-        Settings this property updates these attributes as well.
+        Setting this property updates these attributes as well.
         """
         return Request._unparse_url(self.scheme, self.host, self.port, self.path)
 
