@@ -49,25 +49,44 @@ def activate(path: str | None) -> None:
 
 
 def install(*packages: str) -> int:
+    """Install a Python package in the current venv.
+
+    Returns:
+        int: The pip install command exit code.
+    """
     pip = os.path.join(sys.prefix, "bin", "pip")
     return subprocess.call([pip, "install", "--require-virtualenv", *packages])
 
 
 def uninstall(*packages: str) -> int:
+    """Uninstall a Python package from the current venv.
+
+    Returns:
+        int: The pip uninstall command exit code.
+    """
     pip = os.path.join(sys.prefix, "bin", "pip")
     return subprocess.call([pip, "uninstall", "--require-virtualenv", "-y", *packages])
 
 
 def create(path: str) -> int:
+    """Creates a Python venv on the given path
+
+    Returns:
+        int: The `python3 -m venv` command exit code.
+    """
     return subprocess.call(["python3", "-m", "venv", path])
 
 
 def create_default() -> str:
-    # TODO: Handke this for windows
-    root = (
-        f"{os.environ['HOME']}/.scalpel" if os.environ.get("HOME") else "/tmp/.scalpel"
-    )
-    scalpel_venv = f"{root}/venv_default"
+    """Creates a default venv in the user's home directory
+        Only creates it if the directory doesn't already exist
+
+    Returns:
+        str: The venv directory path.
+    """
+    scalpel_venv = os.path.expanduser("~/.scalpel/venv_default")
+
+    # Don't recreate the venv if it alreay exists
     if not os.path.exists(scalpel_venv):
         os.makedirs(scalpel_venv, exist_ok=True)
         create(scalpel_venv)
