@@ -404,7 +404,7 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
                 self.fields[i] = new_field
                 return
 
-        self.add(new_field)
+        self.append(new_field)
 
     def setdefault(
         self, key: str, default: MultiPartFormField | None = None
@@ -457,10 +457,10 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
         """
         Insert an additional value for the given key at the specified position.
         """
-        self.fields = self.fields[:index] + [value] + self.fields[index:]
+        self.fields.insert(index, value)
 
-    def add(self, value: MultiPartFormField) -> None:
-        self.insert(len(self.fields), value)
+    def append(self, value: MultiPartFormField) -> None:
+        self.fields.append(value)
 
     def __repr__(self):
         fields = (repr(field) for field in self.fields)
