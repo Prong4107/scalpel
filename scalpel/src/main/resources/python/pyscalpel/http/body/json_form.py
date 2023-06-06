@@ -36,9 +36,10 @@ class JSONForm(dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]):
 
 
 def json_escape_bytes(data: bytes) -> str:
+    printable = string.printable.encode()
+
     return "".join(
-        ch if ch in string.printable else "\\u{:04x}".format(ord(ch))
-        for ch in data.decode("latin-1")
+        chr(ch) if ch in printable else "\\u{:04x}".format(ch) for ch in data
     )
 
 
