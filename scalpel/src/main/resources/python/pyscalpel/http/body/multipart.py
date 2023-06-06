@@ -131,6 +131,7 @@ class MultiPartFormField:
 
         return cls(headers, body, encoding)
 
+    # TODO: Rewrite request_toolbelt multipart parser to get rid of encoding.
     @staticmethod
     def from_file(
         name: str,
