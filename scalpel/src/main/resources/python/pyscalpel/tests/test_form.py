@@ -841,7 +841,9 @@ nested\r
         form["file"].filename = expected
         self.assertEqual(expected, form["file"].filename)
 
-        form["file2"] = open("./README.md")
+        with open("./README.md", encoding="utf-8") as file:
+            form["file2"] = file
+
         expected = "README.md"
         self.assertEqual(expected, form["file2"].filename)
 
