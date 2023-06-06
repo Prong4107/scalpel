@@ -852,5 +852,5 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
 
 
 # RequestTestCase().test_all_use_cases()
-# unittest.main(argv=["ignored", "-v"], exit=False)
-RequestTestCase().test_host_is()
+unittest.main(argv=["ignored", "-v"], exit=False)
+# RequestTestCase().test_host_is()
