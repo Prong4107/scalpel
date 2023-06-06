@@ -8,7 +8,7 @@ import string
 import json
 import qs
 
-from typing import Literal, cast
+from typing import Literal, cast, Any
 from pyscalpel.http.body.abstract import (
     FormSerializer,
     TupleExportedForm,
@@ -54,7 +54,7 @@ def json_unescape_bytes(escaped: str) -> bytes:
 
 
 class PrintableJsonEncoder(json.JSONEncoder):
-    def default(self, o):
+    def default(self, o: Any):
         if isinstance(o, bytes):
             return json_escape_bytes(o)
         return super().default(o)
