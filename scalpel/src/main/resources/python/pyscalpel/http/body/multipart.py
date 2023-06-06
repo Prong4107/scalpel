@@ -159,11 +159,11 @@ class MultiPartFormField:
         content: bytes
         match file:
             case TextIOWrapper():
-                content = file.read(-1).encode(file.encoding)
+                content = file.read().encode(file.encoding)
                 # Override file.encoding if provided.
                 encoding = encoding or file.encoding
             case BufferedReader() | IOBase():
-                content = file.read(-1)
+                content = file.read()
 
         instance = MultiPartFormField.make(
             name,
