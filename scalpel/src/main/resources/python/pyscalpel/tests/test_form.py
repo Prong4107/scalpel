@@ -128,14 +128,23 @@ class MultiPartFormTestCase(unittest.TestCase):
         self.assertEqual(self.form.get(key), self.form_field)
 
     def test_len(self):
-        expected_length = 1
-        length = len(self.form)
-        self.assertEqual(length, expected_length)
+        form = MultiPartForm(tuple(), "multipart/form-data; --Boundary")
+        for i in range(10):
+            form[str(i)] = str(i)
+            self.assertEqual(i + 1, len(form))
 
     def test_iter(self):
-        expected_fields = [self.form_field]
-        fields = list(self.form)
-        self.assertEqual(fields, expected_fields)
+        form = MultiPartForm(tuple(), "multipart/form-data; --Boundary")
+
+        for i in range(10):
+            form[str(i)] = str(i)
+
+        expected_fields = form.fields
+
+        # Type checker is broken and does not infer from __iter__  when converting using list()
+        #   This doesn't raise any error -> fields = [field for field in form]
+        fields = cast(list[MultiPartFormField], list(form))
+        self.assertListEqual(fields, expected_fields)
 
     def test_eq_same_fields(self):
         form2 = MultiPartForm([self.form_field], "multipart/form-data")
