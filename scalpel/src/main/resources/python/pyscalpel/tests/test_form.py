@@ -838,9 +838,7 @@ nested\r
         form["file"] = "hello"
 
         expected = "../../../../../../../../../../../../../../../etc/passwd"
-        form[
-            "file"
-        ].filename = "../../../../../../../../../../../../../../../etc/passwd"
+        form["file"].filename = expected
         self.assertEqual(expected, form["file"].filename)
 
         form["file2"] = open("./README.md")
