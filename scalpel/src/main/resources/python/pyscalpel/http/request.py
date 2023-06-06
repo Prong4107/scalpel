@@ -287,7 +287,7 @@ class Request:
         # Strip HTTP/2 pseudo headers.
         # https://portswigger.net/burp/documentation/desktop/http2/http2-basics-for-burp-users#:~:text=HTTP/2%20specification.-,Pseudo%2Dheaders,-In%20HTTP/2
         mapped_headers = tuple(
-            x for x in self.headers.fields if not x[0].startswith(b":")
+            field for field in self.headers.fields if not field[0].startswith(b":")
         )
 
         if self.headers.get(b"Host") is None and self.http_version == "HTTP/2":
