@@ -38,14 +38,26 @@ CONTENT_DISPOSITION_KEY = "Content-Disposition"
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
 
 
-def get_mime(filename):
+def get_mime(filename: str | None) -> str:
+    """Guess the MIME type from a filename based on the extension
+        Returns the default content-type when passing None
+
+    Args:
+        filename (str | None): The filename
+
+    Returns:
+        str: The MIME type (e.g: application/json)
+    """
     if filename is None:
         return DEFAULT_CONTENT_TYPE
 
+    # Guess the type from the file extension.
     mime_type, _ = mimetypes.guess_type(filename)
+
     if mime_type is not None:
         return mime_type
     else:
+        # Extension is unknown.
         return DEFAULT_CONTENT_TYPE
 
 
