@@ -62,6 +62,19 @@ def get_mime(filename: str | None) -> str:
 
 
 class MultiPartFormField:
+    """
+    This class represents a field in a multipart/form-data request. It provides functionalities
+    to create form fields from various inputs like raw body parts, files and manual construction
+    with name, filename, body, and content type. It also offers properties and methods to interact
+    with the form field's headers and content.
+
+    Raises:
+        StopIteration: Raised when the specified Content-Disposition header is not found or could not be parsed.
+
+    Returns:
+        MultiPartFormField: An instance of the class representing a form field in a multipart/form-data request.
+    """
+
     headers: CaseInsensitiveDict[str]
     content: bytes
     encoding: str
@@ -263,6 +276,27 @@ class MultiPartFormField:
 
 
 class MultiPartForm(Mapping[str, MultiPartFormField]):
+    """
+    This class represents a multipart/form-data request. It contains a collection of MultiPartFormField objects,
+    providing methods to add, get, and delete form fields. The class also enables the conversion of the entire form
+    into bytes for transmission.
+
+    Args:
+        fields (Sequence[MultiPartFormField]): A sequence of MultiPartFormField objects that make up the form.
+        content_type (str): The content type of the form.
+        encoding (str): The encoding of the form.
+
+    Raises:
+        RuntimeError: Raised when an incorrect type is passed to MultiPartForm.set.
+        KeyError: Raised when trying to access a field that does not exist in the form.
+
+    Returns:
+        MultiPartForm: An instance of the class representing a multipart/form-data request.
+
+    Yields:
+        Iterator[MultiPartFormField]: Yields each field in the form.
+    """
+
     fields: list[MultiPartFormField]
     content_type: str
     encoding: str
@@ -469,6 +503,20 @@ def scalar_to_str(scalar: Scalars | None) -> str:
 
 
 class MultiPartFormSerializer(FormSerializer):
+    """
+    This class is responsible for serializing and deserializing instances of the MultiPartForm class to and from bytes.
+    It extends the FormSerializer and provides the functionality to handle the form data in the context of a HTTP request.
+    The class also handles the import and export of form data.
+
+    Methods:
+        serialize(deserialized_body, req): Converts the given MultiPartForm instance into bytes.
+        deserialize(body, req): Converts a byte representation of a form back into a MultiPartForm instance.
+        get_empty_form(req): Returns an empty MultiPartForm instance with the appropriate content type.
+        deserialized_type(): Returns the type of the object this serializer handles, i.e., MultiPartForm.
+        import_form(exported, req): Imports form data from a provided sequence or dictionary and creates a MultiPartForm instance.
+        export_form(source): Exports form data from a MultiPartForm instance into a tuple of byte-string pairs.
+    """
+
     def serialize(
         self, deserialized_body: MultiPartForm, req: ObjectWithHeaders
     ) -> bytes:
