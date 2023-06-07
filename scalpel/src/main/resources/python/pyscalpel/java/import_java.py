@@ -26,7 +26,7 @@ def import_java(
     :return: The imported class.
     """
     if _is_pdoc() or os.environ.get("_DO_NOT_IMPORT_JAVA") is not None:
-        return cast(expected_type, None)  # type: ignore
+        return None  # type: ignore
     try:
         module = __import__(module, fromlist=[name])
         return getattr(module, name)
