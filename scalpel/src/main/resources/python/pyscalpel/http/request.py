@@ -282,7 +282,7 @@ class Request:
         if service:
             host = service.host()
             port = service.port()
-            scheme = "https" if service.secure else "http"
+            scheme = "https" if service.secure() else "http"
 
         return cls(
             method=request.method(),
