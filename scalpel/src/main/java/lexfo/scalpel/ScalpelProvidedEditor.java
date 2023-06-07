@@ -2,6 +2,7 @@ package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
+import burp.api.montoya.http.HttpService;
 import burp.api.montoya.http.message.HttpMessage;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
@@ -274,6 +275,33 @@ public class ScalpelProvidedEditor
 	}
 
 	/**
+	 * Get the network informations associated with the editor
+	 *
+	 * Gets the HttpService from requestResponse and falls back to request if it is null
+	 *
+	 * @return An HttpService if found, else null
+	 */
+	public HttpService getHttpService() {
+		final HttpRequestResponse reqRes = this.requestResponse;
+
+		// Ensure editor is initialized
+		if (reqRes == null) return null;
+
+		// Check if networking infos are available in the requestRespone
+		if (reqRes.httpService() != null) {
+			return reqRes.httpService();
+		}
+
+		// Fall back to the initiating request
+		final HttpRequest req = reqRes.request();
+		if (req != null) {
+			return req.httpService();
+		}
+
+		return null;
+	}
+
+	/**
 		Initializes the editor with Python callbacks output of the inputted HTTP message.
 		@param msg The HTTP message to be edited.
 
@@ -284,6 +312,7 @@ public class ScalpelProvidedEditor
 			// Call the Python callback and store the returned value.
 			final var result = executor.callEditorCallback(
 				msg,
+				getHttpService(),
 				true,
 				caption()
 			);
@@ -294,7 +323,6 @@ public class ScalpelProvidedEditor
 			// Display the tab when bytes are returned.
 			return result.isPresent();
 		} catch (Exception e) {
-			// Log the error and stack trace.
 			TraceLogger.logStackTrace(logger, e);
 		}
 		// Disable the tab.
@@ -342,6 +370,7 @@ public class ScalpelProvidedEditor
 			// Call the Python callback and return the result.
 			final var result = executor.callEditorCallback(
 				msg,
+				getHttpService(),
 				bytes,
 				false,
 				caption()
@@ -353,10 +382,7 @@ public class ScalpelProvidedEditor
 				cloneHttpMessageAndReplaceBytes(msg, result.get())
 			);
 		} catch (Exception e) {
-			// Log the function name.
 			logger.logToError("buildHttpMsgFromBytes(): Error");
-
-			// Log the error and stack trace.
 			TraceLogger.logStackTrace(logger, e);
 		}
 

@@ -9,6 +9,7 @@
 package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.http.HttpService;
 import burp.api.montoya.http.handler.*;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.logging.Logging;
@@ -74,7 +75,8 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
 	) {
 		// Call the request() Python callback
 		final Optional<HttpRequest> newReq = executor.callIntercepterCallback(
-			httpRequestToBeSent
+			httpRequestToBeSent,
+			httpRequestToBeSent.httpService()
 		);
 
 		// Return the modified request when requested, else return the original.
@@ -92,9 +94,16 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
 	public ResponseReceivedAction handleHttpResponseReceived(
 		HttpResponseReceived httpResponseReceived
 	) {
+		// Get the network info form the initiating request.
+		final HttpService service = Optional
+			.ofNullable(httpResponseReceived.initiatingRequest())
+			.map(r -> r.httpService())
+			.orElse(null);
+
 		// Call the request() Python callback
 		final var newRes = executor.callIntercepterCallback(
-			httpResponseReceived
+			httpResponseReceived,
+			service
 		);
 
 		// Return the modified request when requested, else return the original.
