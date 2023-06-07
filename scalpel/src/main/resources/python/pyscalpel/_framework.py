@@ -84,7 +84,8 @@ try:
 
     from pyscalpel.burp_utils import IHttpRequest, IHttpResponse
     from pyscalpel.java.burp.http_service import IHttpService
-    from pyscalpel.http import Request, Response
+    from pyscalpel.http import Request, Response, Flow
+    from pyscalpel.events import Events
 
     # Declare convenient types for the callbacks
     CallbackReturn = TypeVar("CallbackReturn", Request, Response, bytes) | None
@@ -95,6 +96,20 @@ try:
     callable_objs = {
         name: obj for name, obj in inspect.getmembers(user_module) if callable(obj)
     }
+
+    match_callback: Callable[[Flow, Events], bool] = callable_objs.get("match") or (
+        lambda _, __: True
+    )
+
+    def call_match_callback(*args) -> bool:
+        """Calls the match callback with the correct parameters.
+
+        Returns:
+            bool: The match callback result
+        """
+        params_len = len(inspect.signature(match_callback).parameters)
+        filtered_args = args[:params_len]
+        return match_callback(*filtered_args)
 
     def fun_name(frame=1):
         """Returns the name of the caller function
@@ -179,9 +194,14 @@ try:
         Returns:
             IHttpRequest | None: The modified request object or None for an unmodified request
         """
-        scalpel_req = Request.from_burp(req, service)
+        py_req = Request.from_burp(req, service)
+
+        flow = Flow(py_req.scheme, py_req.host, py_req.port, py_req)
+        if not call_match_callback(flow, "response"):
+            return None
+
         # Call the user callback
-        processed_req = cast(Request | None, callback(scalpel_req))
+        processed_req = cast(Request | None, callback(py_req))
 
         # Convert the request to a Burp request
         return processed_req.to_burp() if processed_req is not None else None
@@ -199,12 +219,15 @@ try:
         Returns:
             IHttpResponse | None: The modified response object or None for an unmodified response
         """
-        # TODO: Pass network info
-        mitmproxy_res = cast(
-            Response | None, callback(Response.from_burp(res, service))
-        )
+        py_res = Response.from_burp(res, service)
 
-        return mitmproxy_res.to_burp() if mitmproxy_res is not None else None
+        flow = Flow(py_res.scheme, py_res.host, py_res.port, py_res.request, py_res)
+        if not call_match_callback(flow, "response"):
+            return None
+
+        result_res = cast(Response | None, callback(py_res))
+
+        return result_res.to_burp() if result_res is not None else None
 
     @_try_if_present
     def _req_edit_in(
@@ -221,8 +244,14 @@ try:
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
+        py_req = Request.from_burp(req, service)
+
+        flow = Flow(py_req.scheme, py_req.host, py_req.port, py_req)
+        if not call_match_callback(flow, "edit_request_in"):
+            return None
+
         # Call the user callback and return the bytes to display in the editor
-        return cast(bytes | None, callback(Request.from_burp(req, service)))
+        return cast(bytes | None, callback(py_req))
 
     @_try_if_present
     def _req_edit_out(
@@ -242,11 +271,15 @@ try:
             bytes | None: The bytes to construct the new request from
                 or None for an unmodified request
         """
+        py_req = Request.from_burp(req, service)
+
+        flow = Flow(py_req.scheme, py_req.host, py_req.port, py_req, text=bytes(text))
+        if not call_match_callback(flow, "edit_request_out"):
+            return None
+
         # Call the user callback and return the bytes to construct the new request from
         # TODO: Directly return a request object
-        return cast(
-            bytes | None, callback(Request.from_burp(req, service), bytes(text))
-        )
+        return cast(bytes | None, callback(py_req, bytes(text)))
 
     @_try_if_present
     def _res_edit_in(
@@ -261,8 +294,14 @@ try:
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
+        py_res = Response.from_burp(res, service)
+
+        flow = Flow(py_res.scheme, py_res.host, py_res.port, py_res.request, py_res)
+        if not call_match_callback(flow, "edit_response_in"):
+            return None
+
         # Call the user callback and return the bytes to display in the editor
-        return cast(bytes | None, callback(Response.from_burp(res, service)))
+        return cast(bytes | None, callback(py_res))
 
     @_try_if_present
     def _res_edit_out(
@@ -282,11 +321,17 @@ try:
             bytes | None: The bytes to construct the new response from
                 or None for an unmodified response
         """
+        py_res = Response.from_burp(res, service)
+
+        flow = Flow(
+            py_res.scheme, py_res.host, py_res.port, py_res.request, py_res, bytes(text)
+        )
+        if not call_match_callback(flow, "edit_response_out"):
+            return None
+
         # Call the user callback and return the bytes to construct the new response from
         # TODO: Directly return a response object
-        return cast(
-            bytes | None, callback(Response.from_burp(res, service), bytes(text))
-        )
+        return cast(bytes | None, callback(py_res, bytes(text)))
 
     logger.logToOutput("Python: Loaded _framework.py")
 
