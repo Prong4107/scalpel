@@ -83,6 +83,7 @@ try:
     spec.loader.exec_module(user_module)
 
     from pyscalpel.burp_utils import IHttpRequest, IHttpResponse
+    from pyscalpel.java.burp.http_service import IHttpService
     from pyscalpel.http import Request, Response
 
     # Declare convenient types for the callbacks
@@ -164,9 +165,10 @@ try:
         # Ignore the callback.
         return lambda *_, **__: None
 
+    # TODO: HttpService param is useless in this request
     @_try_if_present
     def _request(
-        req: IHttpRequest, callback: CallbackType = ...
+        req: IHttpRequest, service: IHttpService, callback: CallbackType = ...
     ) -> IHttpRequest | None:
         """Wrapper for the request callback
 
@@ -177,15 +179,16 @@ try:
         Returns:
             IHttpRequest | None: The modified request object or None for an unmodified request
         """
+        scalpel_req = Request.from_burp(req, service)
         # Call the user callback
-        mitmproxy_req = cast(Request | None, callback(Request.from_burp(req)))
+        processed_req = cast(Request | None, callback(scalpel_req))
 
         # Convert the request to a Burp request
-        return mitmproxy_req.to_burp() if mitmproxy_req is not None else None
+        return processed_req.to_burp() if processed_req is not None else None
 
     @_try_if_present
     def _response(
-        res: IHttpResponse, callback: CallbackType = ...
+        res: IHttpResponse, service: IHttpService, callback: CallbackType = ...
     ) -> IHttpResponse | None:
         """Wrapper for the response callback
 
@@ -196,12 +199,19 @@ try:
         Returns:
             IHttpResponse | None: The modified response object or None for an unmodified response
         """
-        mitmproxy_res = cast(Response | None, callback(Response.from_burp(res)))
+        # TODO: Pass network info
+        mitmproxy_res = cast(
+            Response | None, callback(Response.from_burp(res, service))
+        )
 
         return mitmproxy_res.to_burp() if mitmproxy_res is not None else None
 
     @_try_if_present
-    def _req_edit_in(req: IHttpRequest, callback: CallbackType = ...) -> bytes | None:
+    def _req_edit_in(
+        req: IHttpRequest,
+        service: IHttpService,
+        callback: CallbackType = ...,
+    ) -> bytes | None:
         """Wrapper for the request edit callback
 
         Args:
@@ -212,11 +222,14 @@ try:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
         # Call the user callback and return the bytes to display in the editor
-        return cast(bytes | None, callback(Request.from_burp(req)))
+        return cast(bytes | None, callback(Request.from_burp(req, service)))
 
     @_try_if_present
     def _req_edit_out(
-        req: IHttpRequest, text: list[int], callback: CallbackType = ...
+        req: IHttpRequest,
+        service: IHttpService,
+        text: list[int],
+        callback: CallbackType = ...,
     ) -> bytes | None:
         """Wrapper for the request edit callback
 
@@ -231,10 +244,14 @@ try:
         """
         # Call the user callback and return the bytes to construct the new request from
         # TODO: Directly return a request object
-        return cast(bytes | None, callback(Request.from_burp(req), bytes(text)))
+        return cast(
+            bytes | None, callback(Request.from_burp(req, service), bytes(text))
+        )
 
     @_try_if_present
-    def _res_edit_in(res: IHttpResponse, callback: CallbackType = ...) -> bytes | None:
+    def _res_edit_in(
+        res: IHttpResponse, service: IHttpService, callback: CallbackType = ...
+    ) -> bytes | None:
         """Wrapper for the response edit callback
 
         Args:
@@ -245,11 +262,14 @@ try:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
         # Call the user callback and return the bytes to display in the editor
-        return cast(bytes | None, callback(Response.from_burp(res)))
+        return cast(bytes | None, callback(Response.from_burp(res, service)))
 
     @_try_if_present
     def _res_edit_out(
-        res: IHttpResponse, text: list[int], callback: CallbackType = ...
+        res: IHttpResponse,
+        service: IHttpService,
+        text: list[int],
+        callback: CallbackType = ...,
     ) -> bytes | None:
         """Wrapper for the response edit callback
 
@@ -264,7 +284,9 @@ try:
         """
         # Call the user callback and return the bytes to construct the new response from
         # TODO: Directly return a response object
-        return cast(bytes | None, callback(Response.from_burp(res), bytes(text)))
+        return cast(
+            bytes | None, callback(Response.from_burp(res, service), bytes(text))
+        )
 
     logger.logToOutput("Python: Loaded _framework.py")
 

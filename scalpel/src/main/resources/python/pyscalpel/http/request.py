@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import urllib.parse
 import re
-import fnmatch
 
 from typing import (
     Iterable,
@@ -22,6 +21,7 @@ from pyscalpel.java.scalpel_types.utils import PythonUtils
 from pyscalpel.encoding import always_bytes, always_str
 from pyscalpel.http.headers import Headers
 from pyscalpel.http.mime import get_header_value_without_params
+from pyscalpel.http.utils import host_is
 from pyscalpel.http.body import (
     FormSerializer,
     JSONFormSerializer,
@@ -58,19 +58,6 @@ class FormNotParsedException(Exception):
     Args:
         Exception (_type_): _description_
     """
-
-
-def host_is(host: str, pattern: str) -> bool:
-    """Matches an host using unix-like wildcard matching
-
-    Args:
-        host (str): The host to match against
-        pattern (str): The pattern to use
-
-    Returns:
-        bool: The match result (True if matching, else False)
-    """
-    return fnmatch.fnmatch(host, pattern)
 
 
 class Request:
@@ -246,12 +233,14 @@ class Request:
         )
 
     @classmethod
-    def from_burp(cls, request: IHttpRequest) -> Request:
+    def from_burp(
+        cls, request: IHttpRequest, service: IHttpService | None = None
+    ) -> Request:
         """Construct an instance of the Request class from a Burp suite HttpRequest.
         :param request: The Burp suite HttpRequest to convert.
         :return: A Request with the same data as the Burp suite HttpRequest.
         """
-        service: IHttpService = request.httpService()
+        service = service or request.httpService()
         body = get_bytes(request.body())
 
         # Burp will give you lowercased and pseudo headers when using HTTP/2.
@@ -920,7 +909,7 @@ class Request:
         """
         return self.host or self.headers.get("Host") or ""
 
-    def host_is(self, pattern: str) -> bool:
+    def host_is(self, *patterns: str) -> bool:
         """Perform wildcard matching (fnmatch) on the target host.
 
         Args:
@@ -929,4 +918,4 @@ class Request:
         Returns:
             bool: Whether the pattern matches
         """
-        return host_is(self.pretty_host, pattern)
+        return host_is(self.pretty_host, *patterns)

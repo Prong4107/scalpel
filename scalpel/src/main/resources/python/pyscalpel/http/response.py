@@ -13,6 +13,7 @@ from pyscalpel.java.burp.byte_array import IByteArray
 from pyscalpel.java.scalpel_types.utils import PythonUtils
 from pyscalpel.encoding import always_bytes
 from pyscalpel.http.headers import Headers
+from pyscalpel.http.utils import host_is
 from pyscalpel.java.burp.http_service import IHttpService
 
 
@@ -79,7 +80,7 @@ class Response(MITMProxyResponse):
     ) -> Response:
         """Construct an instance of the Response class from a Burp suite :class:`IHttpResponse`."""
         body = get_bytes(response.body())
-        return cls(
+        res = cls(
             always_bytes(response.httpVersion()),
             response.statusCode(),
             always_bytes(response.reasonPhrase()),
@@ -87,6 +88,12 @@ class Response(MITMProxyResponse):
             body,
             None,
         )
+        if service:
+            res.scheme = "https" if service.secure() else "http"
+            res.host = service.host()
+            res.port = service.port()
+
+        return res
 
     @lru_cache
     def __bytes__(self) -> bytes:
@@ -152,8 +159,11 @@ class Response(MITMProxyResponse):
         mitmproxy_res = cls.make(status_code, content, headers)
 
         res = cls.from_mitmproxy(mitmproxy_res)
-        res.host = host
+        res.host = host     
         res.scheme = scheme
         res.port = port
 
         return res
+
+    def host_is(self, *patterns: str) -> bool:
+        return host_is(self.host, *patterns)

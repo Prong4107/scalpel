@@ -2,6 +2,7 @@ package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
+import burp.api.montoya.http.HttpService;
 import burp.api.montoya.http.handler.HttpRequestToBeSent;
 import burp.api.montoya.http.handler.HttpResponseReceived;
 import burp.api.montoya.http.message.HttpMessage;
@@ -752,13 +753,17 @@ public class ScalpelExecutor {
 	 * @return the result of the callback.
 	 */
 	@SuppressWarnings({ "unchecked" })
-	public <T extends HttpMessage> Optional<T> callIntercepterCallback(T msg) {
+	public <T extends HttpMessage> Optional<T> callIntercepterCallback(
+		T msg,
+		HttpService service
+	) {
 		// Call the corresponding Python callback and add a debug HTTP header.
 		// TODO: Only add the header in debug mode.
 		// TODO: Add a debug mode.
 		return safeJepInvoke(
 			getMessageCbName(msg),
-			msg,
+			new Object[] { msg, service },
+			Map.of(),
 			(Class<T>) msg.getClass()
 		)
 			.flatMap(r ->
@@ -889,6 +894,7 @@ public class ScalpelExecutor {
 	 */
 	public <T> Optional<T> callEditorCallback(
 		Object param,
+		HttpService service,
 		Boolean isRequest,
 		Boolean isInbound,
 		String tabName,
@@ -896,7 +902,7 @@ public class ScalpelExecutor {
 	) {
 		// Call base method with a single parameter.
 		return callEditorCallback(
-			new Object[] { param },
+			new Object[] { param, service },
 			isRequest,
 			isInbound,
 			tabName,
@@ -914,11 +920,13 @@ public class ScalpelExecutor {
 	 */
 	public Optional<ByteArray> callEditorCallback(
 		HttpMessage msg,
+		HttpService service,
 		Boolean isInbound,
 		String tabName
 	) {
 		return callEditorCallback(
 			msg,
+			service,
 			msg instanceof HttpRequest,
 			isInbound,
 			tabName,
@@ -938,6 +946,7 @@ public class ScalpelExecutor {
 	 */
 	public Optional<ByteArray> callEditorCallback(
 		HttpMessage msg,
+		HttpService service,
 		ByteArray byteArray,
 		Boolean isInbound,
 		String tabName
@@ -945,6 +954,7 @@ public class ScalpelExecutor {
 		return callEditorCallback(
 			new Object[] {
 				msg,
+				service,
 				PythonUtils.toPythonBytes(byteArray.getBytes()),
 			},
 			msg instanceof HttpRequest,
