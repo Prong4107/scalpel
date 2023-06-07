@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # pylint: disable=invalid-name
 
 from abc import abstractmethod, ABCMeta
@@ -13,7 +15,7 @@ class JavaObject(Protocol, metaclass=ABCMeta):
         """generated source for method __init__"""
 
     @abstractmethod
-    def getClass(self):
+    def getClass(self) -> JavaClass:
         """generated source for method getClass"""
 
     @abstractmethod
@@ -26,7 +28,7 @@ class JavaObject(Protocol, metaclass=ABCMeta):
         return False
 
     @abstractmethod
-    def clone(self) -> "JavaObject":
+    def clone(self) -> JavaObject:
         """generated source for method clone"""
 
     @abstractmethod
@@ -59,3 +61,7 @@ class JavaObject(Protocol, metaclass=ABCMeta):
     @abstractmethod
     def finalize(self) -> None:
         """generated source for method finalize"""
+
+
+class JavaClass(JavaObject, metaclass=ABCMeta):
+    pass
