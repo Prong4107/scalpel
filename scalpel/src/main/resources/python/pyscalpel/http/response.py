@@ -149,17 +149,17 @@ class Response(MITMProxyResponse):
     def make(
         cls,
         status_code: int = 200,
-        content: bytes | None = b"",
+        content: bytes | str = b"",
         headers: Headers | tuple[tuple[bytes, bytes], ...] = (),
         host: str = "",
         port: int = 0,
         scheme: Literal["http", "https"] = "http",
     ) -> "Response":
         # Use the base/inherited make method to construct a MITMProxy response.
-        mitmproxy_res = cls.make(status_code, content, headers)
+        mitmproxy_res = MITMProxyResponse.make(status_code, content, headers)
 
         res = cls.from_mitmproxy(mitmproxy_res)
-        res.host = host     
+        res.host = host
         res.scheme = scheme
         res.port = port
 
