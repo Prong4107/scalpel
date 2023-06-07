@@ -15,6 +15,8 @@ from pyscalpel.encoding import always_bytes
 from pyscalpel.http.headers import Headers
 from pyscalpel.http.utils import host_is
 from pyscalpel.java.burp.http_service import IHttpService
+from pyscalpel.java.burp.http_request import IHttpRequest
+from pyscalpel.http.request import Request
 
 
 # TODO: Recode this
@@ -24,11 +26,18 @@ class Response(MITMProxyResponse):
 
 
     This class allows to manipulate Burp responses in a Pythonic way.
+
+    Fields:
+        scheme: http or https
+        host: The initiating request target host
+        port: The initiating request target port
+        request: The initiating request.
     """
 
     scheme: Literal["http", "https"] = "http"
     host: str = ""
     port: int = 0
+    request: Request | None = None
 
     def __init__(
         self,
@@ -80,7 +89,7 @@ class Response(MITMProxyResponse):
     ) -> Response:
         """Construct an instance of the Response class from a Burp suite :class:`IHttpResponse`."""
         body = get_bytes(response.body())
-        res = cls(
+        scalpel_response = cls(
             always_bytes(response.httpVersion()),
             response.statusCode(),
             always_bytes(response.reasonPhrase()),
@@ -88,12 +97,20 @@ class Response(MITMProxyResponse):
             body,
             None,
         )
-        if service:
-            res.scheme = "https" if service.secure() else "http"
-            res.host = service.host()
-            res.port = service.port()
 
-        return res
+        # Some responses can have a "initiatingRequest" field.
+        # https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/http/handler/HttpResponseReceived.html#initiatingRequest():~:text=HttpRequest-,initiatingRequest(),-Returns%3A
+        if response.initiatingRequest:  # type: ignore
+            burp_request: IHttpRequest = response.initiatingRequest()  # type: ignore
+            service = service or burp_request.httpService()
+            scalpel_response.request = Request.from_burp(burp_request, service)
+
+        if service:
+            scalpel_response.scheme = "https" if service.secure() else "http"
+            scalpel_response.host = service.host()
+            scalpel_response.port = service.port()
+
+        return scalpel_response
 
     @lru_cache
     def __bytes__(self) -> bytes:
