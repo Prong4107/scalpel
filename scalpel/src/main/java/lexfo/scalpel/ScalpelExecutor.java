@@ -507,7 +507,7 @@ public class ScalpelExecutor {
 							);
 
 							try {
-								// Invoke python function and get the returned value.
+								// Invoke Python function and get the returned value.
 								final Object pythonResult = interp.invoke(
 									task.name,
 									task.args,
