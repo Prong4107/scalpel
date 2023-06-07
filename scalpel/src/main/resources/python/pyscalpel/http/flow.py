@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from typing import Literal
 from pyscalpel.http.request import Request
 from pyscalpel.http.response import Response
+from pyscalpel.http.utils import host_is
 
 
 @dataclass(frozen=True)
@@ -14,3 +15,5 @@ class Flow:
     response: Response | None = None
     text: bytes | None = None
 
+    def host_is(self, *patterns: str):
+        return host_is(self.host, *patterns)
