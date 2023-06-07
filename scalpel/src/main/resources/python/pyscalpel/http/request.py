@@ -76,7 +76,7 @@ class Request:
     _Header = tuple[_HeaderKey, _HeaderValue]
     _Host = str
     _Method = str
-    _Scheme = str
+    _Scheme = Literal["http", "https"]
     _Authority = str
     _Content = bytes
     _Path = str
@@ -104,7 +104,7 @@ class Request:
     def __init__(
         self,
         method: str,
-        scheme: str,
+        scheme: Literal["http", "https"],
         host: str,
         port: int,
         path: str,
@@ -153,8 +153,14 @@ class Request:
         url: str,
     ) -> tuple[_Scheme, _Host, _Port, _Path]:
         scheme, host, port, path = url_parse(url)
+
+        # This method is only used to create HTTP requests from URLs
+        #   so we can ensure the scheme is valid for this usage
+        if scheme not in (b"http", b"https"):
+            scheme = b"http"
+
         return cast(
-            tuple[str, str, int, str],
+            tuple[Literal["http", "https"], str, int, str],
             (scheme.decode("ascii"), host.decode("idna"), port, path.decode("ascii")),
         )
 
