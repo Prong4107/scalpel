@@ -11,6 +11,7 @@ from mitmproxy.http import (
 from pyscalpel.java.burp.http_header import IHttpHeader, HttpHeader
 from pyscalpel.encoding import always_bytes, native
 
+
 class Headers(MITMProxyHeaders):
     """A wrapper around the MITMProxy Headers.
 

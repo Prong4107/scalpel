@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import time
-
+from typing import Literal
 from functools import lru_cache
 from mitmproxy.http import (
     Response as MITMProxyResponse,
 )
-
 
 from pyscalpel.java.burp.http_response import IHttpResponse, HttpResponse
 from pyscalpel.burp_utils import get_bytes
@@ -14,9 +13,22 @@ from pyscalpel.java.burp.byte_array import IByteArray
 from pyscalpel.java.scalpel_types.utils import PythonUtils
 from pyscalpel.encoding import always_bytes
 from pyscalpel.http.headers import Headers
+from pyscalpel.java.burp.http_service import IHttpService
 
 
+# TODO: Recode this
+#   Add HttpService stuff
 class Response(MITMProxyResponse):
+    """A "Burp oriented" HTTP response class
+
+
+    This class allows to manipulate Burp responses in a Pythonic way.
+    """
+
+    scheme: Literal["http", "https"] = "http"
+    host: str = ""
+    port: int = 0
+
     def __init__(
         self,
         http_version: bytes,
@@ -25,6 +37,9 @@ class Response(MITMProxyResponse):
         headers: Headers | tuple[tuple[bytes, bytes], ...],
         content: bytes | None,
         trailers: Headers | tuple[tuple[bytes, bytes], ...] | None,
+        scheme: Literal["http", "https"] = "http",
+        host: str = "",
+        port: int = 0,
     ):
         # Construct the base/inherited MITMProxy response.
         super().__init__(
@@ -37,6 +52,9 @@ class Response(MITMProxyResponse):
             timestamp_start=time.time(),
             timestamp_end=time.time(),
         )
+        self.scheme = scheme
+        self.host = host
+        self.port = port
 
     @classmethod
     # https://docs.mitmproxy.org/stable/api/mitmproxy/http.html#Response
@@ -56,7 +74,9 @@ class Response(MITMProxyResponse):
         )
 
     @classmethod
-    def from_burp(cls, response: IHttpResponse) -> Response:
+    def from_burp(
+        cls, response: IHttpResponse, service: IHttpService | None = None
+    ) -> Response:
         """Construct an instance of the Response class from a Burp suite :class:`IHttpResponse`."""
         body = get_bytes(response.body())
         return cls(
@@ -124,8 +144,16 @@ class Response(MITMProxyResponse):
         status_code: int = 200,
         content: bytes | None = b"",
         headers: Headers | tuple[tuple[bytes, bytes], ...] = (),
+        host: str = "",
+        port: int = 0,
+        scheme: Literal["http", "https"] = "http",
     ) -> "Response":
         # Use the base/inherited make method to construct a MITMProxy response.
         mitmproxy_res = cls.make(status_code, content, headers)
 
-        return cls.from_mitmproxy(mitmproxy_res)
+        res = cls.from_mitmproxy(mitmproxy_res)
+        res.host = host
+        res.scheme = scheme
+        res.port = port
+
+        return res
