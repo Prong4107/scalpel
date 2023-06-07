@@ -711,7 +711,7 @@ public class ScalpelExecutor {
 				"captured_err"
 			) +
 			exceptionMessage
-				.flatMap(msg -> Optional.of("\n\n" + msg))
+				.map(msg -> "\n\n" + msg)
 				.orElse("");
 			logger.logToOutput(
 				String.format(
