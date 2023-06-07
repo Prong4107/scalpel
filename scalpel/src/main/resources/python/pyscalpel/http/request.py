@@ -1,3 +1,4 @@
+"""Pythonic wrappers for the Burp Request Java object """
 from __future__ import annotations
 
 import urllib.parse
@@ -21,16 +22,6 @@ from pyscalpel.java.scalpel_types.utils import PythonUtils
 from pyscalpel.encoding import always_bytes, always_str
 from pyscalpel.http.headers import Headers
 from pyscalpel.http.mime import get_header_value_without_params
-from mitmproxy.coretypes import multidict
-from mitmproxy.net.http.url import (
-    parse as url_parse,
-    unparse as url_unparse,
-    encode as url_encode,
-    decode as url_decode,
-)
-from mitmproxy.net.http import cookies
-
-
 from pyscalpel.http.body import (
     FormSerializer,
     JSONFormSerializer,
@@ -51,20 +42,42 @@ from pyscalpel.http.body import (
     json_unescape_bytes,
 )
 
+from mitmproxy.coretypes import multidict
+from mitmproxy.net.http.url import (
+    parse as url_parse,
+    unparse as url_unparse,
+    encode as url_encode,
+    decode as url_decode,
+)
+from mitmproxy.net.http import cookies
+
 
 class FormNotParsedException(Exception):
-    pass
+    """Exception raised when a form deserialization failed
+
+    Args:
+        Exception (_type_): _description_
+    """
 
 
-# https://research.swtch.com/glob
 def host_is(host: str, pattern: str) -> bool:
+    """Matches an host using unix-like wildcard matching
+
+    Args:
+        host (str): The host to match against
+        pattern (str): The pattern to use
+
+    Returns:
+        bool: The match result (True if matching, else False)
+    """
     return fnmatch.fnmatch(host, pattern)
 
 
 class Request:
-    """A wrapper class for `mitmproxy.http.Request`.
+    """A "Burp oriented" HTTP request class
 
-    This class provides additional methods for converting requests between Burp suite and MITMProxy formats.
+
+    This class allows to manipulate Burp requests in a Pythonic way.
     """
 
     _Port = int
@@ -74,7 +87,6 @@ class Request:
     _HeaderKey = str
     _HeaderValue = str
     _Header = tuple[_HeaderKey, _HeaderValue]
-    # _Headers = list[_Header]
     _Host = str
     _Method = str
     _Scheme = str
@@ -146,8 +158,8 @@ class Request:
                 self._headers["Content-Length"] = str(length)
 
     @staticmethod
-    def _parse_qs(qs: str) -> _ParsedQuery:
-        return tuple(urllib.parse.parse_qsl(qs))
+    def _parse_qs(query_string: str) -> _ParsedQuery:
+        return tuple(urllib.parse.parse_qsl(query_string))
 
     @staticmethod
     def _parse_url(
@@ -174,7 +186,18 @@ class Request:
         | dict[str, str]
         | dict[bytes, bytes]
         | Iterable[tuple[bytes, bytes]] = (),
-    ) -> "Request":
+    ) -> Request:
+        """Create a request from an URL
+
+        Args:
+            method (str): The request method (GET,POST,PUT,PATCH, DELETE,TRACE,...)
+            url (str): The request URL
+            content (bytes | str, optional): The request content. Defaults to "".
+            headers (Headers, optional): The request headers. Defaults to ().
+
+        Returns:
+            Request: The HTTP request
+        """
         scalpel_headers: Headers
         match headers:
             case Headers():
@@ -242,7 +265,8 @@ class Request:
             body = None
 
         # request.url() gives a relative url for some reason
-        # So we have to parse and unparse to get the full path (path + parameters + query + fragment)
+        # So we have to parse and unparse to get the full path
+        #   (path + parameters + query + fragment)
         _, _, path, parameters, query, fragment = urllib.parse.urlparse(request.url())
 
         # Concatenate the path components
@@ -335,7 +359,7 @@ class Request:
         real_host: str = "",
         port: int = 0,
         scheme: Literal["http"] | Literal["https"] | str = "http",
-    ) -> "Request":
+    ) -> Request:
         """Construct an instance of the Request class from raw bytes.
         :param data: The raw bytes to convert.
         :param real_host: The real host to connect to.
@@ -370,7 +394,8 @@ class Request:
     @property
     def url(self) -> str:
         """
-        The full URL string, constructed from `Request.scheme`, `Request.host`, `Request.port` and `Request.path`.
+        The full URL string, constructed from `Request.scheme`,
+            `Request.host`, `Request.port` and `Request.path`.
 
         Setting this property updates these attributes as well.
         """
@@ -393,6 +418,11 @@ class Request:
 
     @property
     def query(self) -> QueryParamsView:
+        """The query string parameters as a dict-like object
+
+        Returns:
+            QueryParamsView: The query string parameters
+        """
         return QueryParamsView(
             multidict.MultiDictView(self._get_query, self._set_query)
         )
@@ -455,6 +485,11 @@ class Request:
 
     @property
     def content(self) -> bytes | None:
+        """The request content / body as raw bytes
+
+        Returns:
+            bytes | None: The content if it exists
+        """
         if self._serializer and self._has_deserialized_content_changed():
             self._update_deserialized_content(self._deserialized_content)
             self._old_deserialized_content = deepcopy(self._deserialized_content)
@@ -490,12 +525,20 @@ class Request:
     def body(self, value: bytes | str | None):
         self.content = value
 
-    # TODO: Convert former mappings
     def update_serializer_from_content_type(
         self,
         content_type: ImplementedContentTypesTp | str | None = None,
         fail_silently: bool = False,
     ):
+        """Update the form parsing based on the given Content-Type
+
+        Args:
+            content_type (ImplementedContentTypesTp | str | None, optional): The form content-type. Defaults to None.
+            fail_silently (bool, optional): Determine if an excpetion is raised when the content-type is unknown. Defaults to False.
+
+        Raises:
+            FormNotParsedException: Raised when the content-type is unknown.
+        """
         # Strip the boundary param so we can use our content-type to serializer map
         _content_type: str = get_header_value_without_params(
             content_type or self.headers.get("Content-Type") or ""
@@ -656,6 +699,14 @@ class Request:
 
     @property
     def urlencoded_form(self) -> QueryParams:
+        """The urlencoded form data
+
+        Converts the content to the urlencoded form format if needed.
+        Modification to this object will update Request.content and vice versa
+
+        Returns:
+            QueryParams: The urlencoded form data
+        """
         self._is_form_initialized = True
         return cast(
             QueryParams,
@@ -669,6 +720,14 @@ class Request:
 
     @property
     def json_form(self) -> dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]:
+        """The JSON form data
+
+        Converts the content to the JSON form format if needed.
+        Modification to this object will update Request.content and vice versa
+
+        Returns:
+          dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]: The JSON form data
+        """
         self._is_form_initialized = True
         if self._update_serializer_and_get_form(JSONFormSerializer()) is None:
             serializer = cast(JSONFormSerializer, self._serializer)
@@ -709,6 +768,14 @@ class Request:
 
     @property
     def multipart_form(self) -> MultiPartForm:
+        """The multipart form data
+
+        Converts the content to the multipart form format if needed.
+        Modification to this object will update Request.content and vice versa
+
+        Returns:
+            MultiPartForm
+        """
         self._is_form_initialized = True
 
         # Keep boundary even if content-type has changed
@@ -755,8 +822,8 @@ class Request:
         return multidict.MultiDictView(self._get_cookies, self._set_cookies)
 
     def _get_cookies(self) -> tuple[tuple[str, str], ...]:
-        h = self.headers.get_all("Cookie")
-        return tuple(cookies.parse_cookie_headers(h))
+        header = self.headers.get_all("Cookie")
+        return tuple(cookies.parse_cookie_headers(header))
 
     def _set_cookies(self, value: tuple[tuple[str, str], ...]):
         self.headers["cookie"] = cookies.format_cookie_header(value)
@@ -780,6 +847,14 @@ class Request:
         self.headers["Host"] = value
 
     def text(self, encoding="utf-8") -> str:
+        """The decoded content
+
+        Args:
+            encoding (str, optional): encoding to use. Defaults to "utf-8".
+
+        Returns:
+            str: The decoded content
+        """
         if self.content is None:
             return ""
 
@@ -846,4 +921,12 @@ class Request:
         return self.host or self.headers.get("Host") or ""
 
     def host_is(self, pattern: str) -> bool:
+        """Perform wildcard matching (fnmatch) on the target host.
+
+        Args:
+            pattern (str): The pattern to use
+
+        Returns:
+            bool: Whether the pattern matches
+        """
         return host_is(self.pretty_host, pattern)
