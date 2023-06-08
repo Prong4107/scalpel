@@ -9,7 +9,8 @@ from pyscalpel.java.burp.byte_array import IByteArray, ByteArray
 from pyscalpel.java.burp.http_parameter import IHttpParameter, HttpParameter
 from pyscalpel.java.bytes import JavaBytes
 from pyscalpel.java.scalpel_types.utils import PythonUtils
-from pyscalpel.encoding import always_bytes
+from pyscalpel.encoding import always_bytes, urldecode, urlencode_all
+
 
 logger = pyscalpel._globals.logger
 
