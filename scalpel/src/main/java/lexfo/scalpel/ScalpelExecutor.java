@@ -999,6 +999,7 @@ public class ScalpelExecutor {
 	 * @param tabName the name of the tab.
 	 * @return the result of the callback.
 	 */
+	@SuppressWarnings({ "unchecked" })
 	public <T extends HttpMessage> Optional<T> callEditorCallbackOut(
 		T msg,
 		HttpService service,
