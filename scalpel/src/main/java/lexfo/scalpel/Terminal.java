@@ -17,7 +17,6 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class Terminal {
 
