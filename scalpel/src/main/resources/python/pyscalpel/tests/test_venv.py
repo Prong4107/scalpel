@@ -10,7 +10,9 @@ if os.getenv("_VENV_TESTS"):
 
     class TestEnvironmentManager(unittest.TestCase):
         def setUp(self):
-            self.venv_path = os.path.expanduser("~/.scalpel/test_venv")
+            self.venv_path = os.path.join(
+                os.path.expanduser("~"), ".scalpel", "test_venv"
+            )
             if os.path.exists(self.venv_path):
                 shutil.rmtree(self.venv_path)
             create(self.venv_path)
