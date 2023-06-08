@@ -29,7 +29,6 @@ from mitmproxy.net.http.url import (
 )
 from mitmproxy.net.http import cookies
 
-
 from pyscalpel.http.body import (
     FormSerializer,
     JSONFormSerializer,
@@ -48,6 +47,7 @@ from pyscalpel.http.body import (
     json_escape_bytes,
     json_unescape,
     json_unescape_bytes,
+    escape_parameter,
 )
 
 from pyscalpel.http.request import *
@@ -694,7 +694,7 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         import tempfile
         import json
         from os.path import basename
-        from urllib.parse import quote_plus
+        from urllib.parse import quote
 
         # Create a temporary file and write some JSON to it
         with tempfile.NamedTemporaryFile(
@@ -707,10 +707,12 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
 
         # Create an empty temporary file with a malicious name
         with tempfile.NamedTemporaryFile(
-            mode="w+", delete=False, suffix='sp0;0fed"\\'
+            mode="w+", delete=False, suffix="sp0;0f' ed\"\\"
         ) as temp:
             second_name = temp.name
             req.multipart_form["spoofed"] = open(temp.name, "r", encoding="utf-8")
+
+        quote = lambda param: escape_parameter(param, strict=False)
 
         expected = '-----Boundary\r\nContent-Disposition: form-data; name="a"\r\n\r\n'
         expected += "test default\r\n"
@@ -720,7 +722,7 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         expected += "-----Boundary\r\n"
         expected += f'Content-Disposition: form-data; name="data.json"; filename="{basename(first_name)}"\r\n'
         expected += "Content-Type: application/json\r\n\r\n\r\n"
-        expected += f'-----Boundary\r\nContent-Disposition: form-data; name="spoofed"; filename="{quote_plus(basename(second_name))}"\r\n'
+        expected += f'-----Boundary\r\nContent-Disposition: form-data; name="spoofed"; filename="{quote(basename(second_name))}"\r\n'
         expected += "Content-Type: application/octet-stream\r\n\r\n\r\n"
         expected += "-----Boundary--\r\n\r\n"
         expected = expected.encode("latin-1")

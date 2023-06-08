@@ -10,7 +10,7 @@ from collections.abc import Mapping, MutableMapping
 
 from pyscalpel.encoding import always_bytes, always_str
 
-from typing import cast, Any, Iterable
+from typing import cast, Any, Iterable, TypeVar
 from requests_toolbelt.multipart.decoder import (
     BodyPart,
     MultipartDecoder,
@@ -61,6 +61,28 @@ def get_mime(filename: str | None) -> str:
         return DEFAULT_CONTENT_TYPE
 
 
+AnyStr = TypeVar("AnyStr", str, bytes)
+
+
+# https://datatracker.ietf.org/doc/html/rfc8187#:~:text=Inside%20the%20value%20part%2C%20characters%20not%20contained%20in%20attr%2Dchar%20are
+def escape_parameter(param: str | bytes, strict=True) -> str:
+    if not strict:
+        # rfc7578 specifies that characters not in attr_chars should be percent encoded
+        #   but most browser only encodes the " char,
+        #   so we mimic the browser behaviour to avoid confusing the user.
+        if isinstance(param, bytes):
+            return param.replace(b'"', b"%22").decode("ascii")
+
+        return param.replace('"', "%22")
+
+    # RFC compliant behaviour
+    attr_chars: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"  # ALPHA
+    attr_chars += "abcdefghijklmnopqrstuvwxyz"  # alpha
+    attr_chars += "0123456789"  # DIGIT
+    attr_chars += "!#$&+-.^_`|~"  # special characters
+    return urllibquote(param, safe=attr_chars)
+
+
 class MultiPartFormField:
     """
     This class represents a field in a multipart/form-data request. It provides functionalities
@@ -104,18 +126,23 @@ class MultiPartFormField:
         encoding: str = "utf-8",
     ) -> MultiPartFormField:
         # Ensure the form won't break if someone includes quotes
-        # TODO: escape using backslashes
-        urlencoded_name: str = urllibquote(name, safe="[]{}/.;,?!§:@#~^$*")
+        escaped_name: str = escape_parameter(name, strict=False)
+
+        # rfc7578  4.2. specifies that urlencoding shouldn't be applied to filename
+        #   But most browsers still replaces the " character by %22 to avoid breaking the parameters quotation.
+        escaped_filename: str | None = filename and escape_parameter(
+            filename, strict=False
+        )
 
         if content_type is None:
             content_type = get_mime(filename)
 
         urlencoded_content_type = urllibquote(content_type)
 
-        disposition = f'form-data; name="{urlencoded_name}"'
+        disposition = f'form-data; name="{escaped_name}"'
         if filename is not None:
             # When the param is a file, add a filename MIME param and a content-type header
-            disposition += f'; filename="{urllibquote(filename)}"'
+            disposition += f'; filename="{escaped_filename}"'
             headers = CaseInsensitiveDict(
                 {
                     CONTENT_DISPOSITION_KEY: disposition,
