@@ -16,9 +16,8 @@ def req_edit_in(req: Request) -> bytes | None:
         return urldecode(text_bytes).removeprefix(prefix)
 
 
-def req_edit_out(req: Request, text: bytes) -> bytes | None:
+def req_edit_out(req: Request, text: bytes) -> Request | None:
     encoded = urlencode_all(prefix + text)
     str_encoded = str(encoded, "ascii")
     new_req = update_param(req, param_name, str_encoded)
-    req_bytes = bytes(new_req)
-    return req_bytes
+    return new_req

@@ -259,7 +259,7 @@ try:
         service: IHttpService,
         text: list[int],
         callback: CallbackType = ...,
-    ) -> bytes | None:
+    ) -> IHttpRequest | None:
         """Wrapper for the request edit callback
 
         Args:
@@ -278,8 +278,8 @@ try:
             return None
 
         # Call the user callback and return the bytes to construct the new request from
-        # TODO: Directly return a request object
-        return cast(bytes | None, callback(py_req, bytes(text)))
+        result = cast(Request | None, callback(py_req, bytes(text)))
+        return result and result.to_burp()
 
     @_try_if_present
     def _res_edit_in(
@@ -309,7 +309,7 @@ try:
         service: IHttpService,
         text: list[int],
         callback: CallbackType = ...,
-    ) -> bytes | None:
+    ) -> IHttpResponse | None:
         """Wrapper for the response edit callback
 
         Args:
@@ -330,8 +330,8 @@ try:
             return None
 
         # Call the user callback and return the bytes to construct the new response from
-        # TODO: Directly return a response object
-        return cast(bytes | None, callback(py_res, bytes(text)))
+        result = cast(Response | None, callback(py_res, bytes(text)))
+        return result and result.to_burp()
 
     logger.logToOutput("Python: Loaded _framework.py")
 
