@@ -5,12 +5,28 @@ from mitmproxy.utils import strutils
 # str/bytes conversion helpers from mitmproxy/http.py:
 # https://github.com/mitmproxy/mitmproxy/blob/main/mitmproxy/http.py#:~:text=def-,_native,-(x%3A
 def always_bytes(data: str | bytes | int) -> bytes:
+    """Convert data to bytes
+
+    Args:
+        data (str | bytes | int): The data to convert
+
+    Returns:
+        bytes: The converted bytes
+    """
     if isinstance(data, int):
         data = str(data)
     return strutils.always_bytes(data, "utf-8", "surrogateescape")
 
 
 def always_str(data: str | bytes | int) -> str:
+    """Convert data to string
+
+    Args:
+        data (str | bytes | int): The data to convert
+
+    Returns:
+        str: The converted string
+    """
     if isinstance(data, int):
         return str(data)
     return strutils.always_str(data, "utf-8", "surrogateescape")
