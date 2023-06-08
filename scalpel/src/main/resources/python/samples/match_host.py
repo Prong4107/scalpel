@@ -22,10 +22,10 @@ def req_edit_in(req: Request) -> bytes | None:
     return bytes(req)
 
 
-def req_edit_out(_: Request, text: bytes) -> bytes | None:
+def req_edit_out(_: Request, text: bytes) -> Request | None:
     req = Request.from_raw(text)
     req.headers["X-Python-Out-Request-Editor"] = "req_edit_out"
-    return bytes(req)
+    return req
 
 
 def res_edit_in(res: Response) -> bytes | None:
@@ -33,7 +33,7 @@ def res_edit_in(res: Response) -> bytes | None:
     return bytes(res)
 
 
-def res_edit_out(_: Response, text: bytes) -> bytes | None:
+def res_edit_out(_: Response, text: bytes) -> Response | None:
     res = Response.from_raw(text)
     res.headers["X-Python-Out-Response-Editor"] = "res_edit_out"
-    return bytes(res)
+    return res

@@ -710,9 +710,7 @@ public class ScalpelExecutor {
 			final String capturedErr = (String) interp.getValue(
 				"captured_err"
 			) +
-			exceptionMessage
-				.map(msg -> "\n\n" + msg)
-				.orElse("");
+			exceptionMessage.map(msg -> "\n\n" + msg).orElse("");
 			logger.logToOutput(
 				String.format(
 					"Executed:\n%s\nOutput:\n%s\nErr:%s\n",
@@ -944,7 +942,7 @@ public class ScalpelExecutor {
 	 * @param tabName the name of the tab.
 	 * @return the result of the callback.
 	 */
-	public Optional<ByteArray> callEditorCallback(
+	public Optional<Object> callEditorCallback(
 		HttpMessage msg,
 		HttpService service,
 		ByteArray byteArray,
@@ -963,5 +961,61 @@ public class ScalpelExecutor {
 			byte[].class
 		)
 			.flatMap(bytes -> Optional.of(ByteArray.byteArray(bytes)));
+	}
+
+	/**
+	 * Calls the corresponding Python callback for the given tab.
+	 *
+	 * @param msg the message to pass to the callback.
+	 * @param byteArray the byte array to pass to the callback (editor content).
+	 * @param tabName the name of the tab.
+	 * @return the result of the callback.
+	 */
+	public Optional<ByteArray> callEditorCallbackIn(
+		HttpMessage msg,
+		HttpService service,
+		ByteArray byteArray,
+		String tabName
+	) {
+		return callEditorCallback(
+			new Object[] {
+				msg,
+				service,
+				PythonUtils.toPythonBytes(byteArray.getBytes()),
+			},
+			msg instanceof HttpRequest,
+			true,
+			tabName,
+			byte[].class
+		)
+			.flatMap(bytes -> Optional.of(ByteArray.byteArray(bytes)));
+	}
+
+	/**
+	 * Calls the corresponding Python callback for the given tab.
+	 *
+	 * @param msg the message to pass to the callback.
+	 * @param byteArray the byte array to pass to the callback (editor content).
+	 * @param tabName the name of the tab.
+	 * @return the result of the callback.
+	 */
+	public <T extends HttpMessage> Optional<T> callEditorCallbackOut(
+		T msg,
+		HttpService service,
+		ByteArray byteArray,
+		String tabName
+	) {
+		boolean isRequest = msg instanceof HttpRequest;
+		return callEditorCallback(
+			new Object[] {
+				msg,
+				service,
+				PythonUtils.toPythonBytes(byteArray.getBytes()),
+			},
+			isRequest,
+			false,
+			tabName,
+			(Class<T>) (isRequest ? HttpRequest.class : HttpResponse.class)
+		);
 	}
 }

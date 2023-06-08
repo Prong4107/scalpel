@@ -214,9 +214,11 @@ public class ScalpelProvidedEditor
 			if (msg == null || !editor.isModified()) return null;
 
 			// Call Python "outbound" message editor callback with editor's contents.
-			final Optional<HttpMessage> result = pythonBuildHttpMsgFromBytes(
+			final Optional<HttpMessage> result = executor.callEditorCallbackOut(
 				msg,
-				editor.getContents()
+				getHttpService(),
+				editor.getContents(),
+				caption()
 			);
 
 			// Nothing was returned, return the original msg untouched.
@@ -352,42 +354,6 @@ public class ScalpelProvidedEditor
 				)
 				: HttpResponse.httpResponse(bytes)
 		);
-	}
-
-	/**
-	 * Creates a new HTTP message by passing the provided bytes through a Python callback.
-	 *
-	 * @param <T> The type of the HttpMessage to be returned.
-	 * @param msg The HTTP message to be edited.
-	 * @param bytes The bytes to be used to create the new HttpMessage.
-	 * @return The new HttpMessage with the bytes outputted by the Python callback.
-	 */
-	private <T extends HttpMessage> Optional<T> pythonBuildHttpMsgFromBytes(
-		T msg,
-		ByteArray bytes
-	) {
-		try {
-			// Call the Python callback and return the result.
-			final var result = executor.callEditorCallback(
-				msg,
-				getHttpService(),
-				bytes,
-				false,
-				caption()
-			);
-
-			// When new bytes are returned, use them to create a new http message from the original one.
-			// TODO: The callback should NOT return bytes but instead a HttpRequest or HttpResponse.
-			if (result.isPresent()) return Optional.of(
-				cloneHttpMessageAndReplaceBytes(msg, result.get())
-			);
-		} catch (Exception e) {
-			logger.logToError("buildHttpMsgFromBytes(): Error");
-			TraceLogger.logStackTrace(logger, e);
-		}
-
-		// Nothing was returned and / or an error happened, so we return
-		return Optional.empty();
 	}
 
 	/**
