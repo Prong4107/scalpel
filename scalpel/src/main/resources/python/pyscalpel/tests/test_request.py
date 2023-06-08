@@ -712,7 +712,7 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
             second_name = temp.name
             req.multipart_form["spoofed"] = open(temp.name, "r", encoding="utf-8")
 
-        quote = lambda param: escape_parameter(param, strict=False)
+        quote = lambda param: escape_parameter(param, extended=False)
 
         expected = '-----Boundary\r\nContent-Disposition: form-data; name="a"\r\n\r\n'
         expected += "test default\r\n"
