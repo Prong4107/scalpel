@@ -64,18 +64,15 @@ def get_mime(filename: str | None) -> str:
 AnyStr = TypeVar("AnyStr", str, bytes)
 
 
-# https://datatracker.ietf.org/doc/html/rfc8187#:~:text=Inside%20the%20value%20part%2C%20characters%20not%20contained%20in%20attr%2Dchar%20are
-def escape_parameter(param: str | bytes, strict=True) -> str:
-    if not strict:
-        # rfc7578 specifies that characters not in attr_chars should be percent encoded
-        #   but most browser only encodes the " char,
-        #   so we mimic the browser behaviour to avoid confusing the user.
+def escape_parameter(param: str | bytes, extended=False) -> str:
+    if not extended:
         if isinstance(param, bytes):
-            return param.replace(b'"', b"%22").decode("ascii")
+            # https://datatracker.ietf.org/doc/html/rfc8187#section-3.2
+            return param.replace(b'"', b"%22").decode("utf-8")
 
         return param.replace('"', "%22")
 
-    # RFC compliant behaviour
+    # https://datatracker.ietf.org/doc/html/rfc8187#section-3.2.1
     attr_chars: str = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"  # ALPHA
     attr_chars += "abcdefghijklmnopqrstuvwxyz"  # alpha
     attr_chars += "0123456789"  # DIGIT
@@ -126,13 +123,11 @@ class MultiPartFormField:
         encoding: str = "utf-8",
     ) -> MultiPartFormField:
         # Ensure the form won't break if someone includes quotes
-        escaped_name: str = escape_parameter(name, strict=False)
+        escaped_name: str = escape_parameter(name)
 
         # rfc7578  4.2. specifies that urlencoding shouldn't be applied to filename
         #   But most browsers still replaces the " character by %22 to avoid breaking the parameters quotation.
-        escaped_filename: str | None = filename and escape_parameter(
-            filename, strict=False
-        )
+        escaped_filename: str | None = filename and escape_parameter(filename)
 
         if content_type is None:
             content_type = get_mime(filename)
