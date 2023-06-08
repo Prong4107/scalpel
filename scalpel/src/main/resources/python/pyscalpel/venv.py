@@ -91,8 +91,7 @@ def create_default() -> str:
     Returns:
         str: The venv directory path.
     """
-    scalpel_venv = os.path.expanduser("~/.scalpel/venv_default")
-
+    scalpel_venv = os.path.join(os.path.expanduser("~"), ".scalpel", "venv_default")
     # Don't recreate the venv if it alreay exists
     if not os.path.exists(scalpel_venv):
         os.makedirs(scalpel_venv, exist_ok=True)
