@@ -40,9 +40,16 @@ def activate(path: str | None) -> None:
     if old_pythonhome:
         os.environ["_OLD_VIRTUAL_PYTHONHOME"] = old_pythonhome
 
-    site_packages = glob.glob(
+    site_packages_paths = glob.glob(
         os.path.join(virtual_env, "lib", "python*", "site-packages")
-    )[0]
+    )
+
+    if not site_packages_paths:
+        raise RuntimeError(
+            f"No 'site-packages' directory found in virtual environment at {virtual_env}"
+        )
+
+    site_packages = site_packages_paths[0]
     sys.path.insert(0, site_packages)
     sys.prefix = virtual_env
     sys.exec_prefix = virtual_env
@@ -91,9 +98,3 @@ def create_default() -> str:
         os.makedirs(scalpel_venv, exist_ok=True)
         create(scalpel_venv)
     return scalpel_venv
-
-
-if __name__ == "__main__":
-    activate(create_default())
-    uninstall("pdoc", "mitmproxy", "jep")
-    install("pdoc", "mitmproxy", "jep")
