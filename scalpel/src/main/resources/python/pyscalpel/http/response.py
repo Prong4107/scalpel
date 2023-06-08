@@ -19,8 +19,7 @@ from pyscalpel.java.burp.http_request import IHttpRequest
 from pyscalpel.http.request import Request
 
 
-# TODO: Recode this
-#   Add HttpService stuff
+# TODO: Recode this to add a update_content_length flag
 class Response(MITMProxyResponse):
     """A "Burp oriented" HTTP response class
 

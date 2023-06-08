@@ -433,7 +433,6 @@ class Request:
         if self._serializer is None:
             return
 
-        # TODO: Check if this guard is still useful
         if self._deserialized_content is None:
             self._content = None
             return
@@ -470,8 +469,6 @@ class Request:
         if deserialized is None:
             self._deserialized_content = None
             self._old_deserialized_content = None
-            # TODO: Ensure this doesn't break anything
-            # self._content = None
             return
 
         self._deserialized_content = deserialized
@@ -644,7 +641,6 @@ class Request:
         # Update raw _content
         self._serialize_content()
 
-    # TODO: Convert from the previous form mapping
     def _set_serializer(self, serializer: FormSerializer | None):
         # Update the serializer
         old_serializer = self._serializer
