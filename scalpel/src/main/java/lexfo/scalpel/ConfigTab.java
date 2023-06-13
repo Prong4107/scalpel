@@ -66,18 +66,18 @@ public class ConfigTab extends JFrame {
 
 		// Open file browser to select the script to execute.
 		scriptBrowseButton.addActionListener(e ->
-				handleBrowseButtonClick(
-						scriptPathField::getText,
-						this::setAndStoreScriptPath
-				)
+			handleBrowseButtonClick(
+				scriptPathField::getText,
+				this::setAndStoreScriptPath
+			)
 		);
 
 		// Same as above for framework path.
 		frameworkBrowseButton.addActionListener(e ->
-				handleBrowseButtonClick(
-						frameworkPathField::getText,
-						this::setAndStoreFrameworkPath
-				)
+			handleBrowseButtonClick(
+				frameworkPathField::getText,
+				this::setAndStoreFrameworkPath
+			)
 		);
 
 		// Fill the venv list component.
@@ -88,7 +88,7 @@ public class ConfigTab extends JFrame {
 
 		// Change the venv, terminal and package table when the user selects a venv.
 		venvListComponent.addListSelectionListener(
-				this::handleListSelectionEvent
+			this::handleListSelectionEvent
 		);
 
 		// Add a new venv when the user clicks the button.
@@ -104,12 +104,12 @@ public class ConfigTab extends JFrame {
 
 		// Scroll to the right when the field is selected.
 		field.addFocusListener(
-				new FocusAdapter() {
-					@Override
-					public void focusGained(FocusEvent e) {
-						field.setCaretPosition(field.getText().length());
-					}
+			new FocusAdapter() {
+				@Override
+				public void focusGained(FocusEvent e) {
+					field.setCaretPosition(field.getText().length());
 				}
+			}
 		);
 	}
 
@@ -128,27 +128,27 @@ public class ConfigTab extends JFrame {
 			} else if (value.contains(File.separator)) {
 				// The user provided a relative path, forbid it.
 				throw new IllegalArgumentException(
-						"Venv name cannot contain " +
-								File.separator +
-								"\n" +
-								"Please provide a venv name or an absolute path."
+					"Venv name cannot contain " +
+					File.separator +
+					"\n" +
+					"Please provide a venv name or an absolute path."
 				);
 			} else {
 				// The user provided a name, use it to create a venv in the default venvs dir.
 				path =
-						Paths
-								.get(
-										Config.getDefaultVenvsDir().getAbsolutePath(),
-										value
-								)
-								.toString();
+					Paths
+						.get(
+							Config.getDefaultVenvsDir().getAbsolutePath(),
+							value
+						)
+						.toString();
 			}
 		} catch (IllegalArgumentException e) {
 			JOptionPane.showMessageDialog(
-					this,
-					e.getMessage(),
-					"Invalid venv name or absolute path",
-					JOptionPane.ERROR_MESSAGE
+				this,
+				e.getMessage(),
+				"Invalid venv name or absolute path",
+				JOptionPane.ERROR_MESSAGE
 			);
 			return;
 		}
@@ -159,10 +159,10 @@ public class ConfigTab extends JFrame {
 				Venv.createAndInstallDefaults(path);
 			} catch (IOException | InterruptedException e) {
 				JOptionPane.showMessageDialog(
-						this,
-						"Failed to create venv: \n" + e.getMessage(),
-						"Failed to create venv",
-						JOptionPane.ERROR_MESSAGE
+					this,
+					"Failed to create venv: \n" + e.getMessage(),
+					"Failed to create venv",
+					JOptionPane.ERROR_MESSAGE
 				);
 				return;
 			}
@@ -197,7 +197,7 @@ public class ConfigTab extends JFrame {
 			// Connect the terminal to the new process in the new venv.
 			this.terminalForVenvConfig.createTerminalSession(
 					Terminal.createTtyConnector(selectedVenvPath)
-			);
+				);
 
 			// Start the terminal.
 			this.terminalForVenvConfig.start();
@@ -205,8 +205,8 @@ public class ConfigTab extends JFrame {
 	}
 
 	private void handleBrowseButtonClick(
-			Supplier<String> getter,
-			Consumer<String> setter
+		Supplier<String> getter,
+		Consumer<String> setter
 	) {
 		final JFileChooser fileChooser = new JFileChooser();
 
@@ -225,19 +225,19 @@ public class ConfigTab extends JFrame {
 	}
 
 	private void updatePackagesTable(
-			Consumer<JTable> onSuccess,
-			Runnable onFail
+		Consumer<JTable> onSuccess,
+		Runnable onFail
 	) {
 		final PackageInfo[] installedPackages;
 		try {
 			installedPackages =
-					Venv.getInstalledPackages(config.getSelectedVenvPath());
+				Venv.getInstalledPackages(config.getSelectedVenvPath());
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(
-					this,
-					"Failed to get installed packages: \n" + e.getMessage(),
-					"Failed to get installed packages",
-					JOptionPane.ERROR_MESSAGE
+				this,
+				"Failed to get installed packages: \n" + e.getMessage(),
+				"Failed to get installed packages",
+				JOptionPane.ERROR_MESSAGE
 			);
 			onFail.run();
 			return;
@@ -245,15 +245,15 @@ public class ConfigTab extends JFrame {
 
 		// Create a table model with the appropriate column names
 		DefaultTableModel tableModel = new DefaultTableModel(
-				new Object[]{"Name", "Version"},
-				0
+			new Object[] { "Name", "Version" },
+			0
 		);
 
 		// Parse with jackson and add to the table model
 		Arrays
-				.stream(installedPackages)
-				.map(p -> new Object[]{p.name, p.version})
-				.forEach(tableModel::addRow);
+			.stream(installedPackages)
+			.map(p -> new Object[] { p.name, p.version })
+			.forEach(tableModel::addRow);
 
 		// Set the table model
 		packagesTable.setModel(tableModel);
@@ -265,13 +265,11 @@ public class ConfigTab extends JFrame {
 	}
 
 	private void updatePackagesTable(Consumer<JTable> onSuccess) {
-		updatePackagesTable(onSuccess, () -> {
-		});
+		updatePackagesTable(onSuccess, () -> {});
 	}
 
 	private void updatePackagesTable() {
-		updatePackagesTable(__ -> {
-		});
+		updatePackagesTable(__ -> {});
 	}
 
 	private static void scrollToRight(JTextField textField) {
@@ -333,7 +331,7 @@ public class ConfigTab extends JFrame {
 
 		// Create the TtyConnector
 		terminalForVenvConfig =
-				Terminal.createTerminal(theme, config.getSelectedVenvPath());
+			Terminal.createTerminal(theme, config.getSelectedVenvPath());
 	}
 
 	/**
@@ -345,15 +343,73 @@ public class ConfigTab extends JFrame {
 	 */
 	private void $$$setupUI$$$() {
 		createUIComponents();
-		rootPanel.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
-		rootPanel.setBorder(BorderFactory.createTitledBorder(null, "", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+		rootPanel.setLayout(
+			new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1)
+		);
+		rootPanel.setBorder(
+			BorderFactory.createTitledBorder(
+				null,
+				"",
+				TitledBorder.DEFAULT_JUSTIFICATION,
+				TitledBorder.DEFAULT_POSITION,
+				null,
+				null
+			)
+		);
 		venvSelectPanel = new JPanel();
-		venvSelectPanel.setLayout(new GridLayoutManager(4, 2, new Insets(5, 5, 5, 0), -1, -1));
-		rootPanel.add(venvSelectPanel, new GridConstraints(0, 0, 1, 2, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-		venvSelectPanel.setBorder(BorderFactory.createTitledBorder(null, "Manage virtualenvs", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+		venvSelectPanel.setLayout(
+			new GridLayoutManager(4, 2, new Insets(5, 5, 5, 0), -1, -1)
+		);
+		rootPanel.add(
+			venvSelectPanel,
+			new GridConstraints(
+				0,
+				0,
+				1,
+				2,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
+		venvSelectPanel.setBorder(
+			BorderFactory.createTitledBorder(
+				null,
+				"Manage virtualenvs",
+				TitledBorder.DEFAULT_JUSTIFICATION,
+				TitledBorder.DEFAULT_POSITION,
+				null,
+				null
+			)
+		);
 		final JPanel panel1 = new JPanel();
 		panel1.setLayout(new BorderLayout(0, 0));
-		venvSelectPanel.add(panel1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_HORIZONTAL, 1, 1, null, new Dimension(100, -1), null, 0, false));
+		venvSelectPanel.add(
+			panel1,
+			new GridConstraints(
+				0,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_SOUTH,
+				GridConstraints.FILL_HORIZONTAL,
+				1,
+				1,
+				null,
+				new Dimension(100, -1),
+				null,
+				0,
+				false
+			)
+		);
 		addVentText = new JTextField();
 		addVentText.setText("");
 		addVentText.setToolTipText("");
@@ -361,19 +417,79 @@ public class ConfigTab extends JFrame {
 		addVenvButton = new JButton();
 		addVenvButton.setText("+");
 		panel1.add(addVenvButton, BorderLayout.EAST);
-		venvSelectPanel.add(terminalForVenvConfig, new GridConstraints(0, 1, 4, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+		venvSelectPanel.add(
+			terminalForVenvConfig,
+			new GridConstraints(
+				0,
+				1,
+				4,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
 		final JPanel panel2 = new JPanel();
-		panel2.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
-		venvSelectPanel.add(panel2, new GridConstraints(1, 0, 3, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+		panel2.setLayout(
+			new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1)
+		);
+		venvSelectPanel.add(
+			panel2,
+			new GridConstraints(
+				1,
+				0,
+				3,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
 		final JScrollPane scrollPane1 = new JScrollPane();
-		panel2.add(scrollPane1, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, 1, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+		panel2.add(
+			scrollPane1,
+			new GridConstraints(
+				0,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				1,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
 		venvListComponent = new JList();
 		final DefaultListModel defaultListModel1 = new DefaultListModel();
 		defaultListModel1.addElement("lorem");
 		defaultListModel1.addElement("ipsum");
 		defaultListModel1.addElement("aucupatum");
 		defaultListModel1.addElement("versatio");
-		defaultListModel1.addElement("loremaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatum");
+		defaultListModel1.addElement(
+			"loremaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatum"
+		);
 		defaultListModel1.addElement("ipsum");
 		defaultListModel1.addElement("aucupatum");
 		defaultListModel1.addElement("versatio");
@@ -511,46 +627,300 @@ public class ConfigTab extends JFrame {
 		venvListComponent.setModel(defaultListModel1);
 		scrollPane1.setViewportView(venvListComponent);
 		final JScrollPane scrollPane2 = new JScrollPane();
-		panel2.add(scrollPane2, new GridConstraints(1, 0, 2, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-		scrollPane2.setBorder(BorderFactory.createTitledBorder(null, "", TitledBorder.DEFAULT_JUSTIFICATION, TitledBorder.DEFAULT_POSITION, null, null));
+		panel2.add(
+			scrollPane2,
+			new GridConstraints(
+				1,
+				0,
+				2,
+				1,
+				GridConstraints.ANCHOR_WEST,
+				GridConstraints.FILL_VERTICAL,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
+		scrollPane2.setBorder(
+			BorderFactory.createTitledBorder(
+				null,
+				"",
+				TitledBorder.DEFAULT_JUSTIFICATION,
+				TitledBorder.DEFAULT_POSITION,
+				null,
+				null
+			)
+		);
 		packagesTable = new JTable();
 		scrollPane2.setViewportView(packagesTable);
 		final JPanel panel3 = new JPanel();
-		panel3.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
-		rootPanel.add(panel3, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+		panel3.setLayout(
+			new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1)
+		);
+		rootPanel.add(
+			panel3,
+			new GridConstraints(
+				0,
+				2,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
 		browsePanel = new JPanel();
-		browsePanel.setLayout(new GridLayoutManager(3, 3, new Insets(10, 10, 10, 10), 0, -1));
+		browsePanel.setLayout(
+			new GridLayoutManager(3, 3, new Insets(10, 10, 10, 10), 0, -1)
+		);
 		browsePanel.setBackground(new Color(-5198676));
-		panel3.add(browsePanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_NORTH, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
+		panel3.add(
+			browsePanel,
+			new GridConstraints(
+				0,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_NORTH,
+				GridConstraints.FILL_HORIZONTAL,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
 		frameworkConfigPanel = new JPanel();
-		frameworkConfigPanel.setLayout(new GridLayoutManager(2, 3, new Insets(0, 0, 10, 10), -1, -1));
-		browsePanel.add(frameworkConfigPanel, new GridConstraints(1, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+		frameworkConfigPanel.setLayout(
+			new GridLayoutManager(2, 3, new Insets(0, 0, 10, 10), -1, -1)
+		);
+		browsePanel.add(
+			frameworkConfigPanel,
+			new GridConstraints(
+				1,
+				0,
+				1,
+				3,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
 		frameworkBrowseButton = new JButton();
 		frameworkBrowseButton.setText("Browse");
-		frameworkConfigPanel.add(frameworkBrowseButton, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 1, false));
+		frameworkConfigPanel.add(
+			frameworkBrowseButton,
+			new GridConstraints(
+				1,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_NONE,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_FIXED,
+				null,
+				null,
+				null,
+				1,
+				false
+			)
+		);
 		final Spacer spacer1 = new Spacer();
-		frameworkConfigPanel.add(spacer1, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+		frameworkConfigPanel.add(
+			spacer1,
+			new GridConstraints(
+				1,
+				2,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_HORIZONTAL,
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				1,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
 		frameworkPathTextArea = new JTextArea();
 		frameworkPathTextArea.setText("framework path");
-		frameworkConfigPanel.add(frameworkPathTextArea, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(150, 10), null, 0, false));
+		frameworkConfigPanel.add(
+			frameworkPathTextArea,
+			new GridConstraints(
+				0,
+				1,
+				1,
+				1,
+				GridConstraints.ANCHOR_SOUTH,
+				GridConstraints.FILL_NONE,
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				null,
+				new Dimension(150, 10),
+				null,
+				0,
+				false
+			)
+		);
 		frameworkPathField = new JTextField();
 		frameworkPathField.setHorizontalAlignment(4);
 		frameworkPathField.setText("");
-		frameworkConfigPanel.add(frameworkPathField, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(50, 10), null, 0, false));
+		frameworkConfigPanel.add(
+			frameworkPathField,
+			new GridConstraints(
+				1,
+				1,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				null,
+				new Dimension(50, 10),
+				null,
+				0,
+				false
+			)
+		);
 		scriptConfigPanel = new JPanel();
-		scriptConfigPanel.setLayout(new GridLayoutManager(2, 3, new Insets(0, 0, 10, 10), -1, -1));
-		browsePanel.add(scriptConfigPanel, new GridConstraints(2, 0, 1, 3, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+		scriptConfigPanel.setLayout(
+			new GridLayoutManager(2, 3, new Insets(0, 0, 10, 10), -1, -1)
+		);
+		browsePanel.add(
+			scriptConfigPanel,
+			new GridConstraints(
+				2,
+				0,
+				1,
+				3,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
 		scriptBrowseButton = new JButton();
 		scriptBrowseButton.setText("Browse");
-		scriptConfigPanel.add(scriptBrowseButton, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, null, null, null, 1, false));
+		scriptConfigPanel.add(
+			scriptBrowseButton,
+			new GridConstraints(
+				1,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_NONE,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_FIXED,
+				null,
+				null,
+				null,
+				1,
+				false
+			)
+		);
 		final Spacer spacer2 = new Spacer();
-		scriptConfigPanel.add(spacer2, new GridConstraints(1, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, 1, null, null, null, 0, false));
+		scriptConfigPanel.add(
+			spacer2,
+			new GridConstraints(
+				1,
+				2,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_HORIZONTAL,
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				1,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
 		scriptPathTextArea = new JTextArea();
 		scriptPathTextArea.setText("script path");
-		scriptConfigPanel.add(scriptPathTextArea, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_SOUTH, GridConstraints.FILL_NONE, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(150, 10), null, 0, false));
+		scriptConfigPanel.add(
+			scriptPathTextArea,
+			new GridConstraints(
+				0,
+				1,
+				1,
+				1,
+				GridConstraints.ANCHOR_SOUTH,
+				GridConstraints.FILL_NONE,
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				null,
+				new Dimension(150, 10),
+				null,
+				0,
+				false
+			)
+		);
 		scriptPathField = new JTextField();
 		scriptPathField.setText("");
-		scriptConfigPanel.add(scriptPathField, new GridConstraints(1, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, new Dimension(50, -1), null, 0, false));
+		scriptConfigPanel.add(
+			scriptPathField,
+			new GridConstraints(
+				1,
+				1,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				null,
+				new Dimension(50, -1),
+				null,
+				0,
+				false
+			)
+		);
 	}
 
 	/**
@@ -559,5 +929,4 @@ public class ConfigTab extends JFrame {
 	public JComponent $$$getRootComponent$$$() {
 		return rootPanel;
 	}
-
 }
