@@ -5,15 +5,21 @@ package lexfo.scalpel;
 */
 public class Constants {
 
+	public static final String REQ_EDIT_PREFIX = "req_edit_";
+
 	/**
     	Callback prefix for request editors.
 	*/
-	public static final String REQ_EDIT_PREFIX = "_req_edit_";
+	public static final String FRAMEWORK_REQ_EDIT_PREFIX =
+		"_" + REQ_EDIT_PREFIX;
+
+	public static final String RES_EDIT_PREFIX = "res_edit_";
 
 	/**
     	Callback prefix for response editors.
 	*/
-	public static final String RES_EDIT_PREFIX = "_res_edit_";
+	public static final String FRAMEWORK_RES_EDIT_PREFIX =
+		"_" + RES_EDIT_PREFIX;
 
 	/**
     	Callback suffix for HttpMessage-to-bytes convertion.
@@ -25,15 +31,19 @@ public class Constants {
 	*/
 	public static final String OUT_SUFFIX = "out";
 
+	public static final String REQ_CB_NAME = "request";
+
 	/**
     	Callback prefix for request intercepters.
 	*/
-	public static final String REQ_CB_NAME = "_request";
+	public static final String FRAMEWORK_REQ_CB_NAME = "_" + REQ_CB_NAME;
+
+	public static final String RES_CB_NAME = "response";
 
 	/**
     	Callback prefix for response intercepters.
 	*/
-	public static final String RES_CB_NAME = "_response";
+	public static final String FRAMEWORK_RES_CB_NAME = "_" + RES_CB_NAME;
 
 	/**
 		Scalpel prefix for the persistence databases.
@@ -53,4 +63,6 @@ public class Constants {
 	*/
 	public static final String PERSISTED_FRAMEWORK =
 		PERSISTENCE_PREFIX + "framework_path";
+
+	public static final String GET_CB_NAME = "_get_callables";
 }
