@@ -40,7 +40,6 @@ public class Scalpel implements BurpExtension {
 	*/
 	@Override
 	public void initialize(MontoyaApi API) {
-		// Init API member.
 		this.API = API;
 
 		// Set displayed extension name.
@@ -51,24 +50,18 @@ public class Scalpel implements BurpExtension {
 		logger = API.logging();
 
 		try {
-			// Show that the extension is loading.
 			TraceLogger.log(logger, "Initializing...");
 
-			// Init JEP stuff.
-
-			// Instantiate unpacker
+			// Extract embeded ressources.
 			unpacker = new ScalpelUnpacker(logger);
-
-			// Extract the ressources to a new unique temporary directory.
 			unpacker.initializeResourcesDirectory();
 
+			// Read config files.
 			config = new Config(API, unpacker);
 
 			// Register the Jep native library path.
 			MainInterpreter.setJepLibraryPath(unpacker.getJepNativeLibPath());
 
-			// Instantiate the executor (handles Python execution)
-			executor = new ScalpelExecutor(API, unpacker, logger, config);
 			// Add the scripting editor tab to Burp UI.
 			API
 				.userInterface()
@@ -93,23 +86,27 @@ public class Scalpel implements BurpExtension {
 					)
 				);
 
+			// Initialize Python task queue.
+			executor = new ScalpelExecutor(API, unpacker, logger, config);
+
 			// Create the provider responsible for creating the request/response editors for Burp.
 			final var provider = new ScalpelEditorProvider(API, executor);
 
-			// Add the request editor to Burp.
-			API.userInterface().registerHttpRequestEditorProvider(provider);
+			// Inject dependency to solve circular dependency.
+			executor.setEditorsProvider(provider);
 
-			// Add the response editor to Burp.
+			// Add editor tabs to Burp
+			API.userInterface().registerHttpRequestEditorProvider(provider);
 			API.userInterface().registerHttpResponseEditorProvider(provider);
 
-			// Add an HTTP intercepter to Burp.
+			// Intercept HTTP requests
 			API
 				.http()
 				.registerHttpHandler(
 					new ScalpelHttpRequestHandler(API, provider, executor)
 				);
 
-			// Log that the extension has finished loading.
+			// Extension is fully loaded.
 			TraceLogger.log(logger, "Initialized scalpel successfully.");
 		} catch (Exception e) {
 			TraceLogger.logError(logger, "Failed to initialize scalpel:");

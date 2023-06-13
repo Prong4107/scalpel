@@ -93,13 +93,16 @@ try:
     CallbackType = Callable[..., CallbackReturn]
 
     # Get all the callable objects from the user module
-    callable_objs = {
+    callable_objs: dict[str, Callable] = {
         name: obj for name, obj in inspect.getmembers(user_module) if callable(obj)
     }
 
     match_callback: Callable[[Flow, Events], bool] = callable_objs.get("match") or (
         lambda _, __: True
     )
+
+    def _get_callables() -> list[str]:
+        return list(callable_objs.keys())
 
     def call_match_callback(*args) -> bool:
         """Calls the match callback with the correct parameters.
@@ -134,10 +137,12 @@ try:
         @wraps(callback)
         def _wrapped_cb(*args, **kwargs):
             try:
-                logger.logToOutput("Python: _wrapped_cb() called")
+                logger.logToOutput(
+                    f"Python: _wrapped_cb() for {callback.__name__} called"
+                )
                 return callback(*args, **kwargs)
             except Exception as ex:  # pylint: disable=broad-except
-                logger.logToError(f"Python: {fun_name(1)}() error:\n\t{ex}")
+                logger.logToError(f"Python: {callback.__name__}() error:\n\t{ex}")
                 logger.logToError(traceback.format_exc())
 
         # Replace the callback with the wrapped one
@@ -229,36 +234,39 @@ try:
 
         return result_res.to_burp() if result_res is not None else None
 
-    @_try_if_present
+    # TODO: update docstrings
+    @_try_wrap
     def _req_edit_in(
-        req: IHttpRequest,
-        service: IHttpService,
-        callback: CallbackType = ...,
+        req: IHttpRequest, service: IHttpService, callback_suffix: str = ...
     ) -> bytes | None:
         """Wrapper for the request edit callback
 
         Args:
             req (IHttpRequest): The request object
-            callback (CallbackType, optional): The user callback. Defaults to None.
 
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
+        callback = callable_objs.get("req_edit_in" + callback_suffix)
+        if callback is None:
+            return
+
         py_req = Request.from_burp(req, service)
 
         flow = Flow(py_req.scheme, py_req.host, py_req.port, py_req)
         if not call_match_callback(flow, "edit_request_in"):
             return None
 
+        logger.logToOutput(f"Python: calling {callback.__name__}")
         # Call the user callback and return the bytes to display in the editor
         return cast(bytes | None, callback(py_req))
 
-    @_try_if_present
+    @_try_wrap
     def _req_edit_out(
         req: IHttpRequest,
         service: IHttpService,
         text: list[int],
-        callback: CallbackType = ...,
+        callback_suffix: str = ...,
     ) -> IHttpRequest | None:
         """Wrapper for the request edit callback
 
@@ -271,19 +279,24 @@ try:
             bytes | None: The bytes to construct the new request from
                 or None for an unmodified request
         """
+        callback = callable_objs.get("req_edit_out" + callback_suffix)
+        if callback is None:
+            return
+
         py_req = Request.from_burp(req, service)
 
         flow = Flow(py_req.scheme, py_req.host, py_req.port, py_req, text=bytes(text))
         if not call_match_callback(flow, "edit_request_out"):
             return None
 
+        logger.logToOutput(f"Python: calling {callback.__name__}")
         # Call the user callback and return the bytes to construct the new request from
         result = cast(Request | None, callback(py_req, bytes(text)))
         return result and result.to_burp()
 
-    @_try_if_present
+    @_try_wrap
     def _res_edit_in(
-        res: IHttpResponse, service: IHttpService, callback: CallbackType = ...
+        res: IHttpResponse, service: IHttpService, callback_suffix: str = ...
     ) -> bytes | None:
         """Wrapper for the response edit callback
 
@@ -294,21 +307,26 @@ try:
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
+        callback = callable_objs.get("res_edit_in" + callback_suffix)
+        if callback is None:
+            return
+
         py_res = Response.from_burp(res, service)
 
         flow = Flow(py_res.scheme, py_res.host, py_res.port, py_res.request, py_res)
         if not call_match_callback(flow, "edit_response_in"):
             return None
 
+        logger.logToOutput(f"Python: calling {callback.__name__}")
         # Call the user callback and return the bytes to display in the editor
         return cast(bytes | None, callback(py_res))
 
-    @_try_if_present
+    @_try_wrap
     def _res_edit_out(
         res: IHttpResponse,
         service: IHttpService,
         text: list[int],
-        callback: CallbackType = ...,
+        callback_suffix: str = ...,
     ) -> IHttpResponse | None:
         """Wrapper for the response edit callback
 
@@ -321,6 +339,10 @@ try:
             bytes | None: The bytes to construct the new response from
                 or None for an unmodified response
         """
+        callback = callable_objs.get("res_edit_out" + callback_suffix)
+        if callback is None:
+            return
+
         py_res = Response.from_burp(res, service)
 
         flow = Flow(
@@ -329,6 +351,7 @@ try:
         if not call_match_callback(flow, "edit_response_out"):
             return None
 
+        logger.logToOutput(f"Python: calling {callback.__name__}")
         # Call the user callback and return the bytes to construct the new response from
         result = cast(Response | None, callback(py_res, bytes(text)))
         return result and result.to_burp()

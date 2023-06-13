@@ -12,6 +12,7 @@ import burp.api.montoya.logging.Logging;
 import java.io.File;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
@@ -178,6 +179,10 @@ public class ScalpelExecutor {
 							);
 						}
 						synchronized (tasks) {
+							TraceLogger.log(
+								logger,
+								"Task " + name + " notified event loop."
+							);
 							tasks.notifyAll();
 						}
 					} catch (InterruptedException e) {
@@ -260,6 +265,8 @@ public class ScalpelExecutor {
 	private final ScalpelUnpacker unpacker;
 
 	private final Config config;
+
+	private Optional<ScalpelEditorProvider> editorProvider = Optional.empty();
 
 	/**
 	 * Constructs a new ScalpelExecutor object.
@@ -459,6 +466,11 @@ public class ScalpelExecutor {
 			.orElse(false);
 	}
 
+	public void setEditorsProvider(ScalpelEditorProvider provider) {
+		this.editorProvider = Optional.of(provider);
+		provider.resetEditors();
+	}
+
 	/**
 	 * Launches the task runner thread.
 	 *
@@ -473,6 +485,10 @@ public class ScalpelExecutor {
 				// Instantiate the interpreter.
 				final SubInterpreter interp = initInterpreter();
 				isRunnerAlive = true;
+
+				// Force editor tabs recreation
+				this.editorProvider.ifPresent(e -> e.resetEditors());
+
 				while (true) {
 					// Relaunch interpreter when files have changed (hot reload).
 					if (mustReload()) {
@@ -515,7 +531,6 @@ public class ScalpelExecutor {
 									task.kwargs
 								);
 
-								// Log the success.
 								TraceLogger.log(
 									logger,
 									"Executed task: " + task.name
@@ -534,23 +549,18 @@ public class ScalpelExecutor {
 										.getMessage()
 										.contains("Unable to find object")
 								) {
-									// Log the failure.
 									TraceLogger.logError(
 										logger,
 										"Error in task loop:"
 									);
-
-									// Log the error.
 									TraceLogger.logStackTrace(logger, e);
 								}
 							}
-							// Log the success.
 							TraceLogger.log(
 								logger,
 								TraceLogger.Level.DEBUG,
 								"Processed task"
 							);
-
 							// Log the result value.
 							TraceLogger.log(
 								logger,
@@ -736,10 +746,10 @@ public class ScalpelExecutor {
 	) {
 		if (
 			msg instanceof HttpRequest || msg instanceof HttpRequestToBeSent
-		) return Constants.REQ_CB_NAME;
+		) return Constants.FRAMEWORK_REQ_CB_NAME;
 		if (
 			msg instanceof HttpResponse || msg instanceof HttpResponseReceived
-		) return Constants.RES_CB_NAME;
+		) return Constants.FRAMEWORK_RES_CB_NAME;
 		throw new RuntimeException("Passed wrong type to geMessageCbName");
 	}
 
@@ -786,22 +796,20 @@ public class ScalpelExecutor {
 	 * @return the name of the corresponding Python callback.
 	 */
 	private static final String getEditorCallbackName(
-		String tabName,
 		Boolean isRequest,
 		Boolean isInbound
 	) {
 		// Either req_ or res_ depending if it is a request or a response.
 		final var editPrefix = isRequest
-			? Constants.REQ_EDIT_PREFIX
-			: Constants.RES_EDIT_PREFIX;
+			? Constants.FRAMEWORK_REQ_EDIT_PREFIX
+			: Constants.FRAMEWORK_RES_EDIT_PREFIX;
 
 		// Either in_ or out_ depending on context.
 		final var directionPrefix = isInbound
 			? Constants.IN_SUFFIX
 			: Constants.OUT_SUFFIX;
 
-		// Concatenate the prefixes and the tab name.
-		// final var cbName = editPrefix + directionPrefix + tabName;
+		// Concatenate the prefixes
 		final var cbName = editPrefix + directionPrefix;
 
 		// Return the callback Python function name.
@@ -853,6 +861,20 @@ public class ScalpelExecutor {
 	}
 
 	/**
+	 * Calls the given Python function without any argument.
+	 *
+	 * @param <T> the expected class of the returned value.
+	 * @param name the name of the Python function to call.
+	 * @param arg the argument to pass to the function.
+	 * @param expectedClass the expected class of the returned value.
+	 * @return the result of the function call.
+	 */
+
+	public <T> Optional<T> safeJepInvoke(String name, Class<T> expectedClass) {
+		return safeJepInvoke(name, new Object[] {}, Map.of(), expectedClass);
+	}
+
+	/**
 	 * Calls the corresponding Python callback for the given tab.
 	 *
 	 * @param <T> the expected class of the returned value.
@@ -870,11 +892,11 @@ public class ScalpelExecutor {
 		String tabName,
 		Class<T> expectedClass
 	) {
-		// Call safeJepInvoke with the corresponding function name and a logger as a default kwarg.
+		// Call safeJepInvoke with the corresponding function name
 		return safeJepInvoke(
-			getEditorCallbackName(tabName, isRequest, isInbound),
+			getEditorCallbackName(isRequest, isInbound),
 			params,
-			Map.of(),
+			Map.of("callback_suffix", tabName),
 			expectedClass
 		);
 	}
@@ -1018,5 +1040,15 @@ public class ScalpelExecutor {
 			tabName,
 			(Class<T>) (isRequest ? HttpRequest.class : HttpResponse.class)
 		);
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	public List<String> getCallables() {
+		// Jep doesn't offer any way to list functions, so we have to implement it Python side.
+		//FIXME: This sometimes never returns and blocks the queue
+		return this.safeJepInvoke(Constants.GET_CB_NAME, List.class)
+			.orElseThrow(() ->
+				new RuntimeException(Constants.GET_CB_NAME + " was not found.")
+			);
 	}
 }

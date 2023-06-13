@@ -88,6 +88,7 @@ public class ScalpelConcreteEditor
 	*/
 	ScalpelConcreteEditor(
 		String name,
+		Boolean editable,
 		MontoyaApi API,
 		EditorCreationContext creationContext,
 		EditorType type,
@@ -120,7 +121,7 @@ public class ScalpelConcreteEditor
 
 			// Decide wherever the editor must be editable or read only depending on context.
 			editor.setEditable(
-				creationContext.editorMode() != EditorMode.READ_ONLY
+				editable && creationContext.editorMode() != EditorMode.READ_ONLY
 			);
 
 			// Set the editor type (REQUEST or RESPONSE).
@@ -314,25 +315,30 @@ public class ScalpelConcreteEditor
 		@return True when the Python callback returned bytes, false otherwise.
 	*/
 	public boolean updateContentFromHttpMsg(HttpMessage msg) {
+		final Optional<ByteArray> result;
 		try {
 			// Call the Python callback and store the returned value.
-			final var result = executor.callEditorCallback(
-				msg,
-				getHttpService(),
-				true,
-				caption()
-			);
-
-			// Update the editor's content with the returned bytes.
-			result.ifPresent(bytes -> editor.setContents(bytes));
-
-			// Display the tab when bytes are returned.
-			return result.isPresent();
+			result =
+				executor.callEditorCallback(
+					msg,
+					getHttpService(),
+					true,
+					caption()
+				);
 		} catch (Exception e) {
 			TraceLogger.logStackTrace(logger, e);
+
+			// Disable the tab.
+			return false;
 		}
-		// Disable the tab.
-		return false;
+
+		// Update the editor's content with the returned bytes.
+		// >> This causes a deadlock when called in parallell because Swing isn't thread safe (probably)
+		// TODO: Separate Python task execution from setContents so that tasks can be added in parallel
+		result.ifPresent(bytes -> editor.setContents(bytes));
+
+		// Display the tab when bytes are returned.
+		return result.isPresent();
 	}
 
 	/**
@@ -344,19 +350,19 @@ public class ScalpelConcreteEditor
 	*/
 	@Override
 	public boolean isEnabledFor(HttpRequestResponse requestResponse) {
+		// Initialize requestResponse member.
+		this.requestResponse =
+			requestResponse == null ? this.requestResponse : requestResponse;
+
+		// Extract the message from the requestResoponse.
+		final HttpMessage msg = getMessage();
+
+		// Ensure message exists.
+		if (msg == null || msg.toByteArray().length() == 0) {
+			return false;
+		}
+
 		try {
-			// Initialize requestResponse member.
-			this.requestResponse =
-				requestResponse == null
-					? this.requestResponse
-					: requestResponse;
-
-			// Extract the message from the requestResoponse.
-			final HttpMessage msg = getMessage();
-
-			// Ensure message exists.
-			if (msg == null || msg.toByteArray().length() == 0) return false;
-
 			// Call corresponding request editor callback when appropriate.
 			return updateContentFromHttpMsg(msg);
 		} catch (Exception e) {
