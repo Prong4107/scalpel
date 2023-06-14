@@ -34,7 +34,7 @@ public class ScalpelEditorProvider
 	*/
 	private final ScalpelExecutor executor;
 
-	private List<WeakReference<ScalpelProvidedEditor>> editorsRefs = new LinkedList<>();
+	private List<WeakReference<ScalpelEditorTabbedPane>> editorsRefs = new LinkedList<>();
 
 	/**
     Constructs a new ScalpelEditorProvider object with the specified MontoyaApi object and ScalpelExecutor object.
@@ -58,7 +58,7 @@ public class ScalpelEditorProvider
 	public ExtensionProvidedHttpRequestEditor provideHttpRequestEditor(
 		EditorCreationContext creationContext
 	) {
-		final ScalpelProvidedEditor editor = new ScalpelProvidedEditor(
+		final ScalpelEditorTabbedPane editor = new ScalpelEditorTabbedPane(
 			API,
 			creationContext,
 			EditorType.REQUEST,
@@ -79,7 +79,7 @@ public class ScalpelEditorProvider
 	public ExtensionProvidedHttpResponseEditor provideHttpResponseEditor(
 		EditorCreationContext creationContext
 	) {
-		final ScalpelProvidedEditor editor = new ScalpelProvidedEditor(
+		final ScalpelEditorTabbedPane editor = new ScalpelEditorTabbedPane(
 			API,
 			creationContext,
 			EditorType.RESPONSE,
@@ -106,7 +106,7 @@ public class ScalpelEditorProvider
 			"Resetting editors..."
 		);
 		// Destroy all unused editors to avoid useless expensive callbacks.
-		// FIXME: Improve this by using ReferenceQueue
+		// TODO: Improve this by using ReferenceQueue
 		// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/ref/ReferenceQueue.html
 		// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/ref/Reference.html#isEnqueued()
 		forceGarbageCollection();

@@ -1,7 +1,6 @@
 package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
-import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.HttpService;
 import burp.api.montoya.http.message.HttpMessage;
 import burp.api.montoya.http.message.HttpRequestResponse;
@@ -9,16 +8,23 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.logging.Logging;
 import burp.api.montoya.ui.Selection;
-import burp.api.montoya.ui.editor.RawEditor;
 import burp.api.montoya.ui.editor.extension.EditorCreationContext;
-import burp.api.montoya.ui.editor.extension.EditorMode;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpResponseEditor;
-import java.awt.*;
+import com.google.common.base.Function;
+import java.awt.Component;
+import java.awt.Container;
+import java.util.ArrayList;
+// import java.awt.*;
 import java.util.LinkedList;
-import java.util.Optional;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
+import javax.swing.JLayer;
+import javax.swing.JTabbedPane;
 
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpResponseEditor.html
@@ -26,16 +32,15 @@ import java.util.concurrent.atomic.AtomicReference;
   Provides an UI text editor component for editing HTTP requests or responses.
   Calls Python scripts to initialize the editor and update the requests or responses.
 */
-public class ScalpelConcreteEditor
+public class ScalpelEditorTabbedPane
 	implements
 		ExtensionProvidedHttpRequestEditor,
 		ExtensionProvidedHttpResponseEditor {
 
-	private final String name;
 	/**
 		The editor swing UI component.
 	*/
-	private final RawEditor editor;
+	private final JTabbedPane pane = new JTabbedPane();
 
 	/**
 		The HTTP request or response being edited.
@@ -70,12 +75,14 @@ public class ScalpelConcreteEditor
 	/**
 		The editor provider that instantiated this editor. (unused)
 	*/
-	private final ScalpelProvidedEditor provider;
+	private final ScalpelEditorProvider provider;
 
 	/**
 		The executor responsible for interacting with Python.
 	*/
 	private final ScalpelExecutor executor;
+
+	private final ArrayList<ScalpelRawEditor> editors = new ArrayList<>();
 
 	/**
 		Constructs a new Scalpel editor.
@@ -83,20 +90,16 @@ public class ScalpelConcreteEditor
 		@param API The Montoya API object.
 		@param creationContext The EditorCreationContext object containing information about the editor.
 		@param type The editor type (REQUEST or RESPONSE).
-		@param provider The ScalpelProvidedEditor object that instantiated this editor.
+		@param provider The ScalpelEditorProvider object that instantiated this editor.
 		@param executor The executor to use.
 	*/
-	ScalpelConcreteEditor(
-		String name,
-		Boolean editable,
+	ScalpelEditorTabbedPane(
 		MontoyaApi API,
 		EditorCreationContext creationContext,
 		EditorType type,
-		ScalpelProvidedEditor provider,
+		ScalpelEditorProvider provider,
 		ScalpelExecutor executor
 	) {
-		this.name = name;
-
 		// Keep a reference to the Montoya API
 		this.API = API;
 
@@ -115,27 +118,101 @@ public class ScalpelConcreteEditor
 		// Reference the executor to be able to call Python callbacks.
 		this.executor = executor;
 
+		// Set the editor type (REQUEST or RESPONSE).
+		this.type = type;
+
 		try {
-			// Create a new editor UI component.
-			this.editor = API.userInterface().createRawEditor();
-
-			// Decide wherever the editor must be editable or read only depending on context.
-			editor.setEditable(
-				editable && creationContext.editorMode() != EditorMode.READ_ONLY
+			this.recreateEditors();
+			TraceLogger.log(
+				logger,
+				"Successfully initialized ScalpelProvidedEditor for " +
+				type.name()
 			);
-
-			// Set the editor type (REQUEST or RESPONSE).
-			this.type = type;
 		} catch (Exception e) {
-			// Log the error.
-			logger.logToError("Couldn't instantiate new editor:");
-
 			// Log the stack trace.
+			logger.logToError("Couldn't instantiate new editor:");
 			TraceLogger.logStackTrace(logger, e);
 
 			// Throw the error again.
 			throw e;
 		}
+	}
+
+	public void recreateEditors() {
+		// Destroy existing editors
+		this.pane.removeAll();
+		this.editors.clear();
+
+		// List Python callbacks.
+		final List<String> callables = executor.getCallables();
+
+		final String prefix =
+			(
+				type == EditorType.REQUEST
+					? Constants.REQ_EDIT_PREFIX
+					: Constants.RES_EDIT_PREFIX
+			);
+
+		// req_edit_in / res_edit_in
+		final String inPrefix = prefix + Constants.IN_SUFFIX;
+		// req_edit_out / res_edit_out
+		final String outPrefix = prefix + Constants.OUT_SUFFIX;
+
+		// Retain only correct prefixes
+		var callbacks = callables
+			.stream()
+			.filter(c -> c.startsWith(inPrefix) || c.startsWith(outPrefix));
+
+		// Helpers for groupBy
+		Function<String, Integer> getOffset =
+			(
+				name ->
+					name.startsWith(inPrefix)
+						? inPrefix.length()
+						: outPrefix.length()
+			);
+
+		// Allow missing suffix (req_edit_in(...) vs req_edit_in_<tabName>(...))
+		Function<String, String> getSuffix =
+			(n -> n.substring(getOffset.apply(n)).replaceFirst("$_", ""));
+
+		Function<String, String> getPrefix =
+			(name -> name.substring(0, getOffset.apply(name)));
+
+		// Group "in" and "out" callbacks by their tab name (suffix)
+		Map<String, Set<String>> grouped = callbacks.collect(
+			Collectors.groupingBy(
+				getSuffix,
+				Collectors.mapping(getPrefix, Collectors.toSet())
+			)
+		);
+
+		TraceLogger.logError(logger, "DEBUG: " + grouped);
+
+		grouped.forEach((tabName, cbDirections) -> {
+			final ScalpelRawEditor editor = new ScalpelRawEditor(
+				tabName,
+				cbDirections.contains(outPrefix), // Read-only tab if no out method.
+				API,
+				ctx,
+				type,
+				this,
+				executor
+			);
+
+			this.editors.add(editor);
+
+			final var displayedName = tabName.trim().isEmpty()
+				? Integer.toString(this.pane.getTabCount())
+				: tabName;
+
+			/*  
+				.uiComponent() must be wrapped with a JLayer because it is seemingly wrongly implemented
+				 and returns null pointers when Swing tries to call methods that should return valid data,
+				 which results in Burp breaking entirely.
+			*/
+			this.pane.addTab(displayedName, new JLayer<>(editor.uiComponent()));
+		});
 	}
 
 	/**
@@ -187,8 +264,27 @@ public class ScalpelConcreteEditor
 		Returns the Burp editor object.
 		@return The Burp editor object.
 	*/
-	public RawEditor getEditor() {
-		return editor;
+	public JTabbedPane getPane() {
+		return pane;
+	}
+
+	/**
+	 * Select the most suited editor for updating Burp message data.
+	 *
+	 * @return
+	 */
+	public ScalpelRawEditor selectEditor() {
+		final var selectedEditor = editors.get(pane.getSelectedIndex());
+		if (selectedEditor.isModified()) {
+			return selectedEditor;
+		}
+
+		// TODO: Mimic burp update behaviour.
+		final var modifiedEditors = editors
+			.stream()
+			.filter(e -> e.isModified());
+
+		return modifiedEditors.findFirst().orElse(selectedEditor);
 	}
 
 	/**
@@ -210,31 +306,8 @@ public class ScalpelConcreteEditor
 	 *
 	 * @return The new HTTP message.
 	 */
-	public HttpMessage processOutboundMessage() {
-		try {
-			// Safely extract the message from the requestResponse.
-			final HttpMessage msg = getMessage();
-
-			// Ensure request exists and has to be processed again before calling Python
-			if (msg == null || !editor.isModified()) return null;
-
-			// Call Python "outbound" message editor callback with editor's contents.
-			final Optional<HttpMessage> result = executor.callEditorCallbackOut(
-				msg,
-				getHttpService(),
-				editor.getContents(),
-				caption()
-			);
-
-			// Nothing was returned, return the original msg untouched.
-			if (result.isEmpty()) return msg;
-
-			// Return the Python-processed message.
-			return result.get();
-		} catch (Exception e) {
-			TraceLogger.logStackTrace(logger, e);
-		}
-		return null;
+	private HttpMessage processOutboundMessage() {
+		return selectEditor().processOutboundMessage();
 	}
 
 	/**
@@ -245,6 +318,7 @@ public class ScalpelConcreteEditor
 	 */
 	@Override
 	public HttpRequest getRequest() {
+		TraceLogger.log(logger, "getRequest called");
 		// Cast the generic HttpMessage interface back to it's concrete type.
 		return (HttpRequest) processOutboundMessage();
 	}
@@ -257,6 +331,7 @@ public class ScalpelConcreteEditor
 	 */
 	@Override
 	public HttpResponse getResponse() {
+		TraceLogger.log(logger, "getResponse called");
 		// Cast the generic HttpMessage interface back to it's concrete type.
 		return (HttpResponse) processOutboundMessage();
 	}
@@ -267,6 +342,7 @@ public class ScalpelConcreteEditor
 		@return The stored HttpRequestResponse.
 	*/
 	public HttpRequestResponse getRequestResponse() {
+		TraceLogger.log(logger, "getRequestResponse called");
 		return requestResponse;
 	}
 
@@ -278,7 +354,9 @@ public class ScalpelConcreteEditor
 	*/
 	@Override
 	public void setRequestResponse(HttpRequestResponse requestResponse) {
+		TraceLogger.log(logger, "setRequestResponse called");
 		this.requestResponse = requestResponse;
+		editors.stream().forEach(e -> e.setRequestResponse(requestResponse));
 	}
 
 	/**
@@ -309,39 +387,6 @@ public class ScalpelConcreteEditor
 	}
 
 	/**
-		Initializes the editor with Python callbacks output of the inputted HTTP message.
-		@param msg The HTTP message to be edited.
-
-		@return True when the Python callback returned bytes, false otherwise.
-	*/
-	public boolean updateContentFromHttpMsg(HttpMessage msg) {
-		final Optional<ByteArray> result;
-		try {
-			// Call the Python callback and store the returned value.
-			result =
-				executor.callEditorCallback(
-					msg,
-					getHttpService(),
-					true,
-					caption()
-				);
-		} catch (Exception e) {
-			TraceLogger.logStackTrace(logger, e);
-
-			// Disable the tab.
-			return false;
-		}
-
-		// Update the editor's content with the returned bytes.
-		// >> This causes a deadlock when called in parallell because Swing isn't thread safe (probably)
-		// TODO: Separate Python task execution from setContents so that tasks can be added in parallel
-		result.ifPresent(bytes -> editor.setContents(bytes));
-
-		// Display the tab when bytes are returned.
-		return result.isPresent();
-	}
-
-	/**
 		Determines whether the editor should be enabled for the provided HttpRequestResponse.
 		Also initializes the editor with Python callbacks output of the inputted HTTP message.
 		(called by Burp)
@@ -350,21 +395,36 @@ public class ScalpelConcreteEditor
 	*/
 	@Override
 	public boolean isEnabledFor(HttpRequestResponse requestResponse) {
-		// Initialize requestResponse member.
-		this.requestResponse =
-			requestResponse == null ? this.requestResponse : requestResponse;
-
-		// Extract the message from the requestResoponse.
-		final HttpMessage msg = getMessage();
-
-		// Ensure message exists.
-		if (msg == null || msg.toByteArray().length() == 0) {
-			return false;
-		}
-
 		try {
-			// Call corresponding request editor callback when appropriate.
-			return updateContentFromHttpMsg(msg);
+			// Initialize requestResponse member.
+			this.requestResponse =
+				requestResponse == null
+					? this.requestResponse
+					: requestResponse;
+
+			// Extract the message from the requestResoponse.
+			final HttpMessage msg = getMessage();
+
+			// Ensure message exists.
+			if (msg == null || msg.toByteArray().length() == 0) {
+				return false;
+			}
+
+			var enabledEditors = editors
+				.stream() // Using parallelStream cause deadlocks (see updateContentFromHttpMsg())
+				.filter(e -> e.isEnabledFor(requestResponse))
+				.toList(); // Force evaluation.
+
+			// Hide disabled tabs
+			this.pane.removeAll();
+			enabledEditors.forEach(e ->
+				this.pane.add(
+						e.caption(),
+						new JLayer<Component>(e.uiComponent())
+					)
+			);
+
+			return !enabledEditors.isEmpty();
 		} catch (Exception e) {
 			// Log the error trace.
 			TraceLogger.logStackTrace(logger, e);
@@ -381,7 +441,7 @@ public class ScalpelConcreteEditor
 	@Override
 	public String caption() {
 		// Return the tab name.
-		return this.name;
+		return "Scalpel";
 	}
 
 	/**
@@ -392,8 +452,7 @@ public class ScalpelConcreteEditor
 	*/
 	@Override
 	public Component uiComponent() {
-		// return new JFileChooser();
-		return editor.uiComponent();
+		return pane;
 	}
 
 	/**
@@ -404,7 +463,7 @@ public class ScalpelConcreteEditor
 	*/
 	@Override
 	public Selection selectedData() {
-		return editor.selection().isPresent() ? editor.selection().get() : null;
+		return selectEditor().selectedData();
 	}
 
 	/**
@@ -415,6 +474,6 @@ public class ScalpelConcreteEditor
 	*/
 	@Override
 	public boolean isModified() {
-		return editor.isModified();
+		return editors.stream().anyMatch(e -> e.isModified());
 	}
 }

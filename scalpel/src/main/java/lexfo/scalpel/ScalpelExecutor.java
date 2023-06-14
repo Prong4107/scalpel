@@ -716,7 +716,6 @@ public class ScalpelExecutor {
 			interp.exec("captured_err = temp_err.getvalue()");
 
 			final String capturedOut = (String) interp.getValue("captured_out");
-			// final String capturedErr = (String) interp.getValue("captured_err");
 			final String capturedErr = (String) interp.getValue(
 				"captured_err"
 			) +
