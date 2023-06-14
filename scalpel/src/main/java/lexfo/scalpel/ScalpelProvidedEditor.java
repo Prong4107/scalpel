@@ -168,7 +168,7 @@ public class ScalpelProvidedEditor
 			);
 
 		Function<String, String> getSuffix =
-			(name -> name.substring(getOffset.apply(name)));
+			(name -> name.substring(getOffset.apply(name) + 1));
 
 		Function<String, String> getPrefix =
 			(name -> name.substring(0, getOffset.apply(name)));

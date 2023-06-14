@@ -892,11 +892,13 @@ public class ScalpelExecutor {
 		String tabName,
 		Class<T> expectedClass
 	) {
+		var suffix = tabName.isEmpty() ? tabName : "_" + tabName;
+
 		// Call safeJepInvoke with the corresponding function name
 		return safeJepInvoke(
 			getEditorCallbackName(isRequest, isInbound),
 			params,
-			Map.of("callback_suffix", tabName),
+			Map.of("callback_suffix", suffix),
 			expectedClass
 		);
 	}
