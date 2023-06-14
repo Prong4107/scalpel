@@ -11,13 +11,12 @@ def req_edit_in(req: Request) -> bytes:
         except binascii.Error:
             pass
 
-    return bytes(req)
+    return req.content or b""
 
 
-def req_edit_out(_: Request, text: bytes) -> Request:
-    req = Request.from_raw(text)
+def req_edit_out(req: Request, text: bytes) -> Request:
     if req.content:
-        req.content = b64encode(req.content)
+        req.content = b64encode(text)
     return req
 
 
@@ -30,8 +29,7 @@ def res_edit_in(res: Response) -> bytes:
     return bytes(res)
 
 
-def res_edit_out(_: Response, text: bytes) -> Response:
-    res = Response.from_raw(text)
+def res_edit_out(res: Response, text: bytes) -> Response:
     if res.content:
-        res.content = b64encode(res.content)
+        res.content = b64encode(text)
     return res
