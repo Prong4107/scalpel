@@ -247,6 +247,7 @@ try:
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
+        logger.logToOutput(f"Python: _req_edit_in -> {callback_suffix}")
         callback = callable_objs.get("req_edit_in" + callback_suffix)
         if callback is None:
             return
@@ -279,6 +280,7 @@ try:
             bytes | None: The bytes to construct the new request from
                 or None for an unmodified request
         """
+        logger.logToOutput(f"Python: _req_edit_out -> {callback_suffix}")
         callback = callable_objs.get("req_edit_out" + callback_suffix)
         if callback is None:
             return
@@ -296,7 +298,10 @@ try:
 
     @_try_wrap
     def _res_edit_in(
-        res: IHttpResponse, service: IHttpService, callback_suffix: str = ...
+        res: IHttpResponse,
+        req: IHttpRequest,
+        service: IHttpService,
+        callback_suffix: str = ...,
     ) -> bytes | None:
         """Wrapper for the response edit callback
 
@@ -307,11 +312,12 @@ try:
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
+        logger.logToOutput(f"Python: _res_edit_in -> {callback_suffix}")
         callback = callable_objs.get("res_edit_in" + callback_suffix)
         if callback is None:
             return
 
-        py_res = Response.from_burp(res, service)
+        py_res = Response.from_burp(res, service=service, request=req)
 
         flow = Flow(py_res.scheme, py_res.host, py_res.port, py_res.request, py_res)
         if not call_match_callback(flow, "edit_response_in"):
@@ -324,6 +330,7 @@ try:
     @_try_wrap
     def _res_edit_out(
         res: IHttpResponse,
+        req: IHttpRequest,
         service: IHttpService,
         text: list[int],
         callback_suffix: str = ...,
@@ -339,11 +346,12 @@ try:
             bytes | None: The bytes to construct the new response from
                 or None for an unmodified response
         """
+        logger.logToOutput(f"Python: _res_edit_out -> {callback_suffix}")
         callback = callable_objs.get("res_edit_out" + callback_suffix)
         if callback is None:
             return
 
-        py_res = Response.from_burp(res, service)
+        py_res = Response.from_burp(res, service=service, request=req)
 
         flow = Flow(
             py_res.scheme, py_res.host, py_res.port, py_res.request, py_res, bytes(text)

@@ -84,7 +84,10 @@ class Response(MITMProxyResponse):
 
     @classmethod
     def from_burp(
-        cls, response: IHttpResponse, service: IHttpService | None = None
+        cls,
+        response: IHttpResponse,
+        service: IHttpService | None = None,
+        request: IHttpRequest | None = None,
     ) -> Response:
         """Construct an instance of the Response class from a Burp suite :class:`IHttpResponse`."""
         body = get_bytes(response.body())
@@ -97,16 +100,21 @@ class Response(MITMProxyResponse):
             None,
         )
 
-        if not service:
-            # The only way to check if the Java method exist without writing Java is catching the error.
+        burp_request: IHttpRequest | None = request
+        if burp_request is None:
             try:
                 # Some responses can have a "initiatingRequest" field.
                 # https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/http/handler/HttpResponseReceived.html#initiatingRequest():~:text=HttpRequest-,initiatingRequest(),-Returns%3A
-                burp_request: IHttpRequest = response.initiatingRequest()  # type: ignore
-                service = burp_request.httpService()
-                scalpel_response.request = Request.from_burp(burp_request, service)
+                burp_request = response.initiatingRequest()  # type: ignore
             except AttributeError:
                 pass
+
+        if burp_request:
+            scalpel_response.request = Request.from_burp(burp_request, service)
+
+        if not service and burp_request:
+            # The only way to check if the Java method exist without writing Java is catching the error.
+            service = burp_request.httpService()
 
         if service:
             scalpel_response.scheme = "https" if service.secure() else "http"

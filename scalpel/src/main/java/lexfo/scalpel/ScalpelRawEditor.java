@@ -218,13 +218,31 @@ public class ScalpelRawEditor
 			// Ensure request exists and has to be processed again before calling Python
 			if (msg == null || !editor.isModified()) return null;
 
+			final Optional<HttpMessage> result;
+
 			// Call Python "outbound" message editor callback with editor's contents.
-			final Optional<HttpMessage> result = executor.callEditorCallbackOut(
-				msg,
-				getHttpService(),
-				editor.getContents(),
-				caption()
-			);
+			if (type == EditorType.REQUEST) {
+				result =
+					executor
+						.callEditorCallbackOutRequest(
+							(HttpRequest) msg,
+							getHttpService(),
+							editor.getContents(),
+							caption()
+						)
+						.flatMap(r -> Optional.of(r));
+			} else {
+				result =
+					executor
+						.callEditorCallbackOutResponse(
+							(HttpResponse) msg,
+							requestResponse.request(),
+							getHttpService(),
+							editor.getContents(),
+							caption()
+						)
+						.flatMap(m -> Optional.of(m));
+			}
 
 			// Nothing was returned, return the original msg untouched.
 			if (result.isEmpty()) return msg;
@@ -318,13 +336,22 @@ public class ScalpelRawEditor
 		final Optional<ByteArray> result;
 		try {
 			// Call the Python callback and store the returned value.
-			result =
-				executor.callEditorCallback(
-					msg,
-					getHttpService(),
-					true,
-					caption()
-				);
+			if (type == EditorType.REQUEST) {
+				result =
+					executor.callEditorCallbackInRequest(
+						(HttpRequest) msg,
+						getHttpService(),
+						caption()
+					);
+			} else {
+				result =
+					executor.callEditorCallbackInResponse(
+						(HttpResponse) msg,
+						requestResponse.request(),
+						getHttpService(),
+						caption()
+					);
+			}
 		} catch (Exception e) {
 			TraceLogger.logStackTrace(logger, e);
 
