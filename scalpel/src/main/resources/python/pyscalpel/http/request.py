@@ -921,3 +921,6 @@ class Request:
             bool: Whether the pattern matches
         """
         return host_is(self.pretty_host, *patterns)
+
+    def path_is(self, *patterns: str) -> bool:
+        return match_patterns(self.path, *patterns)
