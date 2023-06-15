@@ -852,7 +852,22 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         self.assertFalse(req.host_is("*.gle.*"))
         self.assertFalse(req.host_is(".com"))
 
+    def test_urlencoded_bug(self):
+        req = Request.make(
+            "POST",
+            "http://localhost:3000/encrypt",
+            b"secret=MySecretKey&content=",
+            {"Content-Type": "application/x-www-form-urlencoded"},
+        )
+
+        form = req.urlencoded_form
+        self.assertIsNotNone(form)
+        self.assertIsInstance(form, QueryParams)
+        expected = ((b"secret", b"MySecretKey"), (b"content", b""))
+        self.assertTupleEqual(expected, form.fields)
+
 
 # RequestTestCase().test_all_use_cases()
 unittest.main(argv=["ignored", "-v"], exit=False)
 # RequestTestCase().test_host_is()
+# RequestTestCase().test_urlencoded_bug()

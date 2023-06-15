@@ -21,7 +21,7 @@ from pyscalpel.java.scalpel_types.utils import PythonUtils
 from pyscalpel.encoding import always_bytes, always_str
 from pyscalpel.http.headers import Headers
 from pyscalpel.http.mime import get_header_value_without_params
-from pyscalpel.http.utils import host_is
+from pyscalpel.http.utils import host_is, match_patterns
 from pyscalpel.http.body import (
     FormSerializer,
     JSONFormSerializer,
@@ -646,22 +646,21 @@ class Request:
         old_serializer = self._serializer
         self._serializer = serializer
 
-        if (
-            old_serializer is None
-            or type(serializer) == type(old_serializer)
-            or serializer is None
-        ):
-            # We don't have any content to update.
+        if serializer is None:
+            self._deserialized_content = None
+            return
+
+        if type(serializer) == type(old_serializer):
             return
 
         if old_serializer is None:
-            if self.content is not None:
-                self._deserialized_content = serializer.deserialize(self.content, self)
+            self._deserialize_content()
             return
 
         old_form = self._deserialized_content
 
         if old_form is None:
+            self._deserialize_content()
             return
 
         # Convert the form to an intermediate format for easier conversion

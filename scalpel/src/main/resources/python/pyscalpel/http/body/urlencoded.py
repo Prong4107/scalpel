@@ -59,7 +59,7 @@ class URLEncodedFormSerializer(FormSerializer):
             # But because urllib is broken we need all of this:
             # (I may be wrong)
             decoded = body.decode("latin-1")
-            parsed = urllib.parse.parse_qsl(decoded)
+            parsed = urllib.parse.parse_qsl(decoded, keep_blank_values=True)
             fields = tuple(
                 (
                     key.encode("latin-1"),
