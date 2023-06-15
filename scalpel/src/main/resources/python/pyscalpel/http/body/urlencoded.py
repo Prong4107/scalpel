@@ -1,10 +1,10 @@
 from __future__ import annotations
-from collections.abc import Mapping
+from urllib.parse import quote_from_bytes as quote, parse_qsl
+from typing import Sequence, Any
+
 import sys
-import urllib.parse
 import qs
 
-from typing import Sequence, Any, Mapping, Literal
 from mitmproxy.coretypes import multidict
 
 
@@ -47,7 +47,10 @@ class URLEncodedFormSerializer(FormSerializer):
     def serialize(
         self, deserialized_body: multidict.MultiDict[bytes, bytes], req=...
     ) -> bytes:
-        return b"&".join(b"=".join(field) for field in deserialized_body.fields)
+        return b"&".join(
+            b"=".join(quote(kv, safe="[]").encode() for kv in field)
+            for field in deserialized_body.fields
+        )
 
     def deserialize(self, body: bytes, req=...) -> QueryParams:
         try:
@@ -59,7 +62,7 @@ class URLEncodedFormSerializer(FormSerializer):
             # But because urllib is broken we need all of this:
             # (I may be wrong)
             decoded = body.decode("latin-1")
-            parsed = urllib.parse.parse_qsl(decoded, keep_blank_values=True)
+            parsed = parse_qsl(decoded, keep_blank_values=True)
             fields = tuple(
                 (
                     key.encode("latin-1"),

@@ -233,6 +233,15 @@ class URLEncodedFormSerializerTestCase(unittest.TestCase):
         expected_exported_form = ((b"key1", b"value1"), (b"key2", b"value2"))
         self.assertEqual(exported_form, expected_exported_form)
 
+    def test_serialize_does_urlencode(self):
+        form = QueryParams(
+            ((b"secret", b"MySecretKey"), (b"encrypted", b"+ZSV6BfZwcr7c6m3fZTHyg=="))
+        )
+        serializer = URLEncodedFormSerializer()
+        serialized = serializer.serialize(form)
+        expected = b"secret=MySecretKey&encrypted=%2BZSV6BfZwcr7c6m3fZTHyg%3D%3D"
+        self.assertEqual(expected, serialized)
+
 
 class JSONFormSerializerTestCase(unittest.TestCase):
     def test_serialize(self):
