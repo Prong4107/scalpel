@@ -174,7 +174,7 @@ public class ScalpelEditorTabbedPane
 
 		// Allow missing suffix (req_edit_in(...) vs req_edit_in_<tabName>(...))
 		Function<String, String> getSuffix =
-			(n -> n.substring(getOffset.apply(n)).replaceFirst("$_", ""));
+			(n -> n.substring(getOffset.apply(n)).replaceFirst("^_", ""));
 
 		Function<String, String> getPrefix =
 			(name -> name.substring(0, getOffset.apply(name)));
