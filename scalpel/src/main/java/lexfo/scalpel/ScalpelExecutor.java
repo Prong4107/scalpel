@@ -989,24 +989,43 @@ public class ScalpelExecutor {
 	/**
 	 * Calls the corresponding Python callback for the given tab.
 	 *
-	 * @param msg the message to pass to the callback.
+	 * @param req the message to pass to the callback.
 	 * @param byteArray the byte array to pass to the callback (editor content).
 	 * @param tabName the name of the tab.
 	 * @return the result of the callback.
 	 */
-	public Optional<ByteArray> callEditorCallbackIn(
-		HttpMessage msg,
+	public Optional<ByteArray> callEditorCallbackInRequest(
+		HttpRequest req,
 		HttpService service,
-		ByteArray byteArray,
 		String tabName
 	) {
 		return callEditorCallback(
-			new Object[] {
-				msg,
-				service,
-				PythonUtils.toPythonBytes(byteArray.getBytes()),
-			},
-			msg instanceof HttpRequest,
+			new Object[] { req, service },
+			req instanceof HttpRequest,
+			true,
+			tabName,
+			byte[].class
+		)
+			.flatMap(bytes -> Optional.of(ByteArray.byteArray(bytes)));
+	}
+
+	/**
+	 * Calls the corresponding Python callback for the given tab.
+	 *
+	 * @param res the message to pass to the callback.
+	 * @param byteArray the byte array to pass to the callback (editor content).
+	 * @param tabName the name of the tab.
+	 * @return the result of the callback.
+	 */
+	public Optional<ByteArray> callEditorCallbackInResponse(
+		HttpResponse res,
+		HttpRequest req,
+		HttpService service,
+		String tabName
+	) {
+		return callEditorCallback(
+			new Object[] { res, req, service },
+			false,
 			true,
 			tabName,
 			byte[].class
@@ -1022,24 +1041,53 @@ public class ScalpelExecutor {
 	 * @param tabName the name of the tab.
 	 * @return the result of the callback.
 	 */
-	@SuppressWarnings({ "unchecked" })
-	public <T extends HttpMessage> Optional<T> callEditorCallbackOut(
-		T msg,
+	public Optional<HttpRequest> callEditorCallbackOutRequest(
+		HttpRequest req,
 		HttpService service,
 		ByteArray byteArray,
 		String tabName
 	) {
-		boolean isRequest = msg instanceof HttpRequest;
 		return callEditorCallback(
 			new Object[] {
-				msg,
+				req,
 				service,
 				PythonUtils.toPythonBytes(byteArray.getBytes()),
 			},
-			isRequest,
+			true,
 			false,
 			tabName,
-			(Class<T>) (isRequest ? HttpRequest.class : HttpResponse.class)
+			HttpRequest.class
+		);
+	}
+
+	// TODO: update docstrings
+
+	/**
+	 * Calls the corresponding Python callback for the given tab.
+	 *
+	 * @param msg the message to pass to the callback.
+	 * @param byteArray the byte array to pass to the callback (editor content).
+	 * @param tabName the name of the tab.
+	 * @return the result of the callback.
+	 */
+	public Optional<HttpResponse> callEditorCallbackOutResponse(
+		HttpResponse res,
+		HttpRequest req,
+		HttpService service,
+		ByteArray byteArray,
+		String tabName
+	) {
+		return callEditorCallback(
+			new Object[] {
+				res,
+				req,
+				service,
+				PythonUtils.toPythonBytes(byteArray.getBytes()),
+			},
+			false,
+			false,
+			tabName,
+			HttpResponse.class
 		);
 	}
 
