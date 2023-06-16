@@ -54,6 +54,9 @@ try:
 
     activate(VENV)
 
+    import debugpy
+    debugpy.listen(("localhost", 5678))
+
     # Import the globals module to set the logger
     import pyscalpel._globals
 
@@ -299,7 +302,7 @@ try:
     @_try_wrap
     def _res_edit_in(
         res: IHttpResponse,
-        req: IHttpRequest,
+        request: IHttpRequest,
         service: IHttpService,
         callback_suffix: str = ...,
     ) -> bytes | None:
@@ -317,7 +320,7 @@ try:
         if callback is None:
             return
 
-        py_res = Response.from_burp(res, service=service, request=req)
+        py_res = Response.from_burp(res, service=service, request=request)
 
         flow = Flow(py_res.scheme, py_res.host, py_res.port, py_res.request, py_res)
         if not call_match_callback(flow, "edit_response_in"):
