@@ -6,12 +6,8 @@ from base64 import b64encode, b64decode
 from pyscalpel.burp_utils import logger
 
 
-# Bugged
-# def match(flow: Flow) -> bool:
-#     return (
-#         flow.path_is("/encrypt*")
-#         and flow.request.urlencoded_form.get("secret") is not None
-#     )
+def match(flow: Flow) -> bool:
+    return flow.path_is("/encrypt*") and flow.request.form.get(b"secret") is not None
 
 
 # Requires pycryptodome
@@ -38,8 +34,8 @@ def encrypt(secret: bytes, data: bytes) -> bytes:
 
 
 def req_edit_in_encrypted(req: Request) -> bytes | None:
-    secret = req.urlencoded_form[b"secret"]
-    encrypted = req.urlencoded_form[b"encrypted"]
+    secret = req.form[b"secret"]
+    encrypted = req.form[b"encrypted"]
     if not encrypted:
         return b""
 
@@ -47,13 +43,13 @@ def req_edit_in_encrypted(req: Request) -> bytes | None:
 
 
 def req_edit_out_encrypted(req: Request, text: bytes) -> Request:
-    secret = req.urlencoded_form[b"secret"]
-    req.urlencoded_form[b"encrypted"] = encrypt(secret, text)
+    secret = req.form[b"secret"]
+    req.form[b"encrypted"] = encrypt(secret, text)
     return req
 
 
 def res_edit_in_encrypted(res: Response) -> bytes | None:
-    secret = res.request.urlencoded_form[b"secret"]
+    secret = res.request.form[b"secret"]
     encrypted = res.content
 
     if not encrypted:
@@ -63,6 +59,6 @@ def res_edit_in_encrypted(res: Response) -> bytes | None:
 
 
 def res_edit_out_encrypted(res: Response, text: bytes) -> Response:
-    secret = res.request.urlencoded_form[b"secret"]
+    secret = res.request.form[b"secret"]
     res.content = encrypt(secret, text)
     return res
