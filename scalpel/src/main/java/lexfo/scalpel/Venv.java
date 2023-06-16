@@ -8,6 +8,9 @@ import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Manage Python virtual environments.
@@ -57,7 +60,7 @@ public class Venv {
 		}
 
 		// Install the default packages
-		install_background(path, "mitmproxy");
+		install(path, "mitmproxy", "requests", "requests-toolbelt", "debugpy");
 
 		// Return 0 (success)
 		return 0;
@@ -84,11 +87,11 @@ public class Venv {
 	 * Install a package in a virtual environment in a new thread.
 	 *
 	 * @param path The path to the virtual environment directory.
-	 * @param pkg The name of the package to install.
+	 * @param pkgs The name of the package to install.
 	 * @return The exit code of the "pip install ..." command.
 	 */
-	public static Thread install_background(String path, String pkg) {
-		Thread thread = new Thread(() -> IO.ioWrap(() -> install(path, pkg)));
+	public static Thread install_background(String path, String... pkgs) {
+		Thread thread = new Thread(() -> IO.ioWrap(() -> install(path, pkgs)));
 		thread.start();
 		return thread;
 	}
@@ -97,19 +100,19 @@ public class Venv {
 	 * Install a package in a virtual environment.
 	 *
 	 * @param path The path to the virtual environment directory.
-	 * @param pkg The name of the package to install.
+	 * @param pkgs The name of the package to install.
 	 * @return The exit code of the "pip install ..." command.
 	 */
-	public static int install(String path, String pkg)
+	public static int install(String path, String... pkgs)
 		throws IOException, InterruptedException {
 		// Install the package using the "pip install" command
-		ProcessBuilder processBuilder = new ProcessBuilder(
-			"pip",
-			"install",
-			pkg,
-			"-t",
-			getSitePackagesPath(path).toString()
+
+		LinkedList<String> command = new LinkedList<>(
+			List.of("pip", "install")
 		);
+		command.addAll(Arrays.asList(pkgs));
+		command.addAll(List.of("-t", getSitePackagesPath(path).toString()));
+		ProcessBuilder processBuilder = new ProcessBuilder(command);
 		processBuilder.directory(Paths.get(path).toFile());
 		Process process = processBuilder.start();
 
