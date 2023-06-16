@@ -866,6 +866,26 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         expected = ((b"secret", b"MySecretKey"), (b"content", b""))
         self.assertTupleEqual(expected, form.fields)
 
+    def test_form_bug(self):
+        req = Request.make(
+            "POST",
+            "http://localhost:3000/encrypt",
+            b"secret=MySecretKey&encrypted=BNTYvqs5E%2BE%2Bgx0J%2B6yCG%2FUDUChX3yf61ks%2FZeUei7k%3D",
+            {"Content-Type": "application/x-www-form-urlencoded"},
+        )
+
+        form = cast(QueryParams, req.form)
+        self.assertIsNotNone(form)
+        content_type = req.headers.get("Content-Type")
+        self.assertIsNotNone(content_type)
+        self.assertEqual("application/x-www-form-urlencoded", content_type)
+        self.assertIsInstance(form, QueryParams)
+        expected = (
+            (b"secret", b"MySecretKey"),
+            (b"encrypted", b"BNTYvqs5E+E+gx0J+6yCG/UDUChX3yf61ks/ZeUei7k="),
+        )
+        self.assertTupleEqual(expected, form.fields)
+
 
 # RequestTestCase().test_all_use_cases()
 unittest.main(argv=["ignored", "-v"], exit=False)
