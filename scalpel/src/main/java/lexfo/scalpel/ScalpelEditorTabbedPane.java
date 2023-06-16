@@ -45,7 +45,7 @@ public class ScalpelEditorTabbedPane
 	/**
 		The HTTP request or response being edited.
 	*/
-	private HttpRequestResponse requestResponse;
+	private HttpRequestResponse _requestResponse;
 
 	/**
 		The Montoya API object.
@@ -202,16 +202,19 @@ public class ScalpelEditorTabbedPane
 
 			this.editors.add(editor);
 
-			final var displayedName = tabName.trim().isEmpty()
-				? Integer.toString(this.pane.getTabCount())
-				: tabName;
+			if (
+				this._requestResponse != null &&
+				editor.setRequestResponseInternal(_requestResponse)
+			) {
+				final var displayedName = tabName.trim().isEmpty()
+					? Integer.toString(this.pane.getTabCount())
+					: tabName;
 
-			/*  
-				.uiComponent() must be wrapped with a JLayer because it is seemingly wrongly implemented
-				 and returns null pointers when Swing tries to call methods that should return valid data,
-				 which results in Burp breaking entirely.
-			*/
-			this.pane.addTab(displayedName, new JLayer<>(editor.uiComponent()));
+				this.pane.addTab(
+						displayedName,
+						new JLayer<>(editor.uiComponent())
+					);
+			}
 		});
 	}
 
@@ -293,12 +296,14 @@ public class ScalpelEditorTabbedPane
 	 */
 	public HttpMessage getMessage() {
 		// Ensure request response exists.
-		if (requestResponse == null) return null;
+		if (_requestResponse == null) {
+			return null;
+		}
 
 		// Safely extract the message from the requestResponse.
 		return type == EditorType.REQUEST
-			? requestResponse.request()
-			: requestResponse.response();
+			? _requestResponse.request()
+			: _requestResponse.response();
 	}
 
 	/**
@@ -342,8 +347,7 @@ public class ScalpelEditorTabbedPane
 		@return The stored HttpRequestResponse.
 	*/
 	public HttpRequestResponse getRequestResponse() {
-		TraceLogger.log(logger, "getRequestResponse called");
-		return requestResponse;
+		return this._requestResponse;
 	}
 
 	/**
@@ -353,10 +357,17 @@ public class ScalpelEditorTabbedPane
 		@param requestResponse The HttpRequestResponse to be edited.
 	*/
 	@Override
-	public void setRequestResponse(HttpRequestResponse requestResponse) {
-		TraceLogger.log(logger, "setRequestResponse called");
-		this.requestResponse = requestResponse;
-		editors.stream().forEach(e -> e.setRequestResponse(requestResponse));
+	public synchronized void setRequestResponse(
+		HttpRequestResponse requestResponse
+	) {
+		this._requestResponse = requestResponse;
+
+		// Hide disabled tabs
+		this.pane.removeAll();
+		editors
+			.stream()
+			.filter(e -> e.setRequestResponseInternal(requestResponse))
+			.forEach(e -> pane.addTab(e.caption(), e.uiComponent()));
 	}
 
 	/**
@@ -367,7 +378,7 @@ public class ScalpelEditorTabbedPane
 	 * @return An HttpService if found, else null
 	 */
 	public HttpService getHttpService() {
-		final HttpRequestResponse reqRes = this.requestResponse;
+		final HttpRequestResponse reqRes = this._requestResponse;
 
 		// Ensure editor is initialized
 		if (reqRes == null) return null;
@@ -396,37 +407,10 @@ public class ScalpelEditorTabbedPane
 	@Override
 	public boolean isEnabledFor(HttpRequestResponse requestResponse) {
 		try {
-			// Initialize requestResponse member.
-			this.requestResponse =
-				requestResponse == null
-					? this.requestResponse
-					: requestResponse;
-
-			// Extract the message from the requestResoponse.
-			final HttpMessage msg = getMessage();
-
-			// Ensure message exists.
-			if (msg == null || msg.toByteArray().length() == 0) {
-				return false;
-			}
-
-			var enabledEditors = editors
-				.stream() // Using parallelStream cause deadlocks (see updateContentFromHttpMsg())
-				.filter(e -> e.isEnabledFor(requestResponse))
-				.toList(); // Force evaluation.
-
-			// Hide disabled tabs
-			this.pane.removeAll();
-			enabledEditors.forEach(e ->
-				this.pane.add(
-						e.caption(),
-						new JLayer<Component>(e.uiComponent())
-					)
-			);
-
-			return !enabledEditors.isEmpty();
+			return editors
+				.parallelStream()
+				.anyMatch(e -> e.isEnabledFor(requestResponse));
 		} catch (Exception e) {
-			// Log the error trace.
 			TraceLogger.logStackTrace(logger, e);
 		}
 		return false;
@@ -452,7 +436,7 @@ public class ScalpelEditorTabbedPane
 	*/
 	@Override
 	public Component uiComponent() {
-		return pane;
+		return this.pane;
 	}
 
 	/**

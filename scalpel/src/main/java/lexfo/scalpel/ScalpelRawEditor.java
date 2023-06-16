@@ -40,7 +40,7 @@ public class ScalpelRawEditor
 	/**
 		The HTTP request or response being edited.
 	*/
-	private HttpRequestResponse requestResponse;
+	private HttpRequestResponse _requestResponse;
 
 	/**
 		The Montoya API object.
@@ -197,12 +197,12 @@ public class ScalpelRawEditor
 	 */
 	public HttpMessage getMessage() {
 		// Ensure request response exists.
-		if (requestResponse == null) return null;
+		if (_requestResponse == null) return null;
 
 		// Safely extract the message from the requestResponse.
 		return type == EditorType.REQUEST
-			? requestResponse.request()
-			: requestResponse.response();
+			? _requestResponse.request()
+			: _requestResponse.response();
 	}
 
 	/**
@@ -225,7 +225,7 @@ public class ScalpelRawEditor
 				result =
 					executor
 						.callEditorCallbackOutRequest(
-							(HttpRequest) msg,
+							_requestResponse.request(),
 							getHttpService(),
 							editor.getContents(),
 							caption()
@@ -235,8 +235,8 @@ public class ScalpelRawEditor
 				result =
 					executor
 						.callEditorCallbackOutResponse(
-							(HttpResponse) msg,
-							requestResponse.request(),
+							_requestResponse.response(),
+							_requestResponse.request(),
 							getHttpService(),
 							editor.getContents(),
 							caption()
@@ -285,7 +285,15 @@ public class ScalpelRawEditor
 		@return The stored HttpRequestResponse.
 	*/
 	public HttpRequestResponse getRequestResponse() {
-		return requestResponse;
+		return _requestResponse;
+	}
+
+	// Returns a bool and avoids making duplicate calls to isEnabledFor to know if callback succeeded
+	public boolean setRequestResponseInternal(
+		HttpRequestResponse requestResponse
+	) {
+		this._requestResponse = requestResponse;
+		return updateContent(requestResponse);
 	}
 
 	/**
@@ -296,7 +304,7 @@ public class ScalpelRawEditor
 	*/
 	@Override
 	public void setRequestResponse(HttpRequestResponse requestResponse) {
-		this.requestResponse = requestResponse;
+		setRequestResponseInternal(requestResponse);
 	}
 
 	/**
@@ -307,7 +315,7 @@ public class ScalpelRawEditor
 	 * @return An HttpService if found, else null
 	 */
 	public HttpService getHttpService() {
-		final HttpRequestResponse reqRes = this.requestResponse;
+		final HttpRequestResponse reqRes = this._requestResponse;
 
 		// Ensure editor is initialized
 		if (reqRes == null) return null;
@@ -326,32 +334,34 @@ public class ScalpelRawEditor
 		return null;
 	}
 
+	public Optional<ByteArray> executeCallback(HttpRequestResponse reqRes)
+		throws Exception {
+		if (type == EditorType.REQUEST) {
+			return executor.callEditorCallbackInRequest(
+				reqRes.request(),
+				getHttpService(),
+				caption()
+			);
+		}
+
+		return executor.callEditorCallbackInResponse(
+			reqRes.response(),
+			reqRes.request(),
+			getHttpService(),
+			caption()
+		);
+	}
+
 	/**
 		Initializes the editor with Python callbacks output of the inputted HTTP message.
 		@param msg The HTTP message to be edited.
 
 		@return True when the Python callback returned bytes, false otherwise.
 	*/
-	public boolean updateContentFromHttpMsg(HttpMessage msg) {
+	public boolean updateContent(HttpRequestResponse reqRes) {
 		final Optional<ByteArray> result;
 		try {
-			// Call the Python callback and store the returned value.
-			if (type == EditorType.REQUEST) {
-				result =
-					executor.callEditorCallbackInRequest(
-						(HttpRequest) msg,
-						getHttpService(),
-						caption()
-					);
-			} else {
-				result =
-					executor.callEditorCallbackInResponse(
-						(HttpResponse) msg,
-						requestResponse.request(),
-						getHttpService(),
-						caption()
-					);
-			}
+			result = executeCallback(reqRes);
 		} catch (Exception e) {
 			TraceLogger.logStackTrace(logger, e);
 
@@ -373,25 +383,26 @@ public class ScalpelRawEditor
 		Also initializes the editor with Python callbacks output of the inputted HTTP message.
 		(called by Burp)
 
-		@param requestResponse The HttpRequestResponse to be edited.
+		@param _requestResponse The HttpRequestResponse to be edited.
 	*/
 	@Override
-	public boolean isEnabledFor(HttpRequestResponse requestResponse) {
-		// Initialize requestResponse member.
-		this.requestResponse =
-			requestResponse == null ? this.requestResponse : requestResponse;
+	public boolean isEnabledFor(HttpRequestResponse reqRes) {
+		if (reqRes == null) {
+			return true;
+		}
 
-		// Extract the message from the requestResoponse.
-		final HttpMessage msg = getMessage();
+		// Extract the message from the reqRes.
+		final HttpMessage msg =
+			(type == EditorType.REQUEST ? reqRes.request() : reqRes.response());
 
 		// Ensure message exists.
 		if (msg == null || msg.toByteArray().length() == 0) {
-			return false;
+			return true;
 		}
 
 		try {
 			// Call corresponding request editor callback when appropriate.
-			return updateContentFromHttpMsg(msg);
+			return executeCallback(reqRes).isPresent();
 		} catch (Exception e) {
 			// Log the error trace.
 			TraceLogger.logStackTrace(logger, e);
@@ -407,7 +418,6 @@ public class ScalpelRawEditor
 	*/
 	@Override
 	public String caption() {
-		// Return the tab name.
 		return this.name;
 	}
 
