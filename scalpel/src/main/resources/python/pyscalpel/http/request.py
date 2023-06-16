@@ -584,7 +584,9 @@ class Request:
             self.update_serializer_from_content_type(content_type)
 
             # Set content-type if it does not exist
-            if update_header or not self.headers.get_all("Content-Type"):
+            if (content_type and update_header) or not self.headers.get_all(
+                "Content-Type"
+            ):
                 self.headers["Content-Type"] = content_type
 
         serializer = self._serializer
