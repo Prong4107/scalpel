@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.swing.SwingUtilities;
 
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpResponseEditor.html
@@ -370,9 +371,9 @@ public class ScalpelRawEditor
 		}
 
 		// Update the editor's content with the returned bytes.
-		// >> This causes a deadlock when called in parallell because Swing isn't thread safe (probably)
-		// TODO: Separate Python task execution from setContents so that tasks can be added in parallel
-		result.ifPresent(bytes -> editor.setContents(bytes));
+		result.ifPresent(bytes ->
+			SwingUtilities.invokeLater(() -> editor.setContents(bytes))
+		);
 
 		// Display the tab when bytes are returned.
 		return result.isPresent();

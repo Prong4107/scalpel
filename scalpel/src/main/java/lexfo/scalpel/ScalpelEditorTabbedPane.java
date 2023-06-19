@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import javax.swing.JLayer;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpResponseEditor.html
@@ -138,6 +139,11 @@ public class ScalpelEditorTabbedPane
 		}
 	}
 
+	/**
+		Recreates the editors tabs.
+		
+		Calls Python to get the tabs name.
+	*/
 	public void recreateEditors() {
 		// Destroy existing editors
 		this.pane.removeAll();
@@ -365,9 +371,13 @@ public class ScalpelEditorTabbedPane
 		// Hide disabled tabs
 		this.pane.removeAll();
 		editors
-			.stream()
+			.parallelStream()
 			.filter(e -> e.setRequestResponseInternal(requestResponse))
-			.forEach(e -> pane.addTab(e.caption(), e.uiComponent()));
+			.forEach(e ->
+				SwingUtilities.invokeLater(() ->
+					pane.addTab(e.caption(), e.uiComponent())
+				)
+			);
 	}
 
 	/**
