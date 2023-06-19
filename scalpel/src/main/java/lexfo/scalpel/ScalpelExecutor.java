@@ -318,12 +318,14 @@ public class ScalpelExecutor {
 	 * @param name the name of the python function to be called.
 	 * @param args the arguments to pass to the python function.
 	 * @param kwargs the keyword arguments to pass to the python function.
+	 * @param rejectOnReload reject the task when the runner is reloading.
 	 * @return a Task object representing the added task.
 	 */
 	private Task addTask(
 		String name,
 		Object[] args,
-		Map<String, Object> kwargs
+		Map<String, Object> kwargs,
+		boolean rejectOnReload
 	) {
 		// Create task object.
 		final Task task = new Task(name, args, kwargs);
@@ -336,7 +338,7 @@ public class ScalpelExecutor {
 
 				// Release the runner's lock.
 				tasks.notifyAll();
-			} else {
+			} else if (rejectOnReload) {
 				// The runner is dead, reject this task to avoid blocking Burp when awaiting.
 				task.result = Optional.empty();
 				task.finished = true;
@@ -345,6 +347,22 @@ public class ScalpelExecutor {
 
 		// Return the queued or rejected task.
 		return task;
+	}
+
+	/**
+	 * Adds a new task to the queue of tasks to be executed by the script.
+	 *
+	 * @param name the name of the python function to be called.
+	 * @param args the arguments to pass to the python function.
+	 * @param kwargs the keyword arguments to pass to the python function.
+	 * @return a Task object representing the added task.
+	 */
+	private Task addTask(
+		String name,
+		Object[] args,
+		Map<String, Object> kwargs
+	) {
+		return addTask(name, args, kwargs, true);
 	}
 
 	/**
@@ -411,6 +429,9 @@ public class ScalpelExecutor {
 				// Update the last modification date record.
 				lastScriptModificationTimestamp = script.lastModified();
 
+				this.script =
+					Optional.ofNullable(new File(config.getUserScriptPath()));
+
 				// Return the check result.²
 				return hasChanged;
 			})
@@ -460,6 +481,9 @@ public class ScalpelExecutor {
 				// Update the last modification date record.
 				lastFrameworkModificationTimestamp = framework.lastModified();
 
+				this.framework =
+					Optional.ofNullable(new File(config.getFrameworkPath()));
+
 				// Return the check result.²
 				return hasChanged;
 			})
@@ -486,9 +510,6 @@ public class ScalpelExecutor {
 				final SubInterpreter interp = initInterpreter();
 				isRunnerAlive = true;
 
-				// Force editor tabs recreation
-				this.editorProvider.ifPresent(e -> e.resetEditors());
-
 				while (true) {
 					// Relaunch interpreter when files have changed (hot reload).
 					if (mustReload()) {
@@ -508,7 +529,7 @@ public class ScalpelExecutor {
 						);
 
 						// Sleep the thread while there isn't any new tasks
-						tasks.wait();
+						tasks.wait(1000);
 
 						// Extract the oldest pending task from the queue.
 						final Task task = tasks.poll();
@@ -597,7 +618,7 @@ public class ScalpelExecutor {
 			}
 
 			try {
-				Thread.sleep(20000);
+				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				TraceLogger.logStackTrace(logger, e);
 			}
@@ -608,6 +629,20 @@ public class ScalpelExecutor {
 
 		// Start the task runner thread.
 		thread.start();
+
+		// Force editor tabs recreation
+		// WARN: .resetEditors() depends on the runner loop, do not call it inside of it
+		this.editorProvider.ifPresent(e ->
+				new Thread(() -> {
+					while (!isRunnerAlive) {
+						try {
+							Thread.sleep(200);
+						} catch (InterruptedException exc) {}
+					}
+					e.resetEditors();
+				})
+					.start()
+			);
 
 		// Return the running thread.
 		return thread;
