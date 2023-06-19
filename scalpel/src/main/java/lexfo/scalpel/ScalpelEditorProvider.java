@@ -11,6 +11,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
   Provides a new ScalpelProvidedEditor object for editing HTTP requests or responses.
@@ -34,7 +35,7 @@ public class ScalpelEditorProvider
 	*/
 	private final ScalpelExecutor executor;
 
-	private List<WeakReference<ScalpelEditorTabbedPane>> editorsRefs = new LinkedList<>();
+	private LinkedList<WeakReference<ScalpelEditorTabbedPane>> editorsRefs = new LinkedList<>();
 
 	/**
     Constructs a new ScalpelEditorProvider object with the specified MontoyaApi object and ScalpelExecutor object.
@@ -112,12 +113,15 @@ public class ScalpelEditorProvider
 		forceGarbageCollection();
 
 		// Clean the list
-		var editors =
+		this.editorsRefs =
 			this.editorsRefs.stream()
-				.map(weakRef -> weakRef.get())
-				.filter(ref -> ref != null);
+				.filter(weakRef -> weakRef.get() != null)
+				.collect(Collectors.toCollection(LinkedList::new));
 
-		editors.forEach(e -> e.recreateEditors());
+		this.editorsRefs.stream()
+			.map(e -> e.get())
+			.forEach(e -> e.recreateEditors());
+
 		TraceLogger.log(logger, TraceLogger.Level.DEBUG, "Editors reset.");
 	}
 }
