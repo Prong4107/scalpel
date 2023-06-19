@@ -337,20 +337,25 @@ public class ScalpelRawEditor
 
 	public Optional<ByteArray> executeCallback(HttpRequestResponse reqRes)
 		throws Exception {
-		if (type == EditorType.REQUEST) {
+		if (reqRes == null) {
+			return Optional.empty();
+		}
+
+		if (type == EditorType.REQUEST && reqRes.request() != null) {
 			return executor.callEditorCallbackInRequest(
 				reqRes.request(),
 				getHttpService(),
 				caption()
 			);
+		} else if (type == EditorType.RESPONSE && reqRes.response() != null) {
+			return executor.callEditorCallbackInResponse(
+				reqRes.response(),
+				reqRes.request(),
+				getHttpService(),
+				caption()
+			);
 		}
-
-		return executor.callEditorCallbackInResponse(
-			reqRes.response(),
-			reqRes.request(),
-			getHttpService(),
-			caption()
-		);
+		return Optional.empty();
 	}
 
 	/**
