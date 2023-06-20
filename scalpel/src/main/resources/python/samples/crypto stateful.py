@@ -42,9 +42,6 @@ def response(res: Response) -> Response | None:
         session = res.content or b""
         return
 
-    res.content = decrypt(session, res.content)
-    return res
-
 
 def req_edit_in_encrypted(req: Request) -> bytes | None:
     secret = session
