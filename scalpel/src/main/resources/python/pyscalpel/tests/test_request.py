@@ -887,7 +887,5 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         self.assertTupleEqual(expected, form.fields)
 
 
-# RequestTestCase().test_all_use_cases()
-unittest.main(argv=["ignored", "-v"], exit=False)
-# RequestTestCase().test_host_is()
-# RequestTestCase().test_urlencoded_bug()
+if __name__ == "__main__":
+    unittest.main()
