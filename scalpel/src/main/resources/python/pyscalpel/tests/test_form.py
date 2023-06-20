@@ -857,4 +857,5 @@ nested\r
         self.assertEqual(expected, form["file2"].filename)
 
 
-unittest.main(argv=["ignored", "-v"], exit=False)
+if __name__ == "__main__":
+    unittest.main()

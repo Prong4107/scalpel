@@ -150,4 +150,5 @@ class TestHeaderParams(unittest.TestCase):
         self.assertIn(("name", None), updated_params)
 
 
-unittest.main(argv=["ignored", "-v"], exit=False)
+if __name__ == "__main__":
+    unittest.main()
