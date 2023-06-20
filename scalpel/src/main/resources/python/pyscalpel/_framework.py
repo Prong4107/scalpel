@@ -54,8 +54,9 @@ try:
 
     activate(VENV)
 
-    import debugpy
-    debugpy.listen(("localhost", 5678))
+    # import debugpy
+
+    # debugpy.listen(("localhost", 5678))
 
     # Import the globals module to set the logger
     import pyscalpel._globals

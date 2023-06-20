@@ -3,14 +3,17 @@ from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto.Util.Padding import pad, unpad
 from base64 import b64encode, b64decode
-from pyscalpel.burp_utils import logger
+
+
+session: bytes = b""
 
 
 def match(flow: Flow) -> bool:
-    return flow.path_is("/encrypt") and flow.request.form.get(b"secret") is not None
+    return flow.path_is("/encrypt-session*") and bool(
+        flow.request.method != "POST" or session
+    )
 
 
-# Requires pycryptodome
 def get_cipher(secret: bytes, iv=bytes(16)):
     hasher = SHA256.new()
     hasher.update(secret)
@@ -33,8 +36,18 @@ def encrypt(secret: bytes, data: bytes) -> bytes:
     return b64encode(encrypted)
 
 
+def response(res: Response) -> Response | None:
+    if res.request.method == "GET":
+        global session
+        session = res.content or b""
+        return
+
+    res.content = decrypt(session, res.content)
+    return res
+
+
 def req_edit_in_encrypted(req: Request) -> bytes | None:
-    secret = req.form[b"secret"]
+    secret = session
     encrypted = req.form[b"encrypted"]
     if not encrypted:
         return b""
@@ -43,13 +56,13 @@ def req_edit_in_encrypted(req: Request) -> bytes | None:
 
 
 def req_edit_out_encrypted(req: Request, text: bytes) -> Request:
-    secret = req.form[b"secret"]
+    secret = session
     req.form[b"encrypted"] = encrypt(secret, text)
     return req
 
 
 def res_edit_in_encrypted(res: Response) -> bytes | None:
-    secret = res.request.form[b"secret"]
+    secret = session
     encrypted = res.content
 
     if not encrypted:
@@ -59,6 +72,6 @@ def res_edit_in_encrypted(res: Response) -> bytes | None:
 
 
 def res_edit_out_encrypted(res: Response, text: bytes) -> Response:
-    secret = res.request.form[b"secret"]
+    secret = session
     res.content = encrypt(secret, text)
     return res
