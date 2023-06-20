@@ -135,5 +135,31 @@ app.post("/encrypt", (req, res) => {
 	res.send(encrypted);
 });
 
+const session = "r4nd0mh3xs7r1ng"
 
-app.listen(3000, "localhost")
+app.get("/encrypt-session", (req, res) => {
+	res.send(session);
+});
+
+app.post("/encrypt-session", (req, res) => {
+	console.log(req.body);
+	console.log("Received");
+	res.setHeader("Date", "[REDACTED]");
+
+	const secret = session;
+	const data = req.body["encrypted"];
+
+	if (data === undefined) {
+		res.send("No content");
+		return;
+	}
+
+	const decrypted = decrypt(secret, data);
+	console.log({ decrypted });
+	const resContent = `You have sent "${decrypted}" using secret "${secret}"`;
+	const encrypted = encrypt(secret, resContent);
+
+	res.send(encrypted);
+});
+
+app.listen(3000, ["localhost", "nol-thinkpad"]);
