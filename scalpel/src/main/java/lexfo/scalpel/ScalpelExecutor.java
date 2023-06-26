@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
+import javax.swing.SwingUtilities;
 import jep.ClassEnquirer;
 import jep.ClassList;
 import jep.Interpreter;
@@ -488,6 +489,104 @@ public class ScalpelExecutor {
 		provider.resetEditors();
 	}
 
+	// WARN: Declaring this method as synchronized cause deadlocks.
+	private void taskLoop() {
+		TraceLogger.log(logger, "Starting task loop.");
+
+		try {
+			// Instantiate the interpreter.
+			final SubInterpreter interp = initInterpreter();
+			isRunnerAlive = true;
+
+			while (true) {
+				// Relaunch interpreter when files have changed (hot reload).
+				if (mustReload()) {
+					TraceLogger.log(
+						logger,
+						Level.INFO,
+						"Config or Python files have changed, reloading interpreter..."
+					);
+					break;
+				}
+
+				synchronized (tasks) {
+					TraceLogger.log(
+						logger,
+						TraceLogger.Level.DEBUG,
+						"Runner waiting for notifications."
+					);
+
+					// Extract the oldest pending task from the queue.
+					final Task task = tasks.poll();
+
+					// Ensure a task was polled or poll again.
+					if (task == null) {
+						// Release the lock and wait for new tasks.
+						tasks.wait();
+						continue;
+					}
+
+					TraceLogger.log(logger, "Processing task: " + task.name);
+					try {
+						// Invoke Python function and get the returned value.
+						final Object pythonResult = interp.invoke(
+							task.name,
+							task.args,
+							task.kwargs
+						);
+
+						TraceLogger.log(logger, "Executed task: " + task.name);
+
+						if (pythonResult != null) {
+							task.result = Optional.of(pythonResult);
+						}
+					} catch (Exception e) {
+						task.result = Optional.empty();
+
+						if (!e.getMessage().contains("Unable to find object")) {
+							TraceLogger.logError(logger, "Error in task loop:");
+							TraceLogger.logStackTrace(logger, e);
+						}
+					}
+					TraceLogger.log(
+						logger,
+						TraceLogger.Level.DEBUG,
+						"Processed task"
+					);
+
+					// Log the result value.
+					TraceLogger.log(
+						logger,
+						TraceLogger.Level.TRACE,
+						String.valueOf(task.result.orElse("null"))
+					);
+
+					task.finished = true;
+
+					synchronized (task) {
+						// Wake threads awaiting the task.
+						task.notifyAll();
+
+						TraceLogger.log(logger, "Notified " + task.name);
+					}
+
+					// Sleep the thread while there isn't any new tasks
+					tasks.wait();
+				}
+			}
+		} catch (Exception e) {
+			// The task loop has crashed, log the stack trace.
+			TraceLogger.logStackTrace(logger, e);
+		}
+		// Log the error.
+		TraceLogger.log(logger, "Task loop has crashed");
+
+		isRunnerAlive = false;
+
+		// Relaunch the task thread
+		this.runner = launchTaskRunner();
+	}
+
 	/**
 	 * Launches the task runner thread.
 	 *
@@ -495,129 +594,7 @@ public class ScalpelExecutor {
 	 */
 	private Thread launchTaskRunner() {
 		// Instantiate the task runner thread.
-		final var thread = new Thread(() -> {
-			TraceLogger.log(logger, "Starting task loop.");
-
-			try {
-				// Instantiate the interpreter.
-				final SubInterpreter interp = initInterpreter();
-				isRunnerAlive = true;
-
-				while (true) {
-					// Relaunch interpreter when files have changed (hot reload).
-					if (mustReload()) {
-						TraceLogger.log(
-							logger,
-							Level.INFO,
-							"Config or Python files have changed, reloading interpreter..."
-						);
-						break;
-					}
-
-					synchronized (tasks) {
-						TraceLogger.log(
-							logger,
-							TraceLogger.Level.DEBUG,
-							"Runner waiting for notifications."
-						);
-
-						// Sleep the thread while there isn't any new tasks
-						tasks.wait(1000);
-
-						// Extract the oldest pending task from the queue.
-						final Task task = tasks.poll();
-
-						// Ensure a task was polled or poll again.
-						if (task == null) continue;
-
-						// Log that a task was polled.
-						TraceLogger.log(
-							logger,
-							"Processing task: " + task.name
-						);
-						try {
-							// Invoke Python function and get the returned value.
-							final Object pythonResult = interp.invoke(
-								task.name,
-								task.args,
-								task.kwargs
-							);
-
-							TraceLogger.log(
-								logger,
-								"Executed task: " + task.name
-							);
-
-							// Let the result value to an empty optional when nothing is returned.
-							if (pythonResult != null) {
-								// Wrap the returned value in an Optional.
-								task.result = Optional.of(pythonResult);
-							}
-						} catch (Exception e) {
-							task.result = Optional.empty();
-
-							if (
-								!e
-									.getMessage()
-									.contains("Unable to find object")
-							) {
-								TraceLogger.logError(
-									logger,
-									"Error in task loop:"
-								);
-								TraceLogger.logStackTrace(logger, e);
-							}
-						}
-						TraceLogger.log(
-							logger,
-							TraceLogger.Level.DEBUG,
-							"Processed task"
-						);
-						// Log the result value.
-						TraceLogger.log(
-							logger,
-							"" + task.result.orElse("null")
-						);
-
-						task.finished = true;
-
-						synchronized (task) {
-							// Notify the task to release the awaitResult() wait() lock.
-							task.notifyAll();
-
-							TraceLogger.log(logger, "Notified " + task.name);
-						}
-					}
-				}
-			} catch (Exception e) {
-				// The task loop has crashed, log the stack trace.
-				TraceLogger.logStackTrace(logger, e);
-			}
-			// Log the error.
-			TraceLogger.log(logger, "Task loop has crashed");
-
-			synchronized (tasks) {
-				tasks.forEach(t -> {
-					synchronized (t) {
-						t.result = Optional.empty();
-						t.notifyAll();
-					}
-
-					tasks.clear();
-				});
-
-				isRunnerAlive = false;
-			}
-
-			try {
-				Thread.sleep(500);
-			} catch (InterruptedException e) {
-				TraceLogger.logStackTrace(logger, e);
-			}
-
-			// Relaunch the task thread
-			this.runner = launchTaskRunner();
-		});
+		final var thread = new Thread(this::taskLoop, "ScalpelRunnerLoop");
 
 		// Start the task runner thread.
 		thread.start();
@@ -625,7 +602,7 @@ public class ScalpelExecutor {
 		// Force editor tabs recreation
 		// WARN: .resetEditors() depends on the runner loop, do not call it inside of it
 		this.editorProvider.ifPresent(e ->
-				new Thread(() -> {
+				SwingUtilities.invokeLater(() -> {
 					while (!isRunnerAlive) {
 						try {
 							Thread.sleep(200);
@@ -633,7 +610,6 @@ public class ScalpelExecutor {
 					}
 					e.resetEditors();
 				})
-					.start()
 			);
 
 		// Return the running thread.
