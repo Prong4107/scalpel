@@ -152,7 +152,7 @@ public class ScalpelExecutor {
 		 *
 		 * @return the result of the task.
 		 */
-		public Optional<Object> awaitResult() {
+		public synchronized Optional<Object> awaitResult() {
 			// Log before awaiting to debug potential deadlocks.
 			TraceLogger.log(
 				logger,
@@ -177,13 +177,6 @@ public class ScalpelExecutor {
 								Level.WARN,
 								"Task " + name + " is still waiting..."
 							);
-						}
-						synchronized (tasks) {
-							TraceLogger.log(
-								logger,
-								"Task " + name + " notified event loop."
-							);
-							tasks.notifyAll();
 						}
 					} catch (InterruptedException e) {
 						// Log the error.
@@ -537,59 +530,58 @@ public class ScalpelExecutor {
 						// Ensure a task was polled or poll again.
 						if (task == null) continue;
 
-						synchronized (task) {
-							// Log that a task was polled.
-							TraceLogger.log(
-								logger,
-								"Processing task: " + task.name
+						// Log that a task was polled.
+						TraceLogger.log(
+							logger,
+							"Processing task: " + task.name
+						);
+						try {
+							// Invoke Python function and get the returned value.
+							final Object pythonResult = interp.invoke(
+								task.name,
+								task.args,
+								task.kwargs
 							);
 
-							try {
-								// Invoke Python function and get the returned value.
-								final Object pythonResult = interp.invoke(
-									task.name,
-									task.args,
-									task.kwargs
-								);
+							TraceLogger.log(
+								logger,
+								"Executed task: " + task.name
+							);
 
-								TraceLogger.log(
-									logger,
-									"Executed task: " + task.name
-								);
-
-								// Let the result value to an empty optional when nothing is returned.
-								if (pythonResult != null) {
-									// Wrap the returned value in an Optional.
-									task.result = Optional.of(pythonResult);
-								}
-							} catch (Exception e) {
-								task.result = Optional.empty();
-
-								if (
-									!e
-										.getMessage()
-										.contains("Unable to find object")
-								) {
-									TraceLogger.logError(
-										logger,
-										"Error in task loop:"
-									);
-									TraceLogger.logStackTrace(logger, e);
-								}
+							// Let the result value to an empty optional when nothing is returned.
+							if (pythonResult != null) {
+								// Wrap the returned value in an Optional.
+								task.result = Optional.of(pythonResult);
 							}
-							TraceLogger.log(
-								logger,
-								TraceLogger.Level.DEBUG,
-								"Processed task"
-							);
-							// Log the result value.
-							TraceLogger.log(
-								logger,
-								"" + task.result.orElse("null")
-							);
+						} catch (Exception e) {
+							task.result = Optional.empty();
 
-							task.finished = true;
+							if (
+								!e
+									.getMessage()
+									.contains("Unable to find object")
+							) {
+								TraceLogger.logError(
+									logger,
+									"Error in task loop:"
+								);
+								TraceLogger.logStackTrace(logger, e);
+							}
+						}
+						TraceLogger.log(
+							logger,
+							TraceLogger.Level.DEBUG,
+							"Processed task"
+						);
+						// Log the result value.
+						TraceLogger.log(
+							logger,
+							"" + task.result.orElse("null")
+						);
 
+						task.finished = true;
+
+						synchronized (task) {
 							// Notify the task to release the awaitResult() wait() lock.
 							task.notifyAll();
 
@@ -800,25 +792,12 @@ public class ScalpelExecutor {
 		HttpService service
 	) {
 		// Call the corresponding Python callback and add a debug HTTP header.
-		// TODO: Only add the header in debug mode.
-		// TODO: Add a debug mode.
 		return safeJepInvoke(
 			getMessageCbName(msg),
 			new Object[] { msg, service },
 			Map.of(),
 			(Class<T>) msg.getClass()
-		)
-			.flatMap(r ->
-				Optional.of(
-					PythonUtils.updateHeader(
-						r,
-						"X-Scalpel-" + UnObfuscator.getClassName(msg),
-						Thread
-							.currentThread()
-							.getStackTrace()[3].getMethodName()
-					)
-				)
-			);
+		);
 	}
 
 	/**

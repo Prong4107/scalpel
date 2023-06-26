@@ -10,7 +10,7 @@ session: bytes = b""
 
 def match(flow: Flow) -> bool:
     return flow.path_is("/encrypt-session*") and bool(
-        flow.request.method != "POST" or session
+        session or flow.request.method != "POST"
     )
 
 
@@ -43,7 +43,7 @@ def response(res: Response) -> Response | None:
         return
 
 
-def req_edit_in_encrypted(req: Request) -> bytes | None:
+def req_edit_in_encrypted(req: Request) -> bytes:
     secret = session
     encrypted = req.form[b"encrypted"]
     if not encrypted:
@@ -58,7 +58,7 @@ def req_edit_out_encrypted(req: Request, text: bytes) -> Request:
     return req
 
 
-def res_edit_in_encrypted(res: Response) -> bytes | None:
+def res_edit_in_encrypted(res: Response) -> bytes:
     secret = session
     encrypted = res.content
 
