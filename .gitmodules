@@ -1,0 +1,3 @@
+[submodule "scalpel/src/main/resources/python/qs"]
+	path = scalpel/src/main/resources/python/qs
+	url = https://github.com/nollium/qs.git
