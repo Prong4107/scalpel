@@ -53,14 +53,7 @@ jar {
     
 }
 
-sourceSets {
-    main {
-        resources {
-            srcDirs jepDir
-            exclude '**/*.pyc'
-        }
-    }
-}
+
 
 tasks.withType(Copy).all { duplicatesStrategy 'exclude' }
 
