@@ -104,7 +104,7 @@ public class Scalpel implements BurpExtension {
 				TraceLogger.log(
 					logger,
 					Level.ALL,
-					"Loading Jep native library from " + venvPath
+					"Loading Jep native library from " + jepLib
 				);
 				MainInterpreter.setJepLibraryPath(jepLib);
 			},
