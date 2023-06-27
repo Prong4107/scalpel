@@ -5,8 +5,10 @@ import burp.api.montoya.persistence.PersistedObject;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Optional;
+import javax.swing.JOptionPane;
 
 /**
  * Scalpel configuration.
@@ -201,6 +203,13 @@ public class Config {
 		return lastModified;
 	}
 
+	public static String getDefaultVenv() {
+		return Paths
+			.get(getDefaultVenvsDir().getAbsolutePath())
+			.resolve(DEFAULT_VENV_NAME)
+			.toString();
+	}
+
 	/**
 	 * Get the scalpel configuration directory.
 	 *
@@ -275,8 +284,23 @@ public class Config {
 			throw failureException;
 		}
 
-		// Install the dependencies.
-		Venv.install_background(path, "mitmproxy");
+		try {
+			Venv.install(
+				path,
+				"jep",
+				"requests",
+				"requests-toolbelt",
+				"mitmproxy"
+			);
+		} catch (IOException | InterruptedException e) {
+			// Display a popup explaining why the packages could not be installed
+			JOptionPane.showMessageDialog(
+				null,
+				"Could not install the packages. Error: " + e.getMessage(),
+				"Installation Error",
+				JOptionPane.ERROR_MESSAGE
+			);
+		}
 
 		return path;
 	}

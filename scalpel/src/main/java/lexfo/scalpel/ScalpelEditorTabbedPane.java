@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import javax.swing.JLayer;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
+import lexfo.scalpel.TraceLogger.Level;
 
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpResponseEditor.html
@@ -150,7 +151,17 @@ public class ScalpelEditorTabbedPane
 		this.editors.clear();
 
 		// List Python callbacks.
-		final List<String> callables = executor.getCallables();
+		final List<String> callables;
+		try {
+			callables = executor.getCallables();
+		} catch (RuntimeException e) {
+			TraceLogger.log(
+				logger,
+				Level.TRACE,
+				"recreateEditors(): Could not call get_callables"
+			);
+			return;
+		}
 
 		final String prefix =
 			(

@@ -1082,7 +1082,7 @@ public class ScalpelExecutor {
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public List<String> getCallables() {
+	public List<String> getCallables() throws RuntimeException {
 		// Jep doesn't offer any way to list functions, so we have to implement it Python side.
 		//FIXME: This sometimes never returns and blocks the queue
 		return this.safeJepInvoke(Constants.GET_CB_NAME, List.class)
