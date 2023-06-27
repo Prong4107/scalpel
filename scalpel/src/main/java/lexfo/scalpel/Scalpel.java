@@ -6,6 +6,7 @@ import burp.api.montoya.logging.Logging;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import javax.management.RuntimeErrorException;
 import jep.MainInterpreter;
 import lexfo.scalpel.TraceLogger.Level;
 
@@ -79,15 +80,19 @@ public class Scalpel implements BurpExtension {
 		sitePackagesDirs.ifPresentOrElse(
 			dirs -> {
 				if (dirs.length == 0) {
-					TraceLogger.logError(
-						logger,
+					throw new RuntimeException(
 						"FATAL: Could not find Jep directory"
 					);
-					return;
 				}
 
 				final File[] jepDirs =
 					dirs[0].listFiles((current, name) -> name.matches("jep"));
+
+				if (jepDirs.length == 0) {
+					throw new RuntimeException(
+						"FATAL: Could not find jep directory in " + dirs[0]
+					);
+				}
 
 				final String jepDir = jepDirs[0].getAbsolutePath();
 				// TODO: Windows
@@ -103,11 +108,11 @@ public class Scalpel implements BurpExtension {
 				);
 				MainInterpreter.setJepLibraryPath(jepLib);
 			},
-			() ->
-				TraceLogger.logError(
-					logger,
+			() -> {
+				throw new RuntimeException(
 					"FATAL: Could not find Jep site-packages directory"
-				)
+				);
+			}
 		);
 	}
 
