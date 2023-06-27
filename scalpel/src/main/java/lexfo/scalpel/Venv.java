@@ -11,6 +11,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Manage Python virtual environments.
@@ -108,6 +109,22 @@ public class Venv {
 	 */
 	public static int install(String path, String... pkgs)
 		throws IOException, InterruptedException {
+		return install(path, Map.of(), pkgs);
+	}
+
+	/**
+	 * Install a package in a virtual environment.
+	 *
+	 * @param path The path to the virtual environment directory.
+	 * @param env The environnement variables to pass
+	 * @param pkgs The name of the package to install.
+	 * @return The exit code of the "pip install ..." command.
+	 */
+	public static int install(
+		String path,
+		Map<String, String> env,
+		String... pkgs
+	) throws IOException, InterruptedException {
 		// Install the package using the "pip install" command
 
 		LinkedList<String> command = new LinkedList<>(
@@ -117,6 +134,7 @@ public class Venv {
 		command.addAll(List.of("-t", getSitePackagesPath(path).toString()));
 		ProcessBuilder processBuilder = new ProcessBuilder(command);
 		processBuilder.directory(Paths.get(path).toFile());
+		processBuilder.environment().putAll(env);
 		Process process = processBuilder.start();
 
 		// Wait for the package installation to complete and get the exit code
