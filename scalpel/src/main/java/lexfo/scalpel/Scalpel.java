@@ -59,9 +59,6 @@ public class Scalpel implements BurpExtension {
 			// Read config files.
 			config = new Config(API, unpacker);
 
-			// Register the Jep native library path.
-			MainInterpreter.setJepLibraryPath(unpacker.getJepNativeLibPath());
-
 			// Add the scripting editor tab to Burp UI.
 			API
 				.userInterface()
