@@ -76,6 +76,7 @@ public class TraceLogger {
   */
 	public static void logStackTrace(Logging logger, Throwable throwed) {
 		logError(logger, "ERROR:");
+		logError(logger, throwed.getMessage());
 		logError(logger, throwed.toString());
 		Arrays
 			.stream(throwed.getStackTrace())
