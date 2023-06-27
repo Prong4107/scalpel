@@ -274,10 +274,10 @@ public class Config {
 
 		try {
 			if (Venv.create(path) != 0) {
-				throw new RuntimeException();
+				throw new RuntimeException("Failed to create default venv");
 			}
 		} catch (IOException | InterruptedException e) {
-			throw new RuntimeException("Failed to create default venv", e);
+			throw new RuntimeException(e);
 		}
 
 		try {
@@ -289,7 +289,9 @@ public class Config {
 				"mitmproxy"
 			);
 			if (res != 0) {
-				throw new RuntimeException();
+				throw new RuntimeException(
+					"Could not not install dependencies."
+				);
 			}
 		} catch (IOException | InterruptedException e) {
 			// Display a popup explaining why the packages could not be installed
@@ -300,10 +302,7 @@ public class Config {
 				"Installation Error",
 				JOptionPane.ERROR_MESSAGE
 			);
-			throw new RuntimeException(
-				"Could not not install dependencies.",
-				e
-			);
+			throw new RuntimeException(e);
 		}
 		return path;
 	}
