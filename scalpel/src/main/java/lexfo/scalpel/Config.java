@@ -4,6 +4,7 @@ import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.persistence.PersistedObject;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -250,8 +251,35 @@ public class Config {
 		return new File(getScalpelDir(), "global" + CONFIG_EXT);
 	}
 
-	private static String getJavaHome() {
-		return System.getProperty("java.home");
+	private static String getJavaHome() throws IOException {
+		// Cannot do this because Burp comes and runs with it's own JRE
+		//	> return System.getProperty("java.home");
+		// We try to find the JDK form the javac binary path
+
+		final String binaryName = "javac";
+		final String binaryPath = findBinaryInPath(binaryName);
+
+		if (binaryPath != null) {
+			final Path absolutePath = Paths.get(binaryPath).toRealPath();
+			final Path parentDir = absolutePath.getParent().getParent();
+			return parentDir.toString();
+		}
+		return null;
+	}
+
+	private static String findBinaryInPath(String binaryName) {
+		final String systemPath = System.getenv("PATH");
+		final String[] pathDirs = systemPath.split(
+			System.getProperty("path.separator")
+		);
+
+		for (String pathDir : pathDirs) {
+			final Path path = Paths.get(pathDir, binaryName);
+			if (Files.exists(path)) {
+				return path.toString();
+			}
+		}
+		return null;
 	}
 
 	/**
