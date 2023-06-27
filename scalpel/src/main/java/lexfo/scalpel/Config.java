@@ -285,23 +285,27 @@ public class Config {
 		}
 
 		try {
-			Venv.install(
+			final int res = Venv.install(
 				path,
 				"jep",
 				"requests",
 				"requests-toolbelt",
 				"mitmproxy"
 			);
+			if (res != 0) {
+				throw failureException;
+			}
 		} catch (IOException | InterruptedException e) {
 			// Display a popup explaining why the packages could not be installed
 			JOptionPane.showMessageDialog(
 				null,
-				"Could not install the packages. Error: " + e.getMessage(),
+				"Could not install depencency packages. Error: " +
+				e.getMessage(),
 				"Installation Error",
 				JOptionPane.ERROR_MESSAGE
 			);
+			throw failureException;
 		}
-
 		return path;
 	}
 
