@@ -60,10 +60,13 @@ public class Venv {
 		}
 
 		// Install the default packages
-		install(path, "mitmproxy", "requests", "requests-toolbelt", "debugpy");
-
-		// Return 0 (success)
-		return 0;
+		return install(
+			path,
+			"mitmproxy",
+			"requests",
+			"requests-toolbelt",
+			"debugpy"
+		);
 	}
 
 	/**
