@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Optional;
 import javax.swing.JOptionPane;
 
@@ -249,6 +250,10 @@ public class Config {
 		return new File(getScalpelDir(), "global" + CONFIG_EXT);
 	}
 
+	private static String getJavaHome() {
+		return System.getProperty("java.home");
+	}
+
 	/**
 	 * Get the default venv path.
 	 * This is the venv that will be used when the project is created.
@@ -283,6 +288,7 @@ public class Config {
 		try {
 			final int res = Venv.install(
 				path,
+				Map.of("JAVA_HOME", getJavaHome()),
 				"jep",
 				"requests",
 				"requests-toolbelt",
