@@ -257,7 +257,7 @@ public class Config {
 	 *
 	 * @return The default venv path.
 	 */
-	private static String getOrCreateDefaultVenv() {
+	public static String getOrCreateDefaultVenv() {
 		final File defaultPath = new File(
 			getDefaultVenvsDir(),
 			DEFAULT_VENV_NAME

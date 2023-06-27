@@ -62,7 +62,7 @@ public class Scalpel implements BurpExtension {
 	}
 
 	private static void setupJepFromConfig(Logging logger, Config config) {
-		final String venvPath = Config.getDefaultVenv();
+		final String venvPath = Config.getOrCreateDefaultVenv();
 		final File directory = new File(venvPath + "/lib/");
 		final File[] directories = directory.listFiles((current, name) ->
 			new File(current, name).isDirectory()
