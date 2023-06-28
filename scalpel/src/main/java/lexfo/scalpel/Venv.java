@@ -150,8 +150,7 @@ public class Venv {
 		public String version;
 	}
 
-	private static Path getSitePackagesPath(String venvPath)
-		throws IOException {
+	public static Path getSitePackagesPath(String venvPath) throws IOException {
 		// Find the sites-package directory path as in: <path>/lib/python*/site-packages
 		return Files
 			.walk(Paths.get(venvPath, "lib"))
