@@ -644,7 +644,10 @@ public class ScalpelExecutor {
 					final SubInterpreter interp = new SubInterpreter(
 						new JepConfig()
 							.setClassEnquirer(new CustomEnquirer())
-							.addIncludePaths(defaultIncludePath)
+							.addIncludePaths(
+								defaultIncludePath,
+								unpacker.getPythonPath()
+							)
 					);
 
 					var burpEnv = new HashMap<>(10);
@@ -672,17 +675,6 @@ public class ScalpelExecutor {
 					burpEnv.put("venv", config.getSelectedVenvPath());
 
 					interp.set("__scalpel__", burpEnv);
-
-					// Set the framework's directory to be able to add it to Python's path.
-					interp.set("__directory__", unpacker.getPythonPath());
-
-					// Add the framework's directory to Python's path to allow imports of adjacent files.
-					interp.exec(
-						"""
-    from sys import path
-    path.append(__directory__)
-    """
-					);
 
 					// Run the framework (wraps the user script)
 					interp.runScript(framework.getAbsolutePath());
