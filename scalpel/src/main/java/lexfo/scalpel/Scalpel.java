@@ -90,7 +90,9 @@ public class Scalpel implements BurpExtension {
 
 				if (jepDirs.length == 0) {
 					throw new RuntimeException(
-						"FATAL: Could not find jep directory in " + dirs[0]
+						"FATAL: Could not find jep directory in " +
+						dirs[0] +
+						"\nIf the install failed previously, remove the ~/.scalpel directory and reload the extension"
 					);
 				}
 
