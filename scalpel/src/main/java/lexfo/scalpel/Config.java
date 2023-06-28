@@ -307,7 +307,10 @@ public class Config {
 
 		try {
 			if (Venv.create(path) != 0) {
-				throw new RuntimeException("Failed to create default venv");
+				throw new RuntimeException(
+					"Failed to create default venv\n" +
+					"Ensure that pip and openjdk-17 are installed and javac in in PATH."
+				);
 			}
 		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
