@@ -10,6 +10,7 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.logging.Logging;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +23,6 @@ import jep.ClassEnquirer;
 import jep.ClassList;
 import jep.Interpreter;
 import jep.JepConfig;
-import jep.JepException;
 import jep.SubInterpreter;
 import lexfo.scalpel.TraceLogger.Level;
 
@@ -616,6 +616,18 @@ public class ScalpelExecutor {
 		return thread;
 	}
 
+	private String getDefaultIncludePath() {
+		try {
+			return Venv.getSitePackagesPath(Config.getDefaultVenv()).toString();
+		} catch (IOException e) {
+			TraceLogger.logError(
+				logger,
+				"Could not find a default include path for JEP"
+			);
+		}
+		return "";
+	}
+
 	/**
 	 * Initializes the interpreter.
 	 *
@@ -625,9 +637,14 @@ public class ScalpelExecutor {
 		try {
 			return framework
 				.map(framework -> {
+					// Add a default include path so JEP can be loaded
+					String defaultIncludePath = getDefaultIncludePath();
+
 					// Instantiate a Python interpreter.
 					final SubInterpreter interp = new SubInterpreter(
-						new JepConfig().setClassEnquirer(new CustomEnquirer())
+						new JepConfig()
+							.setClassEnquirer(new CustomEnquirer())
+							.addIncludePaths(defaultIncludePath)
 					);
 
 					var burpEnv = new HashMap<>(10);
