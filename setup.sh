@@ -1,6 +1,8 @@
 #!/bin/sh
 set -e
 
+git submodule update --init --recursive
+
 echo Creating .venv ...
 python3 -m venv .venv
 source ./.venv/bin/activate
