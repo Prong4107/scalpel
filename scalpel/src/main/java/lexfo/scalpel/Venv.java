@@ -1,5 +1,6 @@
 package lexfo.scalpel;
 
+import java.io.BufferedReader;
 /**
  * The Venv class is used to manage Python virtual environments.
  */
@@ -22,9 +23,9 @@ public class Venv {
 	 * Create a virtual environment.
 	 *
 	 * @param path The path to the virtual environment directory.
-	 * @return The exit code of the "python3 -m venv" command.
+	 * @return The finished process of the "python3 -m venv" command.
 	 */
-	public static int create(String path)
+	public static Process create(String path)
 		throws IOException, InterruptedException {
 		// Create the directory for the virtual environment
 		Path venvPath = Paths.get(path);
@@ -39,11 +40,10 @@ public class Venv {
 		);
 		Process process = processBuilder.start();
 
-		// Wait for the virtual environment creation to complete and get the exit code
-		int exitCode = process.waitFor();
+		// Wait for the virtual environment creation to complete
+		process.waitFor();
 
-		// Return the exit code (0 indicates success)
-		return exitCode;
+		return process;
 	}
 
 	/**
@@ -55,7 +55,7 @@ public class Venv {
 	public static int createAndInstallDefaults(String path)
 		throws IOException, InterruptedException {
 		// Create the virtual environment
-		int exitCode = create(path);
+		int exitCode = create(path).exitValue();
 		if (exitCode != 0) {
 			return exitCode;
 		}
