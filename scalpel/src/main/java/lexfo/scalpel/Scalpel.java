@@ -197,6 +197,11 @@ public class Scalpel implements BurpExtension {
 				"Initialized scalpel successfully."
 			);
 		} catch (Exception e) {
+			TraceLogger.log(
+				logger,
+				Level.ALL,
+				"An error as occured, look at the \"Errors\" tab ^^"
+			);
 			TraceLogger.logError(logger, "Failed to initialize scalpel:");
 			TraceLogger.logStackTrace(logger, e);
 		}
