@@ -139,8 +139,22 @@ public class Scalpel implements BurpExtension {
 			unpacker = new ScalpelUnpacker(logger);
 			unpacker.initializeResourcesDirectory();
 
-			TraceLogger.log(logger, Level.ALL, "Reading config...");
-			// Read config files and init the default venv.
+			TraceLogger.log(
+				logger,
+				Level.DEBUG,
+				"Found JAVA_HOME: " + Config.getJavaHome()
+			);
+
+			TraceLogger.log(
+				logger,
+				Level.ALL,
+				"Reading config and initializing venvs..."
+			);
+			TraceLogger.log(
+				logger,
+				Level.ALL,
+				"(This might take a minute, Scalpel is installing dependencies...)"
+			);
 			config = new Config(API, unpacker);
 			logConfig(logger, config);
 

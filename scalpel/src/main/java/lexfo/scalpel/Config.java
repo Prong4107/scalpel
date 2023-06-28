@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.swing.JOptionPane;
 
 /**
@@ -251,7 +252,7 @@ public class Config {
 		return new File(getScalpelDir(), "global" + CONFIG_EXT);
 	}
 
-	private static String getJavaHome() throws IOException {
+	public static String getJavaHome() throws IOException {
 		// Cannot do this because Burp comes and runs with it's own JRE
 		//	> return System.getProperty("java.home");
 		// We try to find the JDK form the javac binary path
@@ -306,10 +307,24 @@ public class Config {
 		}
 
 		try {
-			if (Venv.create(path) != 0) {
+			final var proc = Venv.create(path);
+			if (proc.exitValue() != 0) {
+				// proc.inputReader().lines().forEach(l -> System.err.println(l));
+				final String out = proc
+					.inputReader()
+					.lines()
+					.collect(Collectors.joining("\n"));
+
+				final String cmd = proc
+					.info()
+					.commandLine()
+					.orElse("python3 -m venv " + path);
+
 				throw new RuntimeException(
-					"Failed to create default venv\n" +
-					"Ensure that pip3, python >= 3.10 and openjdk-17 are installed and in PATH."
+					cmd +
+					" failed:\n" +
+					out +
+					"\nEnsure that pip3, python3.*-venv, python >= 3.10 and openjdk >= 17 are installed and in PATH."
 				);
 			}
 		} catch (IOException | InterruptedException e) {
