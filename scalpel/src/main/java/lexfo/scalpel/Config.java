@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.swing.JOptionPane;
 
 /**
@@ -255,9 +256,9 @@ public class Config {
 	public static String getJavaHome() throws IOException {
 		// Cannot do this because Burp comes and runs with it's own JRE
 		//	> return System.getProperty("java.home");
-		// We try to find the JDK form the javac binary path
+		// We try to find the JDK from the java binary path
 
-		final String binaryName = "javac";
+		final String binaryName = "java";
 		final String binaryPath = findBinaryInPath(binaryName);
 
 		if (binaryPath != null) {
@@ -281,6 +282,22 @@ public class Config {
 			}
 		}
 		return null;
+	}
+
+	private static RuntimeException createExceptionFromProcess(
+		Process proc,
+		String msg,
+		String defaultCmdLine
+	) {
+		final Stream<String> outStream = Stream.concat(
+			proc.inputReader().lines(),
+			proc.errorReader().lines()
+		);
+		final String out = outStream.collect(Collectors.joining("\n"));
+
+		final String cmd = proc.info().commandLine().orElse(defaultCmdLine);
+
+		return new RuntimeException(cmd + " failed:\n" + out + "\n" + msg);
 	}
 
 	/**
@@ -309,22 +326,10 @@ public class Config {
 		try {
 			final var proc = Venv.create(path);
 			if (proc.exitValue() != 0) {
-				// proc.inputReader().lines().forEach(l -> System.err.println(l));
-				final String out = proc
-					.inputReader()
-					.lines()
-					.collect(Collectors.joining("\n"));
-
-				final String cmd = proc
-					.info()
-					.commandLine()
-					.orElse("python3 -m venv " + path);
-
-				throw new RuntimeException(
-					cmd +
-					" failed:\n" +
-					out +
-					"\nEnsure that pip3, python3.*-venv, python >= 3.10 and openjdk >= 17 are installed and in PATH."
+				throw createExceptionFromProcess(
+					proc,
+					"Ensure that pip3, python3.*-venv, python >= 3.10 and openjdk >= 17 are installed and in PATH.",
+					"python3 -m venv " + path
 				);
 			}
 		} catch (IOException | InterruptedException e) {
@@ -332,20 +337,22 @@ public class Config {
 		}
 
 		try {
-			final int res = Venv.install(
+			final Process proc = Venv.install(
 				path,
 				Map.of("JAVA_HOME", getJavaHome()),
-				"jep",
-				"requests",
-				"requests-toolbelt",
-				"mitmproxy"
+				Constants.PYTHON_DEPENDENCIES
 			);
-			if (res != 0) {
-				throw new RuntimeException(
-					"Could not not install dependencies."
+			if (proc.exitValue() != 0) {
+				throw createExceptionFromProcess(
+					proc,
+					"Could  not install dependencies\n" +
+					"Make sure that openjdk 17 is properly installed and in PATH\n" +
+					"On Debian/Ubuntu systems:\n\t" +
+					"apt install openjdk-17-jdk",
+					"pip install jep ..."
 				);
 			}
-		} catch (IOException | InterruptedException e) {
+		} catch (Exception e) {
 			// Display a popup explaining why the packages could not be installed
 			JOptionPane.showMessageDialog(
 				null,

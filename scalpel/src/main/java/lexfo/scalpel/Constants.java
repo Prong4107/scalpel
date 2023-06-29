@@ -65,4 +65,11 @@ public class Constants {
 		PERSISTENCE_PREFIX + "framework_path";
 
 	public static final String GET_CB_NAME = "_get_callables";
+
+	public static final String[] PYTHON_DEPENDENCIES = new String[] {
+		"jep",
+		"requests",
+		"requests-toolbelt",
+		"mitmproxy",
+	};
 }
