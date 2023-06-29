@@ -52,22 +52,16 @@ public class Venv {
 	 * @param path The path to the virtual environment directory.
 	 * @return The exit code of the "pip install ..." command.
 	 */
-	public static int createAndInstallDefaults(String path)
+	public static Process createAndInstallDefaults(String path)
 		throws IOException, InterruptedException {
 		// Create the virtual environment
-		int exitCode = create(path).exitValue();
-		if (exitCode != 0) {
-			return exitCode;
+		final Process proc = create(path);
+		if (proc.exitValue() != 0) {
+			return proc;
 		}
 
 		// Install the default packages
-		return install(
-			path,
-			"mitmproxy",
-			"requests",
-			"requests-toolbelt",
-			"debugpy"
-		);
+		return install(path, Constants.PYTHON_DEPENDENCIES);
 	}
 
 	/**
@@ -107,7 +101,7 @@ public class Venv {
 	 * @param pkgs The name of the package to install.
 	 * @return The exit code of the "pip install ..." command.
 	 */
-	public static int install(String path, String... pkgs)
+	public static Process install(String path, String... pkgs)
 		throws IOException, InterruptedException {
 		return install(path, Map.of(), pkgs);
 	}
@@ -120,7 +114,7 @@ public class Venv {
 	 * @param pkgs The name of the package to install.
 	 * @return The exit code of the "pip install ..." command.
 	 */
-	public static int install(
+	public static Process install(
 		String path,
 		Map<String, String> env,
 		String... pkgs
@@ -137,11 +131,10 @@ public class Venv {
 		processBuilder.environment().putAll(env);
 		Process process = processBuilder.start();
 
-		// Wait for the package installation to complete and get the exit code
-		int exitCode = process.waitFor();
+		// Wait for the package installation to complete
+		process.waitFor();
 
-		// Return the exit code (0 indicates success)
-		return exitCode;
+		return process;
 	}
 
 	protected static final class PackageInfo {

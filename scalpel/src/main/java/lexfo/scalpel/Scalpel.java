@@ -141,7 +141,7 @@ public class Scalpel implements BurpExtension {
 
 			TraceLogger.log(
 				logger,
-				Level.DEBUG,
+				Level.ALL,
 				"Found JAVA_HOME: " + Config.getJavaHome()
 			);
 
