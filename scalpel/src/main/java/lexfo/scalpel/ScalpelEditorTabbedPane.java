@@ -6,7 +6,6 @@ import burp.api.montoya.http.message.HttpMessage;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
-import burp.api.montoya.logging.Logging;
 import burp.api.montoya.ui.Selection;
 import burp.api.montoya.ui.editor.extension.EditorCreationContext;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor;
@@ -15,7 +14,6 @@ import com.google.common.base.Function;
 import java.awt.Component;
 import java.awt.Container;
 import java.util.ArrayList;
-// import java.awt.*;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +24,7 @@ import java.util.stream.Collectors;
 import javax.swing.JLayer;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
-import lexfo.scalpel.TraceLogger.Level;
+import lexfo.scalpel.ScalpelLogger.Level;
 
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpResponseEditor.html
@@ -53,11 +51,6 @@ public class ScalpelEditorTabbedPane
 		The Montoya API object.
 	*/
 	private final MontoyaApi API;
-
-	/**
-		The logger object.
-	*/
-	private final Logging logger;
 
 	/**
 		The editor creation context.
@@ -105,9 +98,6 @@ public class ScalpelEditorTabbedPane
 		// Keep a reference to the Montoya API
 		this.API = API;
 
-		// Get a logger
-		this.logger = API.logging();
-
 		// Associate the editor with an unique ID (obsolete)
 		this.id = UUID.randomUUID().toString();
 
@@ -125,15 +115,14 @@ public class ScalpelEditorTabbedPane
 
 		try {
 			this.recreateEditors();
-			TraceLogger.log(
-				logger,
+			ScalpelLogger.log(
 				"Successfully initialized ScalpelProvidedEditor for " +
 				type.name()
 			);
 		} catch (Exception e) {
 			// Log the stack trace.
-			logger.logToError("Couldn't instantiate new editor:");
-			TraceLogger.logStackTrace(logger, e);
+			ScalpelLogger.logError("Couldn't instantiate new editor:");
+			ScalpelLogger.logStackTrace(e);
 
 			// Throw the error again.
 			throw e;
@@ -155,8 +144,7 @@ public class ScalpelEditorTabbedPane
 		try {
 			callables = executor.getCallables();
 		} catch (RuntimeException e) {
-			TraceLogger.log(
-				logger,
+			ScalpelLogger.log(
 				Level.TRACE,
 				"recreateEditors(): Could not call get_callables"
 			);
@@ -203,8 +191,6 @@ public class ScalpelEditorTabbedPane
 				Collectors.mapping(getPrefix, Collectors.toSet())
 			)
 		);
-
-		TraceLogger.logError(logger, "DEBUG: " + grouped);
 
 		grouped.forEach((tabName, cbDirections) -> {
 			final ScalpelRawEditor editor = new ScalpelRawEditor(
@@ -259,7 +245,7 @@ public class ScalpelEditorTabbedPane
 		// https://stackoverflow.com/questions/38402493/local-variable-log-defined-in-an-enclosing-scope-must-be-final-or-effectively-fi
 		final AtomicReference<String> pad = new AtomicReference<>("");
 		lst.forEach(c -> {
-			logger.logToOutput(pad.get() + c.hashCode() + ":" + c);
+			ScalpelLogger.trace(pad.get() + c.hashCode() + ":" + c);
 			pad.set(pad.get() + "  ");
 		});
 	}
@@ -340,7 +326,7 @@ public class ScalpelEditorTabbedPane
 	 */
 	@Override
 	public HttpRequest getRequest() {
-		TraceLogger.log(logger, "getRequest called");
+		ScalpelLogger.log("getRequest called");
 		// Cast the generic HttpMessage interface back to it's concrete type.
 		return (HttpRequest) processOutboundMessage();
 	}
@@ -353,7 +339,7 @@ public class ScalpelEditorTabbedPane
 	 */
 	@Override
 	public HttpResponse getResponse() {
-		TraceLogger.log(logger, "getResponse called");
+		ScalpelLogger.log("getResponse called");
 		// Cast the generic HttpMessage interface back to it's concrete type.
 		return (HttpResponse) processOutboundMessage();
 	}
@@ -432,7 +418,7 @@ public class ScalpelEditorTabbedPane
 				.parallelStream()
 				.anyMatch(e -> e.isEnabledFor(requestResponse));
 		} catch (Exception e) {
-			TraceLogger.logStackTrace(logger, e);
+			ScalpelLogger.logStackTrace(e);
 		}
 		return false;
 	}

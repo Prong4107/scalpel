@@ -8,7 +8,6 @@ import burp.api.montoya.http.handler.HttpResponseReceived;
 import burp.api.montoya.http.message.HttpMessage;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
-import burp.api.montoya.logging.Logging;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
@@ -24,7 +23,7 @@ import jep.ClassList;
 import jep.Interpreter;
 import jep.JepConfig;
 import jep.SubInterpreter;
-import lexfo.scalpel.TraceLogger.Level;
+import lexfo.scalpel.ScalpelLogger.Level;
 
 /**
  * Responds to requested Python tasks from multiple threads through a task queue handled in a single sepearate thread.
@@ -96,7 +95,7 @@ public class ScalpelExecutor {
 		public boolean isJavaPackage(String s) {
 			// https://github.com/ninia/jep/issues/347
 			if (s.equals("lexfo") || s.equals("lexfo.scalpel")) {
-				TraceLogger.log(logger, "Returning true");
+				ScalpelLogger.log("Returning true");
 				return true;
 			}
 			return base.isJavaPackage(s);
@@ -145,7 +144,7 @@ public class ScalpelExecutor {
 			this.args = args;
 			this.kwargs = kwargs;
 
-			TraceLogger.log(logger, "Created task: " + name);
+			ScalpelLogger.log("Created task: " + name);
 		}
 
 		/**
@@ -155,9 +154,8 @@ public class ScalpelExecutor {
 		 */
 		public synchronized Optional<Object> awaitResult() {
 			// Log before awaiting to debug potential deadlocks.
-			TraceLogger.log(
-				logger,
-				TraceLogger.Level.DEBUG,
+			ScalpelLogger.log(
+				ScalpelLogger.Level.DEBUG,
 				"Awaiting task: " + name
 			);
 
@@ -173,28 +171,23 @@ public class ScalpelExecutor {
 
 						if (!isFinished()) {
 							// Warn the user that a task is taking a long time.
-							TraceLogger.log(
-								logger,
+							ScalpelLogger.log(
 								Level.WARN,
 								"Task " + name + " is still waiting..."
 							);
 						}
 					} catch (InterruptedException e) {
 						// Log the error.
-						TraceLogger.logError(
-							logger,
-							"Task " + name + "interrupted:"
-						);
+						ScalpelLogger.logError("Task " + name + "interrupted:");
 
 						// Log the stack trace.
-						TraceLogger.logStackTrace(logger, e);
+						ScalpelLogger.logStackTrace(e);
 					}
 				}
 			}
 
-			TraceLogger.log(
-				logger,
-				TraceLogger.Level.DEBUG,
+			ScalpelLogger.log(
+				ScalpelLogger.Level.DEBUG,
 				"Finished awaiting task: " + name
 			);
 			// Return the awaited result.
@@ -205,11 +198,6 @@ public class ScalpelExecutor {
 			return finished;
 		}
 	}
-
-	/**
-	 * The logging object to use for logging messages.
-	 */
-	private final Logging logger;
 
 	/**
 	 * The MontoyaApi object to use for sending and receiving HTTP messages.
@@ -267,13 +255,11 @@ public class ScalpelExecutor {
 	 *
 	 * @param API the MontoyaApi object to use for sending and receiving HTTP messages.
 	 * @param unpacker the ScalpelUnpacker object to use for getting the ressources paths.
-	 * @param logger the Logging object to use for logging messages.
 	 * @param config the Config object to use for getting the configuration values.
 	 */
 	public ScalpelExecutor(
 		MontoyaApi API,
 		ScalpelUnpacker unpacker,
-		Logging logger,
 		Config config
 	) {
 		// Store Montoya API object
@@ -281,9 +267,6 @@ public class ScalpelExecutor {
 
 		// Store the unpacker
 		this.unpacker = unpacker;
-
-		// Keep a reference to a logger
-		this.logger = logger;
 
 		// Keep a reference to the config
 		this.config = config;
@@ -384,8 +367,7 @@ public class ScalpelExecutor {
 				Object rawResult = result.get();
 				T castResult = (T) rawResult;
 
-				TraceLogger.log(
-					logger,
+				ScalpelLogger.log(
 					"Successfully cast " +
 					UnObfuscator.getClassName(rawResult) +
 					" to " +
@@ -395,12 +377,9 @@ public class ScalpelExecutor {
 				// Ensure the result can be cast to the expected type.
 				return Optional.of(castResult);
 			} catch (ClassCastException e) {
-				TraceLogger.logError(
-					logger,
-					"Failed casting " + name + "'s result:"
-				);
+				ScalpelLogger.logError("Failed casting " + name + "'s result:");
 				// Log the error stack trace.
-				TraceLogger.logStackTrace(logger, e);
+				ScalpelLogger.logStackTrace(e);
 			}
 		}
 
@@ -491,7 +470,7 @@ public class ScalpelExecutor {
 
 	// WARN: Declaring this method as synchronized cause deadlocks.
 	private void taskLoop() {
-		TraceLogger.log(logger, "Starting task loop.");
+		ScalpelLogger.log("Starting task loop.");
 
 		try {
 			// Instantiate the interpreter.
@@ -501,8 +480,7 @@ public class ScalpelExecutor {
 			while (true) {
 				// Relaunch interpreter when files have changed (hot reload).
 				if (mustReload()) {
-					TraceLogger.log(
-						logger,
+					ScalpelLogger.log(
 						Level.INFO,
 						"Config or Python files have changed, reloading interpreter..."
 					);
@@ -510,9 +488,8 @@ public class ScalpelExecutor {
 				}
 
 				synchronized (tasks) {
-					TraceLogger.log(
-						logger,
-						TraceLogger.Level.DEBUG,
+					ScalpelLogger.log(
+						ScalpelLogger.Level.DEBUG,
 						"Runner waiting for notifications."
 					);
 
@@ -526,7 +503,7 @@ public class ScalpelExecutor {
 						continue;
 					}
 
-					TraceLogger.log(logger, "Processing task: " + task.name);
+					ScalpelLogger.log("Processing task: " + task.name);
 					try {
 						// Invoke Python function and get the returned value.
 						final Object pythonResult = interp.invoke(
@@ -535,7 +512,7 @@ public class ScalpelExecutor {
 							task.kwargs
 						);
 
-						TraceLogger.log(logger, "Executed task: " + task.name);
+						ScalpelLogger.log("Executed task: " + task.name);
 
 						if (pythonResult != null) {
 							task.result = Optional.of(pythonResult);
@@ -544,20 +521,18 @@ public class ScalpelExecutor {
 						task.result = Optional.empty();
 
 						if (!e.getMessage().contains("Unable to find object")) {
-							TraceLogger.logError(logger, "Error in task loop:");
-							TraceLogger.logStackTrace(logger, e);
+							ScalpelLogger.logError("Error in task loop:");
+							ScalpelLogger.logStackTrace(e);
 						}
 					}
-					TraceLogger.log(
-						logger,
-						TraceLogger.Level.DEBUG,
+					ScalpelLogger.log(
+						ScalpelLogger.Level.DEBUG,
 						"Processed task"
 					);
 
 					// Log the result value.
-					TraceLogger.log(
-						logger,
-						TraceLogger.Level.TRACE,
+					ScalpelLogger.log(
+						ScalpelLogger.Level.TRACE,
 						String.valueOf(task.result.orElse("null"))
 					);
 
@@ -567,7 +542,7 @@ public class ScalpelExecutor {
 						// Wake threads awaiting the task.
 						task.notifyAll();
 
-						TraceLogger.log(logger, "Notified " + task.name);
+						ScalpelLogger.log("Notified " + task.name);
 					}
 
 					// Sleep the thread while there isn't any new tasks
@@ -576,10 +551,10 @@ public class ScalpelExecutor {
 			}
 		} catch (Exception e) {
 			// The task loop has crashed, log the stack trace.
-			TraceLogger.logStackTrace(logger, e);
+			ScalpelLogger.logStackTrace(e);
 		}
 		// Log the error.
-		TraceLogger.log(logger, "Task loop has crashed");
+		ScalpelLogger.log("Task loop has crashed");
 
 		isRunnerAlive = false;
 
@@ -620,8 +595,7 @@ public class ScalpelExecutor {
 		try {
 			return Venv.getSitePackagesPath(Config.getDefaultVenv()).toString();
 		} catch (IOException e) {
-			TraceLogger.logError(
-				logger,
+			ScalpelLogger.logError(
 				"Could not find a default include path for JEP"
 			);
 		}
@@ -660,8 +634,7 @@ public class ScalpelExecutor {
 					burpEnv.put("file", framework.getAbsolutePath());
 
 					// Add logger global to be able to log to Burp from Python.
-					// TODO: Change this to TraceLogger.
-					burpEnv.put("logger", logger);
+					burpEnv.put("logger", new ScalpelLogger());
 
 					// Set the path to the user script that will define the actual callbacks.
 					burpEnv.put(
@@ -684,8 +657,8 @@ public class ScalpelExecutor {
 				})
 				.orElseThrow();
 		} catch (Exception e) {
-			logger.logToError("Failed to instantiate interpreter:");
-			TraceLogger.logStackTrace(logger, e);
+			ScalpelLogger.logError("Failed to instantiate interpreter:");
+			ScalpelLogger.logStackTrace(e);
 			throw e;
 		}
 	}
@@ -732,7 +705,7 @@ public class ScalpelExecutor {
 				"captured_err"
 			) +
 			exceptionMessage.map(msg -> "\n\n" + msg).orElse("");
-			logger.logToOutput(
+			ScalpelLogger.all(
 				String.format(
 					"Executed:\n%s\nOutput:\n%s\nErr:%s\n",
 					scriptContent,

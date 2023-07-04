@@ -4,11 +4,9 @@ import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.logging.Logging;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import javax.management.RuntimeErrorException;
 import jep.MainInterpreter;
-import lexfo.scalpel.TraceLogger.Level;
 
 // Burp will auto-detect and load any class that extends BurpExtension.
 /**
@@ -16,11 +14,6 @@ import lexfo.scalpel.TraceLogger.Level;
   This class is instantiated by Burp Suite and is used to initialize the extension.
 */
 public class Scalpel implements BurpExtension {
-
-	/**
-	 * The logger object used to log messages to Burp Suite's output tab.
-	 */
-	private Logging logger;
 
 	/**
 	 * The ScalpelUnpacker object used to extract the extension's resources to a temporary directory.
@@ -39,83 +32,48 @@ public class Scalpel implements BurpExtension {
 
 	private Config config;
 
-	private static void logConfig(Logging logger, Config config) {
-		var level = Level.ALL;
-		TraceLogger.log(logger, level, "Config:");
-		TraceLogger.log(
-			logger,
-			level,
-			"Framework: " + config.getFrameworkPath()
-		);
-		TraceLogger.log(logger, level, "Script: " + config.getUserScriptPath());
-		TraceLogger.log(logger, level, "Venvs: " + config.getVenvPaths());
-		TraceLogger.log(
-			logger,
-			level,
-			"Default venv: " + Config.getDefaultVenv()
-		);
-		TraceLogger.log(
-			logger,
-			level,
-			"Selected venv: " + config.getSelectedVenvPath()
-		);
+	private static void logConfig(Config config) {
+		ScalpelLogger.all("Config:");
+		ScalpelLogger.all("Framework: " + config.getFrameworkPath());
+		ScalpelLogger.all("Script: " + config.getUserScriptPath());
+		ScalpelLogger.all("Venvs: " + config.getVenvPaths());
+		ScalpelLogger.all("Default venv: " + Config.getDefaultVenv());
+		ScalpelLogger.all("Selected venv: " + config.getSelectedVenvPath());
 	}
 
-	private static void setupJepFromConfig(Logging logger, Config config) {
-		final String venvPath = Config.getOrCreateDefaultVenv();
-		final File directory = new File(venvPath + "/lib/");
-		final File[] directories = directory.listFiles((current, name) ->
-			new File(current, name).isDirectory()
+	private static void setupJepFromConfig(Config config) throws IOException {
+		final String venvPath = config.getOrCreateDefaultVenv(
+			config.getFrameworkPath()
 		);
 
-		final var pythonDir = Arrays
-			.stream(directories)
-			.filter(d -> d.getName().startsWith("python3"))
-			.findAny();
+		var dir = Venv.getSitePackagesPath(venvPath).toFile();
 
-		final var sitePackagesDirs = pythonDir.map(d ->
-			d.listFiles((current, name) -> name.matches("site-packages"))
+		final File[] jepDirs = dir.listFiles((current, name) ->
+			name.matches("jep")
 		);
 
-		sitePackagesDirs.ifPresentOrElse(
-			dirs -> {
-				if (dirs.length == 0) {
-					throw new RuntimeException(
-						"FATAL: Could not find Jep directory"
-					);
-				}
+		if (jepDirs.length == 0) {
+			throw new IOException(
+				"FATAL: Could not find jep directory in " +
+				dir +
+				"\nIf the install failed previously, remove the ~/.scalpel directory and reload the extension"
+			);
+		}
 
-				final File[] jepDirs =
-					dirs[0].listFiles((current, name) -> name.matches("jep"));
+		final String jepDir = jepDirs[0].getAbsolutePath();
 
-				if (jepDirs.length == 0) {
-					throw new RuntimeException(
-						"FATAL: Could not find jep directory in " +
-						dirs[0] +
-						"\nIf the install failed previously, remove the ~/.scalpel directory and reload the extension"
-					);
-				}
+		// Adding path to java.library.path is necessary for Windows
+		final var oldLibPath = System.getProperty("java.library.path");
+		final var newLibPath = jepDir + File.pathSeparator + oldLibPath;
+		System.setProperty("java.library.path", newLibPath);
 
-				final String jepDir = jepDirs[0].getAbsolutePath();
-				// TODO: Windows
-				final String jepLib = Paths
-					.get(jepDir)
-					.resolve("libjep.so")
-					.toString();
+		final String libjepFile = Constants.NATIVE_LIBJEP_FILE;
+		final String jepLib = Paths.get(jepDir).resolve(libjepFile).toString();
 
-				TraceLogger.log(
-					logger,
-					Level.ALL,
-					"Loading Jep native library from " + jepLib
-				);
-				MainInterpreter.setJepLibraryPath(jepLib);
-			},
-			() -> {
-				throw new RuntimeException(
-					"FATAL: Could not find Jep site-packages directory"
-				);
-			}
-		);
+		ScalpelLogger.all("Loading Jep native library from " + jepLib);
+		// Load the library ourselves to catch errors right away.
+		System.load(jepLib);
+		MainInterpreter.setJepLibraryPath(jepLib);
 	}
 
 	/**
@@ -130,35 +88,26 @@ public class Scalpel implements BurpExtension {
 		API.extension().setName("Lexfo Scalpel extension");
 
 		// Create a logger that will display messages in Burp extension logs.
-		logger = API.logging();
+		ScalpelLogger.setLogger(API.logging());
 
 		try {
-			TraceLogger.log(logger, Level.ALL, "Initializing...");
+			ScalpelLogger.all("Initializing...");
 
 			// Extract embeded ressources.
-			unpacker = new ScalpelUnpacker(logger);
+			unpacker = new ScalpelUnpacker();
+
+			ScalpelLogger.all("Extracting ressources...");
 			unpacker.initializeResourcesDirectory();
 
-			TraceLogger.log(
-				logger,
-				Level.ALL,
-				"Found JAVA_HOME: " + Config.getJavaHome()
-			);
-
-			TraceLogger.log(
-				logger,
-				Level.ALL,
-				"Reading config and initializing venvs..."
-			);
-			TraceLogger.log(
-				logger,
-				Level.ALL,
+			ScalpelLogger.all("Reading config and initializing venvs...");
+			ScalpelLogger.all(
 				"(This might take a minute, Scalpel is installing dependencies...)"
 			);
-			config = new Config(API, unpacker);
-			logConfig(logger, config);
 
-			setupJepFromConfig(logger, config);
+			config = new Config(API, unpacker);
+			logConfig(config);
+
+			setupJepFromConfig(config);
 
 			// Add the configuration tab to Burp UI.
 			API
@@ -173,18 +122,14 @@ public class Scalpel implements BurpExtension {
 				);
 
 			// Initialize Python task queue.
-			executor = new ScalpelExecutor(API, unpacker, logger, config);
+			executor = new ScalpelExecutor(API, unpacker, config);
 
 			// Add the scripting editor tab to Burp UI.
 			API
 				.userInterface()
 				.registerSuiteTab(
 					"Scalpel Interpreter",
-					UIBuilder.constructScalpelInterpreterTab(
-						config,
-						executor,
-						logger
-					)
+					UIBuilder.constructScalpelInterpreterTab(config, executor)
 				);
 
 			// Create the provider responsible for creating the request/response editors for Burp.
@@ -205,19 +150,13 @@ public class Scalpel implements BurpExtension {
 				);
 
 			// Extension is fully loaded.
-			TraceLogger.log(
-				logger,
-				Level.ALL,
-				"Initialized scalpel successfully."
-			);
+			ScalpelLogger.all("Initialized scalpel successfully.");
 		} catch (Exception e) {
-			TraceLogger.log(
-				logger,
-				Level.ALL,
+			ScalpelLogger.all(
 				"^ An error has occured, look at the \"Errors\" tab ^"
 			);
-			TraceLogger.logError(logger, "Failed to initialize scalpel:");
-			TraceLogger.logStackTrace(logger, e);
+			ScalpelLogger.logError("Failed to initialize scalpel:");
+			ScalpelLogger.logStackTrace(e);
 		}
 	}
 }
