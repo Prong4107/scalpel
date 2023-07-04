@@ -1,32 +1,44 @@
 # Scalpel
+
 Python scripting Burp extension.
+
+## Install:
+
+-   openjdk >= 17
+-   python >= 3.10
+-   pip
+
+1):
+
+```bash
+pip install jep
+```
+
+2): Import scalpel .jar in Burp.
 
 ## Build:
 
 ### Requirements:
-- Gradle
-- JDK 17
-- python3.10
-- JEP (install via pip)
+
+-   \> JDK 17
+-   \> python3.10
+-   JEP (`pip install jep`)
+-   [Visual C++ >=14.0 build tools](https://visualstudio.microsoft.com/fr/visual-cpp-build-tools/) (Windows only)
+
+---
 
 ```bash
-gradle build
+./gradlew build
 ```
 
 Will generate `scalpel/build/libs/scalpel-1.0.0.jar` which can be imported in Burp.
 
-## Runtime requirements:
-- Python 3.10
-- JEP
-
-JEP uses your user's global Python environnement
-
-Virtual envs are not yet supported :'(
-
+---
 
 ## Testing:
 
 You can use the ExpressJS test server to get back your request:
+
 ```Bash
 cd test/
 npm i
