@@ -72,7 +72,7 @@ class IHttpRequest(IHttpMessage, Protocol):
     #
 
     @abstractmethod
-    def httpVersion(self) -> str:
+    def httpVersion(self) -> str | None:
         """generated source for method httpVersion"""
 
     #
