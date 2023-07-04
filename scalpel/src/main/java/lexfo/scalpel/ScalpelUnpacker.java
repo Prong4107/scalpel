@@ -1,6 +1,5 @@
 package lexfo.scalpel;
 
-import burp.api.montoya.logging.Logging;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -20,32 +19,11 @@ public class ScalpelUnpacker {
 	private Path ressourcesDirectory;
 
 	/**
-	    The Logging object to use.
-	*/
-	private Logging logger;
-
-	/**
-	    Creates a new ScalpelUnpacker object.
-	    @param logger The Logging object to use.
-	*/
-	public ScalpelUnpacker(Logging logger) {
-		this.logger = logger;
-	}
-
-	/**
 	    Returns the path to the Scalpel resources directory.
 	    @return The path to the Scalpel resources directory.
 	*/
 	public String getResourcesPath() {
 		return ressourcesDirectory.toString();
-	}
-
-	/**
-	Returns the path to the (un)packed Jep native library.
-	@return The path to the (un)packed Jep native library.
-	*/
-	public String getJepNativeLibPath() {
-		return getResourcesPath() + "/libjep.so";
 	}
 
 	/**
@@ -114,7 +92,13 @@ public class ScalpelUnpacker {
 			while (zipFileEntries.hasMoreElements()) {
 				// grab a zip file entry
 				final ZipEntry entry = (ZipEntry) zipFileEntries.nextElement();
+
 				final String currentEntry = entry.getName();
+				if (!currentEntry.startsWith("python")) {
+					continue;
+				}
+
+				ScalpelLogger.debug("Extracting " + currentEntry);
 
 				final File destFile = new File(newPath, currentEntry);
 				final File destinationParent = destFile.getParentFile();
@@ -147,12 +131,12 @@ public class ScalpelUnpacker {
 				}
 			}
 		} catch (Exception e) {
-			logger.logToError("ERROR: " + e.getMessage());
+			ScalpelLogger.logStackTrace(e);
 		} finally {
 			try {
 				if (zip != null) zip.close();
 			} catch (Exception e) {
-				TraceLogger.logStackTrace(logger, e);
+				ScalpelLogger.logStackTrace(e);
 			}
 		}
 	}
@@ -170,18 +154,15 @@ public class ScalpelUnpacker {
 					"extracted"
 				);
 
-			// Extract running JAR to tmp directory.
+			ScalpelLogger.all("Extracting to " + ressourcesDirectory);
 			extractFolder(getRunningJarPath(), getResourcesPath());
 
-			logger.logToOutput(
+			ScalpelLogger.all(
 				"Successfully extracted running .jar to " + ressourcesDirectory
 			);
 		} catch (Exception e) {
-			// Log the function name.
-			logger.logToError("initializeResourcesDirectory() failed.");
-
-			// Log the error reason.
-			logger.logToError(e.toString());
+			ScalpelLogger.logError("initializeResourcesDirectory() failed.");
+			ScalpelLogger.logStackTrace(e);
 		}
 	}
 }

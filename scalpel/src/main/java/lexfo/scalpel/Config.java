@@ -8,10 +8,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 
 /**
@@ -61,6 +63,7 @@ public class Config {
 		public String defaultVenvPath = "";
 		public String defaultScriptPath = "";
 		public String defaultFrameworkPath = "";
+		public String jdkPath = null;
 	}
 
 	// Persistent data for a specific project.
@@ -107,6 +110,7 @@ public class Config {
 
 	// Venv that will be created and used when none exists
 	private static final String DEFAULT_VENV_NAME = "default";
+	private String _jdkPath = null;
 
 	public Config(MontoyaApi API, ScalpelUnpacker unpacker) {
 		// Get the extension data to store and get the project ID back.
@@ -138,10 +142,13 @@ public class Config {
 				.map(d -> {
 					// Remove venvs that were deleted by an external process.
 					d.venvPaths.removeIf(path -> !new File(path).exists());
+					if (d.jdkPath == null) {
+						d.jdkPath = IO.ioWrap(this::findJdkPath);
+					}
 
 					// Ensure that there is at least one venv.
 					if (d.venvPaths.size() == 0) {
-						d.venvPaths.add(getOrCreateDefaultVenv());
+						d.venvPaths.add(getOrCreateDefaultVenv(d.jdkPath));
 					}
 
 					// Select the first venv if the default one doesn't exist anymore or if it's not set.
@@ -150,9 +157,12 @@ public class Config {
 							.ofNullable(d.defaultVenvPath)
 							.filter(path -> new File(path).exists())
 							.orElseGet(() -> d.venvPaths.get(0));
+
 					return d;
 				})
 				.orElseGet(() -> getDefaultGlobalData(unpacker));
+
+		_jdkPath = globalConfig.jdkPath;
 
 		// Load project config or create a new one on failure. (e.g. file doesn't exist)
 		projectConfig =
@@ -172,6 +182,11 @@ public class Config {
 
 		// Write the global config to the file if they didn't exist.
 		saveAllConfig();
+	}
+
+	public static boolean isWindows() {
+		String os = System.getProperty("os.name").toLowerCase();
+		return (os.contains("win"));
 	}
 
 	/**
@@ -253,35 +268,106 @@ public class Config {
 		return new File(getScalpelDir(), "global" + CONFIG_EXT);
 	}
 
-	public static String getJavaHome() throws IOException {
-		// Cannot do this because Burp comes and runs with it's own JRE
-		//	> return System.getProperty("java.home");
-		// We try to find the JDK from the java binary path
-
-		final String binaryName = "java";
-		final String binaryPath = findBinaryInPath(binaryName);
-
-		if (binaryPath != null) {
-			final Path absolutePath = Paths.get(binaryPath).toRealPath();
-			final Path parentDir = absolutePath.getParent().getParent();
-			return parentDir.toString();
-		}
-		return null;
+	private static boolean hasIncludeDir(Path jdkPath) {
+		var inc = jdkPath.resolve("include").toFile();
+		return inc.exists() && inc.isDirectory();
 	}
 
-	private static String findBinaryInPath(String binaryName) {
+	private static Optional<String> guessJdkPath() throws IOException {
+		if (isWindows()) {
+			// Official JDK usually gets installed in 'C:\\Program Files\\Java\\jdk-<version>'
+			final var winJdkPath = Path.of("C:\\Program Files\\Java\\");
+			return Files
+				.walk(winJdkPath)
+				.filter(f -> f.toFile().getName().contains("jdk"))
+				.map(jdk -> jdk.toAbsolutePath())
+				.filter(Config::hasIncludeDir)
+				.map(jdk -> jdk.toString())
+				.findFirst();
+		}
+
+		// We try to find the JDK from the javac binary path
+		final String binaryName = "javac";
+		final var matchingBinaries = findBinaryInPath(binaryName);
+		final var potentialJdkPaths = matchingBinaries
+			.map(binaryPath -> {
+				try {
+					final Path absolutePath = Paths
+						.get(binaryPath)
+						.toRealPath();
+					return absolutePath.getParent().getParent();
+				} catch (IOException e) {
+					return null;
+				}
+			})
+			.filter(path -> path != null);
+
+		// Some distributions (e.g. Kali) come with an incomplete JDK and requires installing a package for the complete one.
+		// This filter prevents selecting those.
+		final var validJavaHomes = potentialJdkPaths.filter(
+			Config::hasIncludeDir
+		);
+
+		final var javaHome = validJavaHomes
+			.map(path -> path.toString())
+			.findFirst();
+
+		return javaHome;
+	}
+
+	/**
+	 * Tries to get the JDK path from PATH, usual install locations, or by prompting the user.
+	 * @return The JDK path.
+	 * @throws IOException
+	 */
+	public String findJdkPath() throws IOException {
+		if (_jdkPath != null) {
+			// Return memoized path
+			return _jdkPath;
+		}
+
+		final String javaHome = guessJdkPath()
+			.orElseGet(() -> {
+				// Display popup telling the user that JDK was not found and needs to select it manually
+				JOptionPane.showMessageDialog(
+					null,
+					"JDK not found. Please select JDK path manually.",
+					"JDK not found",
+					JOptionPane.INFORMATION_MESSAGE
+				);
+
+				// Include a filechooser to choose the path
+				JFileChooser fileChooser = new JFileChooser();
+				fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+				int option = fileChooser.showOpenDialog(null);
+				if (option == JFileChooser.APPROVE_OPTION) {
+					File file = fileChooser.getSelectedFile();
+					return file.getPath();
+				} else {
+					return null;
+				}
+			});
+
+		if (javaHome != null) {
+			// Memoize path
+			_jdkPath = javaHome;
+		}
+
+		return javaHome;
+	}
+
+	private static Stream<String> findBinaryInPath(String binaryName) {
 		final String systemPath = System.getenv("PATH");
 		final String[] pathDirs = systemPath.split(
 			System.getProperty("path.separator")
 		);
 
-		for (String pathDir : pathDirs) {
-			final Path path = Paths.get(pathDir, binaryName);
-			if (Files.exists(path)) {
-				return path.toString();
-			}
-		}
-		return null;
+		return Arrays
+			.stream(pathDirs)
+			.map(pathDir -> Paths.get(pathDir, binaryName))
+			.filter(Files::exists)
+			.map(Path::toString);
 	}
 
 	private static RuntimeException createExceptionFromProcess(
@@ -294,7 +380,6 @@ public class Config {
 			proc.errorReader().lines()
 		);
 		final String out = outStream.collect(Collectors.joining("\n"));
-
 		final String cmd = proc.info().commandLine().orElse(defaultCmdLine);
 
 		return new RuntimeException(cmd + " failed:\n" + out + "\n" + msg);
@@ -308,13 +393,14 @@ public class Config {
 	 *
 	 * @return The default venv path.
 	 */
-	public static String getOrCreateDefaultVenv() {
+	public String getOrCreateDefaultVenv(String javaHome) {
 		final File defaultPath = new File(
 			getDefaultVenvsDir(),
 			DEFAULT_VENV_NAME
 		);
 		final String path = defaultPath.getAbsolutePath();
 
+		// Return if default venv dir already exists.
 		if (!defaultPath.exists()) {
 			defaultPath.mkdir();
 		} else if (!defaultPath.isDirectory()) {
@@ -323,32 +409,44 @@ public class Config {
 			return path;
 		}
 
+		// Run python -m venv <path>
 		try {
 			final var proc = Venv.create(path);
 			if (proc.exitValue() != 0) {
 				throw createExceptionFromProcess(
 					proc,
 					"Ensure that pip3, python3.*-venv, python >= 3.10 and openjdk >= 17 are installed and in PATH.",
-					"python3 -m venv " + path
+					Constants.PYTHON_BIN + " -m venv " + path
 				);
 			}
 		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
 		}
 
+		// Run pip install <dependencies>
 		try {
-			final Process proc = Venv.install(
+			final Process proc = Venv.install_background(
 				path,
-				Map.of("JAVA_HOME", getJavaHome()),
+				Map.of("JAVA_HOME", javaHome),
 				Constants.PYTHON_DEPENDENCIES
 			);
+
+			// Log pip output
+			final var stdout = proc.inputReader();
+			while (proc.isAlive()) {
+				ScalpelLogger.all(stdout.readLine());
+			}
+
 			if (proc.exitValue() != 0) {
 				throw createExceptionFromProcess(
 					proc,
 					"Could  not install dependencies\n" +
-					"Make sure that openjdk 17 is properly installed and in PATH\n" +
+					"Make sure that openjdk 17 is properly installed and in PATH\n\n" +
 					"On Debian/Ubuntu systems:\n\t" +
-					"apt install openjdk-17-jdk",
+					"apt install openjdk-17-jdk\n\n" +
+					"On Windows:\n\t" +
+					"Make sure you have installed Microsoft Visual C++ >=14.0 :\n\t" +
+					"https://visualstudio.microsoft.com/visual-cpp-build-tools/",
 					"pip install jep ..."
 				);
 			}
@@ -356,7 +454,8 @@ public class Config {
 			// Display a popup explaining why the packages could not be installed
 			JOptionPane.showMessageDialog(
 				null,
-				"Could not install depencency packages. Error: " +
+				"Could not install depencency packages.\n" +
+				"Error: " +
 				e.getMessage(),
 				"Installation Error",
 				JOptionPane.ERROR_MESSAGE
@@ -375,10 +474,11 @@ public class Config {
 	private _GlobalData getDefaultGlobalData(ScalpelUnpacker unpacker) {
 		final _GlobalData data = new _GlobalData();
 
+		data.jdkPath = IO.ioWrap(this::findJdkPath, () -> null);
 		data.defaultScriptPath = unpacker.getDefaultScriptPath();
 		data.defaultFrameworkPath = unpacker.getPythonFrameworkPath();
 		data.venvPaths = new ArrayList<String>();
-		data.venvPaths.add(getOrCreateDefaultVenv());
+		data.venvPaths.add(getOrCreateDefaultVenv(data.jdkPath));
 		data.defaultVenvPath = data.venvPaths.get(0);
 		return data;
 	}
@@ -426,6 +526,10 @@ public class Config {
 		return projectConfig.frameworkPath;
 	}
 
+	public String getJdkPath() {
+		return globalConfig.jdkPath;
+	}
+
 	/*
 	 * Get the selected venv path.
 	 *
@@ -436,6 +540,11 @@ public class Config {
 	}
 
 	// Setters
+
+	public void setJdkPath(String path) {
+		this.globalConfig.jdkPath = path;
+		this.saveGlobalConfig();
+	}
 
 	/*
 	 * Set the venv paths list.
