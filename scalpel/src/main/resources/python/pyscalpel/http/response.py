@@ -92,7 +92,7 @@ class Response(MITMProxyResponse):
         """Construct an instance of the Response class from a Burp suite :class:`IHttpResponse`."""
         body = get_bytes(response.body())
         scalpel_response = cls(
-            always_bytes(response.httpVersion()),
+            always_bytes(response.httpVersion() or "HTTP/1.1"),
             response.statusCode(),
             always_bytes(response.reasonPhrase()),
             Headers.from_burp(response.headers()),
