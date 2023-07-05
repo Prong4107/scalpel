@@ -7,17 +7,25 @@ from typing import Sequence
 def parse_mime_header_value(header_str: str) -> list[tuple[str, str]]:
     params = list()
     if header_str is not None:
-        # Match key=value pairs where value can be in double quotes
-        param_pattern = re.compile(r'([\w-]+)\s*=\s*(".*?"|[^;]*)(?:;|$)')
-        matches = param_pattern.finditer(header_str)
-        for match in matches:
-            key, value = match.group(1), match.group(2)
-            params.append(
-                (
-                    key,
-                    value.strip('"'),
-                )
-            )
+        inside_quotes = False
+        start = 0
+        for i, char in enumerate(header_str):
+            if char == '"':
+                inside_quotes = not inside_quotes
+            elif char == ";" and not inside_quotes:
+                pair = header_str[start:i]
+                split_pair = pair.split("=", 1)
+                if len(split_pair) == 2:  # Check if there is a key-value pair
+                    key, value = split_pair[0].strip(), split_pair[1].strip()
+                    value = value.strip('"')
+                    params.append((key, value))
+                start = i + 1
+        pair = header_str[start:]
+        split_pair = pair.split("=", 1)
+        if len(split_pair) == 2:  # Check if there is a key-value pair
+            key, value = split_pair[0].strip(), split_pair[1].strip()
+            value = value.strip('"')
+            params.append((key, value))
     return params
 
 
@@ -100,5 +108,3 @@ def update_header_param(
 
 def get_header_value_without_params(header_value: str) -> str:
     return header_value.split(";", maxsplit=1)[0].strip()
-
-
