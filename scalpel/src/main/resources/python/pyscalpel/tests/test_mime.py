@@ -150,5 +150,46 @@ class TestHeaderParams(unittest.TestCase):
         self.assertIn(("name", None), updated_params)
 
 
+class TestParseMIMEHeaderValue(unittest.TestCase):
+    def test_null_string(self):
+        self.assertEqual(parse_mime_header_value(None), [])
+
+    def test_empty_string(self):
+        self.assertEqual(parse_mime_header_value(""), [])
+
+    def test_single_parameter(self):
+        self.assertEqual(parse_mime_header_value("key1=value1"), [("key1", "value1")])
+
+    def test_multiple_parameters(self):
+        self.assertEqual(
+            parse_mime_header_value("key1=value1; key2=value2"),
+            [("key1", "value1"), ("key2", "value2")],
+        )
+
+    def test_quoted_value(self):
+        self.assertEqual(
+            parse_mime_header_value('key1="value1 with spaces"; key2=value2'),
+            [("key1", "value1 with spaces"), ("key2", "value2")],
+        )
+
+    def test_extra_spaces(self):
+        self.assertEqual(
+            parse_mime_header_value(' key1 = "value1 with spaces" ; key2 = value2 '),
+            [("key1", "value1 with spaces"), ("key2", "value2")],
+        )
+
+    def test_value_with_equal_sign(self):
+        self.assertEqual(
+            parse_mime_header_value('key1="value1=value1"; key2=value2'),
+            [("key1", "value1=value1"), ("key2", "value2")],
+        )
+
+    def test_value_with_semi_colon(self):
+        self.assertEqual(
+            parse_mime_header_value('key1="value1;value2"; key3=value3'),
+            [("key1", "value1;value2"), ("key3", "value3")],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
