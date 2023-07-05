@@ -1,16 +1,13 @@
 package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
-import burp.api.montoya.logging.Logging;
 import burp.api.montoya.ui.editor.extension.EditorCreationContext;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpResponseEditor;
 import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider;
 import burp.api.montoya.ui.editor.extension.HttpResponseEditorProvider;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -24,11 +21,6 @@ public class ScalpelEditorProvider
     The MontoyaApi object used to interact with Burp Suite.
 	*/
 	private final MontoyaApi API;
-
-	/**
-    The logger object used to log messages to Burp Suite's output tab and standard streams.
-	*/
-	private final Logging logger;
 
 	/**
     The ScalpelExecutor object used to execute Python scripts.
@@ -45,7 +37,6 @@ public class ScalpelEditorProvider
 	*/
 	public ScalpelEditorProvider(MontoyaApi API, ScalpelExecutor executor) {
 		this.API = API;
-		this.logger = API.logging();
 		this.executor = executor;
 	}
 
@@ -92,7 +83,9 @@ public class ScalpelEditorProvider
 	}
 
 	private void forceGarbageCollection() {
-		WeakReference<Object> ref = new WeakReference<Object>(new Object());
+		final WeakReference<Object> ref = new WeakReference<Object>(
+			new Object()
+		);
 		// The above object may now be garbage collected.
 
 		while (ref.get() != null) {
@@ -101,11 +94,7 @@ public class ScalpelEditorProvider
 	}
 
 	public void resetEditors() {
-		TraceLogger.log(
-			logger,
-			TraceLogger.Level.DEBUG,
-			"Resetting editors..."
-		);
+		ScalpelLogger.log(ScalpelLogger.Level.DEBUG, "Resetting editors...");
 		// Destroy all unused editors to avoid useless expensive callbacks.
 		// TODO: Improve this by using ReferenceQueue
 		// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/ref/ReferenceQueue.html
@@ -122,6 +111,6 @@ public class ScalpelEditorProvider
 			.map(e -> e.get())
 			.forEach(e -> e.recreateEditors());
 
-		TraceLogger.log(logger, TraceLogger.Level.DEBUG, "Editors reset.");
+		ScalpelLogger.log(ScalpelLogger.Level.DEBUG, "Editors reset.");
 	}
 }

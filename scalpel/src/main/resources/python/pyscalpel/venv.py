@@ -40,9 +40,12 @@ def activate(path: str | None) -> None:
     if old_pythonhome:
         os.environ["_OLD_VIRTUAL_PYTHONHOME"] = old_pythonhome
 
-    site_packages_paths = glob.glob(
-        os.path.join(virtual_env, "lib", "python*", "site-packages")
-    )
+    if os.name == "nt":
+        site_packages_paths = os.path.join(virtual_env, "Lib", "site-packages")
+    else:
+        site_packages_paths = glob.glob(
+            os.path.join(virtual_env, "lib", "python*", "site-packages")
+        )
 
     if not site_packages_paths:
         raise RuntimeError(
