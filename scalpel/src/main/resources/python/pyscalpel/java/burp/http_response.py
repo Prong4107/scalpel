@@ -43,7 +43,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     #      * @return Version string
     #
     @abstractmethod
-    def httpVersion(self) -> str:
+    def httpVersion(self) -> str | None:
         """generated source for method httpVersion"""
 
     #

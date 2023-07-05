@@ -1,6 +1,7 @@
 package lexfo.scalpel;
 
 import java.awt.*;
+import java.util.function.Consumer;
 import javax.swing.*;
 
 /**
@@ -13,14 +14,17 @@ public class WorkingPopup {
 
 		@param task The task to run while the dialog is shown.
 	*/
-	public static void showBlockingWaitDialog(Runnable task) {
-		JFrame parent = new JFrame();
+	public static void showBlockingWaitDialog(
+		String message,
+		Consumer<JLabel> task
+	) {
+		final JFrame parent = new JFrame();
 		parent.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
-		JDialog dialog = new JDialog(parent, "Please wait...", true);
+		final JDialog dialog = new JDialog(parent, "Please wait...", true);
 		dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
-		JLabel label = new JLabel("Processing...");
+		final JLabel label = new JLabel(message);
 		label.setHorizontalAlignment(SwingConstants.CENTER);
 		label.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
 		dialog.add(label, BorderLayout.CENTER);
@@ -28,9 +32,9 @@ public class WorkingPopup {
 		dialog.setSize(200, 100);
 		dialog.setLocationRelativeTo(parent);
 
-		Thread taskThread = new Thread(() -> {
+		final Thread taskThread = new Thread(() -> {
 			try {
-				task.run();
+				task.accept(label);
 			} finally {
 				SwingUtilities.invokeLater(() -> dialog.dispose());
 			}

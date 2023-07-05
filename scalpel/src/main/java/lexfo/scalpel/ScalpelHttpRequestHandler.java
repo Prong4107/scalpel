@@ -12,7 +12,6 @@ import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.http.HttpService;
 import burp.api.montoya.http.handler.*;
 import burp.api.montoya.http.message.requests.HttpRequest;
-import burp.api.montoya.logging.Logging;
 import java.util.Optional;
 
 /**
@@ -24,11 +23,6 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
     	The MontoyaApi object used to interact with Burp Suite.
   	*/
 	private final MontoyaApi API;
-
-	/**
-    	The logger object used to log messages to Burp Suite's output tab and standard streams.
-  	*/
-	private final Logging logger;
 
 	/**
     	The ScalpelEditorProvider object used to provide new 	editors.
@@ -51,9 +45,6 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
 		ScalpelEditorProvider editorProvider,
 		ScalpelExecutor executor
 	) {
-		// Get a logger object.
-		this.logger = API.logging();
-
 		// Keep a reference to the Montoya API.
 		this.API = API;
 

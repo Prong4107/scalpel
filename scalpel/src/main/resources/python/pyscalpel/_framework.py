@@ -14,7 +14,7 @@ from functools import wraps
 class DebugLogger:
     """Debug logger to use if for some reason the logger is not initialized"""
 
-    def logToOutput(self, msg: str):  # pylint: disable=invalid-name
+    def all(self, msg: str):  # pylint: disable=invalid-name
         """Prints the message to the standard output
 
         Args:
@@ -38,9 +38,9 @@ VENV = None
 # Try to use the logger a first time to ensure it is initialized
 try:
     logger = __scalpel__["logger"]  # type: ignore
-    logger.logToOutput("Python: Loading _framework.py ...")
+    logger.all("Python: Loading _framework.py ...")
 except NameError:
-    logger.logToOutput(
+    logger.all(
         "Python: Initializing logger ...\nWARNING: Logger not initialized, using DebugLogger"
     )
 
@@ -135,15 +135,13 @@ try:
         Returns:
             CallbackType: The wrapped callback
         """
-        logger.logToOutput("Python: _try_wrap() called")
+        logger.all("Python: _try_wrap() called")
 
         # Define the wrapper function
         @wraps(callback)
         def _wrapped_cb(*args, **kwargs):
             try:
-                logger.logToOutput(
-                    f"Python: _wrapped_cb() for {callback.__name__} called"
-                )
+                logger.all(f"Python: _wrapped_cb() for {callback.__name__} called")
                 return callback(*args, **kwargs)
             except Exception as ex:  # pylint: disable=broad-except
                 logger.logToError(f"Python: {callback.__name__}() error:\n\t{ex}")
@@ -163,7 +161,7 @@ try:
         Returns:
             Callable[..., CallbackReturn]: The wrapped callback
         """
-        logger.logToOutput(f"Python: _try_if_present({callback.__name__}) called")
+        logger.all(f"Python: _try_if_present({callback.__name__}) called")
 
         # Remove the leading underscore from the callback name
         name = callback.__name__.removeprefix("_")
@@ -173,7 +171,7 @@ try:
 
         # Ensure the user callback is present
         if user_cb is not None:
-            logger.logToOutput(f"Python: {name}() is present")
+            logger.all(f"Python: {name}() is present")
 
             # Wrap the user callback in a try catch block and return it
             @_try_wrap
@@ -184,7 +182,7 @@ try:
             # Return the wrapped callback
             return new_cb
 
-        logger.logToOutput(f"Python: {name}() is not present")
+        logger.all(f"Python: {name}() is not present")
 
         # Ignore the callback.
         return lambda *_, **__: None
@@ -251,7 +249,7 @@ try:
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
-        logger.logToOutput(f"Python: _req_edit_in -> {callback_suffix}")
+        logger.all(f"Python: _req_edit_in -> {callback_suffix}")
         callback = callable_objs.get("req_edit_in" + callback_suffix)
         if callback is None:
             return
@@ -262,7 +260,7 @@ try:
         if not call_match_callback(flow, "edit_request_in"):
             return None
 
-        logger.logToOutput(f"Python: calling {callback.__name__}")
+        logger.all(f"Python: calling {callback.__name__}")
         # Call the user callback and return the bytes to display in the editor
         return cast(bytes | None, callback(py_req))
 
@@ -284,7 +282,7 @@ try:
             bytes | None: The bytes to construct the new request from
                 or None for an unmodified request
         """
-        logger.logToOutput(f"Python: _req_edit_out -> {callback_suffix}")
+        logger.all(f"Python: _req_edit_out -> {callback_suffix}")
         callback = callable_objs.get("req_edit_out" + callback_suffix)
         if callback is None:
             return
@@ -295,7 +293,7 @@ try:
         if not call_match_callback(flow, "edit_request_out"):
             return None
 
-        logger.logToOutput(f"Python: calling {callback.__name__}")
+        logger.all(f"Python: calling {callback.__name__}")
         # Call the user callback and return the bytes to construct the new request from
         result = cast(Request | None, callback(py_req, bytes(text)))
         return result and result.to_burp()
@@ -316,7 +314,7 @@ try:
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
-        logger.logToOutput(f"Python: _res_edit_in -> {callback_suffix}")
+        logger.all(f"Python: _res_edit_in -> {callback_suffix}")
         callback = callable_objs.get("res_edit_in" + callback_suffix)
         if callback is None:
             return
@@ -327,7 +325,7 @@ try:
         if not call_match_callback(flow, "edit_response_in"):
             return None
 
-        logger.logToOutput(f"Python: calling {callback.__name__}")
+        logger.all(f"Python: calling {callback.__name__}")
         # Call the user callback and return the bytes to display in the editor
         return cast(bytes | None, callback(py_res))
 
@@ -350,7 +348,7 @@ try:
             bytes | None: The bytes to construct the new response from
                 or None for an unmodified response
         """
-        logger.logToOutput(f"Python: _res_edit_out -> {callback_suffix}")
+        logger.all(f"Python: _res_edit_out -> {callback_suffix}")
         callback = callable_objs.get("res_edit_out" + callback_suffix)
         if callback is None:
             return
@@ -363,16 +361,16 @@ try:
         if not call_match_callback(flow, "edit_response_out"):
             return None
 
-        logger.logToOutput(f"Python: calling {callback.__name__}")
+        logger.all(f"Python: calling {callback.__name__}")
         # Call the user callback and return the bytes to construct the new response from
         result = cast(Response | None, callback(py_res, bytes(text)))
         return result and result.to_burp()
 
-    logger.logToOutput("Python: Loaded _framework.py")
+    logger.all("Python: Loaded _framework.py")
 
 except Exception as global_ex:  # pylint: disable=broad-except
     # Global generic exception handler to ensure the error is logged and visible to the user.
-    logger.logToOutput("Python: Failed loading _framework.py")
+    logger.all("Python: Failed loading _framework.py")
     logger.logToError("Couldn't load script:")
     logger.logToError(str(global_ex))
     logger.logToError(traceback.format_exc())
