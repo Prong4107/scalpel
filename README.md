@@ -4,26 +4,23 @@ Python scripting Burp extension.
 
 ## Install:
 
+### Requirements:
+
 -   openjdk >= 17
 -   python >= 3.10
 -   pip
+-   [Visual C++ >=14.0 build tools](https://visualstudio.microsoft.com/fr/visual-cpp-build-tools/) (Windows only)
+-   [Xcode](https://github.com/ninia/jep/wiki/OS-X) (OS X only)
 
-1):
+---
 
-```bash
-pip install jep
-```
-
-2): Import scalpel .jar in Burp.
+Simply import the Scalpel jar in Burp and it should automatically install it's Python dependencies in a venv.
 
 ## Build:
 
 ### Requirements:
 
 -   \> JDK 17
--   \> python3.10
--   JEP (`pip install jep`)
--   [Visual C++ >=14.0 build tools](https://visualstudio.microsoft.com/fr/visual-cpp-build-tools/) (Windows only)
 
 ---
 
@@ -37,10 +34,4 @@ Will generate `scalpel/build/libs/scalpel-1.0.0.jar` which can be imported in Bu
 
 ## Testing:
 
-You can use the ExpressJS test server to get back your request:
-
-```Bash
-cd test/
-npm i
-node server.js # Listens on port 3000
-```
+You can run the unit tests with run_tests.sh
