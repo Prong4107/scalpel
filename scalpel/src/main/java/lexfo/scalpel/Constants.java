@@ -65,4 +65,35 @@ public class Constants {
 		PERSISTENCE_PREFIX + "framework_path";
 
 	public static final String GET_CB_NAME = "_get_callables";
+
+	/**
+	 * Required python packages
+	 */
+	public static final String[] PYTHON_DEPENDENCIES = new String[] {
+		"jep",
+		"requests",
+		"requests-toolbelt",
+		"mitmproxy",
+	};
+
+	/**
+	 * Venv dir containing site-packages
+	 */
+	public static final String VENV_LIB_DIR = Config.isWindows()
+		? "Lib"
+		: "lib";
+
+	/**
+	 * JEP native library filename
+	 */
+	public static final String NATIVE_LIBJEP_FILE = Config.isWindows()
+		? "jep.dll"
+		: "libjep.so";
+
+	/**
+	 * Python 3 executable filename
+	 */
+	public static final String PYTHON_BIN = Config.isWindows()
+		? "python.exe"
+		: "python3";
 }

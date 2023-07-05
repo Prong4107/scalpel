@@ -67,11 +67,11 @@ public class Terminal {
 		String[] command;
 
 		final String sep = File.separator;
-		final String activatePath = venvPath + sep + "bin" + sep + "activate";
+		final String binDir = UIUtil.isWindows ? "Scripts" : "bin";
+		final String activatePath = venvPath + sep + binDir + sep + "activate";
 
 		if (UIUtil.isWindows) {
-			// TODO: Handle Windows.
-			command = new String[] { "cmd.exe" };
+			command = new String[] { "cmd.exe", "/K", activatePath };
 		} else {
 			// Override the default bash load order to ensure that the virtualenv activate script is correctly loaded
 			// and we don't lose any interactive functionality.
@@ -92,7 +92,6 @@ public class Terminal {
 				File.createTempFile("scalpel-term", ".sh")
 			);
 
-			// Get the absolute path.
 			final String initFilePath = initFile.getAbsolutePath();
 
 			IO.writeFile(initFilePath, tmpInitFileContent);
