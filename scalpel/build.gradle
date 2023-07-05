@@ -13,28 +13,13 @@ repositories {
     jcenter()
 }
 
-def pyscalpelDir = '..' + File.separator + 'scripts' + File.separator + 'pyscalpel'
 
-def venvPath = '..' + File.separator + '.venv'
-def jepDir, jepJar
-
-if (OperatingSystem.current().isWindows()) {
-    jepDir = file(venvPath + File.separator + 'Lib' + File.separator + 'site-packages' + File.separator + 'jep').getAbsolutePath()
-    jepJar = fileTree(dir: venvPath + File.separator + 'Lib', include: '**/jep/jep-*.jar').files.first().getAbsolutePath()
-} else {
-    jepDir = file(venvPath + File.separator + 'lib').listFiles()
-        .find { it.name.startsWith('python3') }
-        .listFiles().find { it.name.matches('site-packages') }
-        .listFiles().find { it.name.matches('jep') }
-        .getAbsolutePath()
-
-    jepJar = fileTree(dir: venvPath + File.separator + 'lib', include: '**/jep/jep-*.jar').files.first().getAbsolutePath()
-}
 
 dependencies {
     compileOnly 'net.portswigger.burp.extensions:montoya-api:2023.3'
     
-    implementation files(jepJar)
+    // https://mvnrepository.com/artifact/black.ninia/jep
+    implementation 'black.ninia:jep:4.1.1'
     implementation 'commons-io:commons-io:2.6'
     implementation 'com.intellij:forms_rt:7.0.3'
 
