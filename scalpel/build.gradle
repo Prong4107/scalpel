@@ -1,3 +1,5 @@
+import org.gradle.internal.os.OperatingSystem
+
 plugins {
     id 'java'
 }
@@ -11,38 +13,37 @@ repositories {
     jcenter()
 }
 
-def pyscalpelDir = '../scripts/pyscalpel'
+def pyscalpelDir = '..' + File.separator + 'scripts' + File.separator + 'pyscalpel'
 
-def venvPath = '../.venv'
+def venvPath = '..' + File.separator + '.venv'
+def jepDir, jepJar
 
-def jepDir = file(venvPath + '/lib/').listFiles()
-    .find { it.name.startsWith('python3') }
-    .listFiles().find { it.name.matches('site-packages') }
-    .listFiles().find { it.name.matches('jep') }
-    .getAbsolutePath()
+if (OperatingSystem.current().isWindows()) {
+    jepDir = file(venvPath + File.separator + 'Lib' + File.separator + 'site-packages' + File.separator + 'jep').getAbsolutePath()
+    jepJar = fileTree(dir: venvPath + File.separator + 'Lib', include: '**/jep/jep-*.jar').files.first().getAbsolutePath()
+} else {
+    jepDir = file(venvPath + File.separator + 'lib').listFiles()
+        .find { it.name.startsWith('python3') }
+        .listFiles().find { it.name.matches('site-packages') }
+        .listFiles().find { it.name.matches('jep') }
+        .getAbsolutePath()
 
-def jepJar = fileTree(dir: venvPath + '/lib', include: '**/jep/jep-*.jar').files.first().getAbsolutePath()
+    jepJar = fileTree(dir: venvPath + File.separator + 'lib', include: '**/jep/jep-*.jar').files.first().getAbsolutePath()
+}
 
 dependencies {
-    // Check the lastest version: https://github.com/PortSwigger/burp-extensions-montoya-api#gradle:~:text=2023.3%3C/version%3E%0A%3C/dependency%3E-,Gradle,-implementation%20%27net.portswigger
     compileOnly 'net.portswigger.burp.extensions:montoya-api:2023.3'
     
-    // JEP installed from pip in a venv.
     implementation files(jepJar)
     implementation 'commons-io:commons-io:2.6'
     implementation 'com.intellij:forms_rt:7.0.3'
 
-
-    // Jediterm PTY library
     implementation 'org.jetbrains.jediterm:jediterm-pty:2.42'
     implementation 'com.google.guava:guava:31.0.1-jre'
     implementation 'log4j:log4j:1.2.17'
     implementation 'org.jetbrains.pty4j:pty4j:0.12.11'
 
-    // JSON
-    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0-rc2'
-
 }
 
 jar {
@@ -50,13 +51,9 @@ jar {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
     duplicatesStrategy = 'exclude'
-    
 }
 
-
-
 tasks.withType(Copy).all { duplicatesStrategy 'exclude' }
-
 
 configurations {
     javadocImplementation.extendsFrom implementation

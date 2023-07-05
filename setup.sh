@@ -3,6 +3,9 @@ set -e
 
 git submodule update --init --recursive
 
+pip cache remove jep
+rm -rf .venv .gradle
+
 echo Creating .venv ...
 python3 -m venv .venv
 source ./.venv/bin/activate
