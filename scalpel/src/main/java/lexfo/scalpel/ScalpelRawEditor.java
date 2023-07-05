@@ -7,7 +7,6 @@ import burp.api.montoya.http.message.HttpMessage;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
-import burp.api.montoya.logging.Logging;
 import burp.api.montoya.ui.Selection;
 import burp.api.montoya.ui.editor.RawEditor;
 import burp.api.montoya.ui.editor.extension.EditorCreationContext;
@@ -47,11 +46,6 @@ public class ScalpelRawEditor
 		The Montoya API object.
 	*/
 	private final MontoyaApi API;
-
-	/**
-		The logger object.
-	*/
-	private final Logging logger;
 
 	/**
 		The editor creation context.
@@ -101,9 +95,6 @@ public class ScalpelRawEditor
 		// Keep a reference to the Montoya API
 		this.API = API;
 
-		// Get a logger
-		this.logger = API.logging();
-
 		// Associate the editor with an unique ID (obsolete)
 		this.id = UUID.randomUUID().toString();
 
@@ -129,10 +120,10 @@ public class ScalpelRawEditor
 			this.type = type;
 		} catch (Exception e) {
 			// Log the error.
-			logger.logToError("Couldn't instantiate new editor:");
+			ScalpelLogger.logError("Couldn't instantiate new editor:");
 
 			// Log the stack trace.
-			TraceLogger.logStackTrace(logger, e);
+			ScalpelLogger.logStackTrace(e);
 
 			// Throw the error again.
 			throw e;
@@ -163,7 +154,7 @@ public class ScalpelRawEditor
 		// https://stackoverflow.com/questions/38402493/local-variable-log-defined-in-an-enclosing-scope-must-be-final-or-effectively-fi
 		final AtomicReference<String> pad = new AtomicReference<>("");
 		lst.forEach(c -> {
-			logger.logToOutput(pad.get() + c.hashCode() + ":" + c);
+			ScalpelLogger.trace(pad.get() + c.hashCode() + ":" + c);
 			pad.set(pad.get() + "  ");
 		});
 	}
@@ -251,7 +242,7 @@ public class ScalpelRawEditor
 			// Return the Python-processed message.
 			return result.get();
 		} catch (Exception e) {
-			TraceLogger.logStackTrace(logger, e);
+			ScalpelLogger.logStackTrace(e);
 		}
 		return null;
 	}
@@ -369,7 +360,7 @@ public class ScalpelRawEditor
 		try {
 			result = executeCallback(reqRes);
 		} catch (Exception e) {
-			TraceLogger.logStackTrace(logger, e);
+			ScalpelLogger.logStackTrace(e);
 
 			// Disable the tab.
 			return false;
@@ -411,7 +402,7 @@ public class ScalpelRawEditor
 			return executeCallback(reqRes).isPresent();
 		} catch (Exception e) {
 			// Log the error trace.
-			TraceLogger.logStackTrace(logger, e);
+			ScalpelLogger.logStackTrace(e);
 		}
 		return false;
 	}

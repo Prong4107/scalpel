@@ -3,6 +3,9 @@ package lexfo.scalpel;
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.logging.Logging;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
 import jep.MainInterpreter;
 
 // Burp will auto-detect and load any class that extends BurpExtension.
@@ -11,11 +14,6 @@ import jep.MainInterpreter;
   This class is instantiated by Burp Suite and is used to initialize the extension.
 */
 public class Scalpel implements BurpExtension {
-
-	/**
-	 * The logger object used to log messages to Burp Suite's output tab.
-	 */
-	private Logging logger;
 
 	/**
 	 * The ScalpelUnpacker object used to extract the extension's resources to a temporary directory.
@@ -34,6 +32,50 @@ public class Scalpel implements BurpExtension {
 
 	private Config config;
 
+	private static void logConfig(Config config) {
+		ScalpelLogger.all("Config:");
+		ScalpelLogger.all("Framework: " + config.getFrameworkPath());
+		ScalpelLogger.all("Script: " + config.getUserScriptPath());
+		ScalpelLogger.all("Venvs: " + config.getVenvPaths());
+		ScalpelLogger.all("Default venv: " + Config.getDefaultVenv());
+		ScalpelLogger.all("Selected venv: " + config.getSelectedVenvPath());
+	}
+
+	private static void setupJepFromConfig(Config config) throws IOException {
+		final String venvPath = config.getOrCreateDefaultVenv(
+			config.getFrameworkPath()
+		);
+
+		var dir = Venv.getSitePackagesPath(venvPath).toFile();
+
+		final File[] jepDirs = dir.listFiles((current, name) ->
+			name.matches("jep")
+		);
+
+		if (jepDirs.length == 0) {
+			throw new IOException(
+				"FATAL: Could not find jep directory in " +
+				dir +
+				"\nIf the install failed previously, remove the ~/.scalpel directory and reload the extension"
+			);
+		}
+
+		final String jepDir = jepDirs[0].getAbsolutePath();
+
+		// Adding path to java.library.path is necessary for Windows
+		final var oldLibPath = System.getProperty("java.library.path");
+		final var newLibPath = jepDir + File.pathSeparator + oldLibPath;
+		System.setProperty("java.library.path", newLibPath);
+
+		final String libjepFile = Constants.NATIVE_LIBJEP_FILE;
+		final String jepLib = Paths.get(jepDir).resolve(libjepFile).toString();
+
+		ScalpelLogger.all("Loading Jep native library from " + jepLib);
+		// Load the library ourselves to catch errors right away.
+		System.load(jepLib);
+		MainInterpreter.setJepLibraryPath(jepLib);
+	}
+
 	/**
      * Initializes the extension.
     @param API The MontoyaApi object to use.
@@ -46,30 +88,26 @@ public class Scalpel implements BurpExtension {
 		API.extension().setName("Lexfo Scalpel extension");
 
 		// Create a logger that will display messages in Burp extension logs.
-		// TODO: Replace with TraceLogger that also logs to standard output streams.
-		logger = API.logging();
+		ScalpelLogger.setLogger(API.logging());
 
 		try {
-			TraceLogger.log(logger, "Initializing...");
+			ScalpelLogger.all("Initializing...");
 
 			// Extract embeded ressources.
-			unpacker = new ScalpelUnpacker(logger);
+			unpacker = new ScalpelUnpacker();
+
+			ScalpelLogger.all("Extracting ressources...");
 			unpacker.initializeResourcesDirectory();
 
-			// Read config files.
-			config = new Config(API, unpacker);
+			ScalpelLogger.all("Reading config and initializing venvs...");
+			ScalpelLogger.all(
+				"(This might take a minute, Scalpel is installing dependencies...)"
+			);
 
-			// Add the scripting editor tab to Burp UI.
-			API
-				.userInterface()
-				.registerSuiteTab(
-					"Scalpel Interpreter",
-					UIBuilder.constructScalpelInterpreterTab(
-						config,
-						executor,
-						logger
-					)
-				);
+			config = new Config(API, unpacker);
+			logConfig(config);
+
+			setupJepFromConfig(config);
 
 			// Add the configuration tab to Burp UI.
 			API
@@ -84,7 +122,15 @@ public class Scalpel implements BurpExtension {
 				);
 
 			// Initialize Python task queue.
-			executor = new ScalpelExecutor(API, unpacker, logger, config);
+			executor = new ScalpelExecutor(API, unpacker, config);
+
+			// Add the scripting editor tab to Burp UI.
+			API
+				.userInterface()
+				.registerSuiteTab(
+					"Scalpel Interpreter",
+					UIBuilder.constructScalpelInterpreterTab(config, executor)
+				);
 
 			// Create the provider responsible for creating the request/response editors for Burp.
 			final var provider = new ScalpelEditorProvider(API, executor);
@@ -104,10 +150,13 @@ public class Scalpel implements BurpExtension {
 				);
 
 			// Extension is fully loaded.
-			TraceLogger.log(logger, "Initialized scalpel successfully.");
+			ScalpelLogger.all("Initialized scalpel successfully.");
 		} catch (Exception e) {
-			TraceLogger.logError(logger, "Failed to initialize scalpel:");
-			TraceLogger.logStackTrace(logger, e);
+			ScalpelLogger.all(
+				"^ An error has occured, look at the \"Errors\" tab ^"
+			);
+			ScalpelLogger.logError("Failed to initialize scalpel:");
+			ScalpelLogger.logStackTrace(e);
 		}
 	}
 }

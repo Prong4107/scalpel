@@ -285,7 +285,7 @@ class Request:
             host=host,
             port=port,
             path=path,
-            http_version=request.httpVersion(),
+            http_version=request.httpVersion() or "HTTP/1.1",
             headers=headers,
             authority=headers.get(":authority") or headers.get("Host") or "",
             content=body,

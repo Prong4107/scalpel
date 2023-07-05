@@ -1,5 +1,13 @@
+import org.gradle.internal.os.OperatingSystem
+
 plugins {
     id 'java'
+}
+
+java {
+  toolchain {
+    languageVersion.set(JavaLanguageVersion.of(17))
+  }
 }
 
 group 'lexfo'
@@ -11,38 +19,22 @@ repositories {
     jcenter()
 }
 
-def pyscalpelDir = '../scripts/pyscalpel'
 
-def venvPath = '../.venv'
-
-def jepDir = file(venvPath + '/lib/').listFiles()
-    .find { it.name.startsWith('python3') }
-    .listFiles().find { it.name.matches('site-packages') }
-    .listFiles().find { it.name.matches('jep') }
-    .getAbsolutePath()
-
-def jepJar = fileTree(dir: venvPath + '/lib', include: '**/jep/jep-*.jar').files.first().getAbsolutePath()
 
 dependencies {
-    // Check the lastest version: https://github.com/PortSwigger/burp-extensions-montoya-api#gradle:~:text=2023.3%3C/version%3E%0A%3C/dependency%3E-,Gradle,-implementation%20%27net.portswigger
     compileOnly 'net.portswigger.burp.extensions:montoya-api:2023.3'
     
-    // JEP installed from pip in a venv.
-    implementation files(jepJar)
+    // https://mvnrepository.com/artifact/black.ninia/jep
+    implementation 'black.ninia:jep:4.1.1'
     implementation 'commons-io:commons-io:2.6'
     implementation 'com.intellij:forms_rt:7.0.3'
 
-
-    // Jediterm PTY library
     implementation 'org.jetbrains.jediterm:jediterm-pty:2.42'
     implementation 'com.google.guava:guava:31.0.1-jre'
     implementation 'log4j:log4j:1.2.17'
     implementation 'org.jetbrains.pty4j:pty4j:0.12.11'
 
-    // JSON
-    // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0-rc2'
-
 }
 
 jar {
@@ -50,13 +42,9 @@ jar {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
     duplicatesStrategy = 'exclude'
-    
 }
 
-
-
 tasks.withType(Copy).all { duplicatesStrategy 'exclude' }
-
 
 configurations {
     javadocImplementation.extendsFrom implementation

@@ -1,4 +1,3 @@
-from pyscalpel.java.burp.logging import Logging
 import sys
 
 

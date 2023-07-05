@@ -153,29 +153,44 @@ public class ConfigTab extends JFrame {
 			return;
 		}
 
-		WorkingPopup.showBlockingWaitDialog(() -> {
-			// Create the venv and installed required packages. (i.e. mitmproxy)
-			try {
-				Venv.createAndInstallDefaults(path);
-			} catch (IOException | InterruptedException e) {
-				JOptionPane.showMessageDialog(
-					this,
-					"Failed to create venv: \n" + e.getMessage(),
-					"Failed to create venv",
-					JOptionPane.ERROR_MESSAGE
-				);
-				return;
+		WorkingPopup.showBlockingWaitDialog(
+			"Creating venv and installing required packages...",
+			label -> {
+				// Create the venv and installed required packages. (i.e. mitmproxy)
+				try {
+					Venv.create(path);
+					// Add the venv to the config.
+					config.addVenvPath(path);
+
+					// Display the venv in the list.
+					venvListComponent.setListData(config.getVenvPaths());
+
+					// Clear the text field.
+					addVentText.setText("");
+
+					final Process proc = Venv.installDefaults(path);
+					final var stdout = proc.inputReader();
+					String displayed = "";
+
+					while (proc.isAlive()) {
+						displayed += stdout.readLine();
+						label.setText(displayed);
+					}
+				} catch (IOException | InterruptedException e) {
+					final String msg =
+						"Failed to create venv: \n" + e.getMessage();
+					ScalpelLogger.logError(msg);
+					ScalpelLogger.logStackTrace(e);
+					JOptionPane.showMessageDialog(
+						this,
+						msg,
+						"Failed to create venv",
+						JOptionPane.ERROR_MESSAGE
+					);
+					return;
+				}
 			}
-
-			// Add the venv to the config.
-			config.addVenvPath(path);
-
-			// Display the venv in the list.
-			venvListComponent.setListData(config.getVenvPaths());
-
-			// Clear the text field.
-			addVentText.setText("");
-		});
+		);
 	}
 
 	private void handleListSelectionEvent(ListSelectionEvent e) {
@@ -183,7 +198,7 @@ public class ConfigTab extends JFrame {
 		if (e.getValueIsAdjusting()) return;
 
 		// Get the selected venv path.
-		String selectedVenvPath = venvListComponent.getSelectedValue();
+		final String selectedVenvPath = venvListComponent.getSelectedValue();
 		config.setSelectedVenvPath(selectedVenvPath);
 
 		// Update the package table.
@@ -216,7 +231,7 @@ public class ConfigTab extends JFrame {
 		// Set default path to the path in the text field.
 		fileChooser.setCurrentDirectory(new File(getter.get()));
 
-		int result = fileChooser.showOpenDialog(this);
+		final int result = fileChooser.showOpenDialog(this);
 
 		// When the user selects a file, set the text field to the selected file.
 		if (result == JFileChooser.APPROVE_OPTION) {
@@ -244,7 +259,7 @@ public class ConfigTab extends JFrame {
 		}
 
 		// Create a table model with the appropriate column names
-		DefaultTableModel tableModel = new DefaultTableModel(
+		final DefaultTableModel tableModel = new DefaultTableModel(
 			new Object[] { "Name", "Version" },
 			0
 		);

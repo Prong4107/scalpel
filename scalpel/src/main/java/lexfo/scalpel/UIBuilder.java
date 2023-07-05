@@ -1,6 +1,5 @@
 package lexfo.scalpel;
 
-import burp.api.montoya.logging.Logging;
 import burp.api.montoya.ui.Theme;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -37,8 +36,7 @@ public class UIBuilder {
 	*/
 	public static final Component constructScalpelInterpreterTab(
 		Config config,
-		ScalpelExecutor executor,
-		Logging logger
+		ScalpelExecutor executor
 	) {
 		// Split pane
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
@@ -48,14 +46,14 @@ public class UIBuilder {
 		JButton button = new JButton("Run script.");
 
 		button.addActionListener((ActionEvent e) -> {
-			logger.logToOutput("Clicked button");
+			ScalpelLogger.trace("Clicked button");
 			final String scriptContent = editorPane.getText();
 			try {
 				final String[] scriptOutput = executor.evalAndCaptureOutput(
 					scriptContent
 				);
 
-				var txt = String.format(
+				final var txt = String.format(
 					"stdout:\n------------------\n%s\n------------------\n\nstderr:\n------------------\n%s",
 					scriptOutput[0],
 					scriptOutput[1]
@@ -74,10 +72,10 @@ public class UIBuilder {
 
 				outputArea.append(stackTrace);
 			}
-			logger.logToOutput("Handled action.");
+			ScalpelLogger.info("Handled action.");
 		});
 
-		File file = new File(config.getFrameworkPath());
+		final File file = new File(config.getFrameworkPath());
 		editorPane.setText(
 			IO.ioWrap(() -> FileUtils.readFileToString(file, "UTF-8"), () -> "")
 		);
