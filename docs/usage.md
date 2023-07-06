@@ -66,3 +66,35 @@
     -   Which you can modify to update the request and include anything you want (e.g: path traversal sequences) ![traversal](assets/traversal.png)
     -   When you send the request or switch to another editor tab, your python hook `req_edit_out()` will be invoked to update the parameter. ![updated](assets/updated.png)
 
+-   You can have multiple tabs by adding a suffix to your function names:
+
+    -   E.g: Same script as above but for two parameters "filename" and "directory"
+
+        ```python
+        from pyscalpel.http import Request
+        from pyscalpel.utils import urldecode, urlencode_all
+
+        def req_edit_in_filename(req: Request):
+            param = req.query.get("filename")
+            if param is not None:
+                return urldecode(param)
+
+        def req_edit_out_filename(req: Request, text: bytes):
+            req.query["filename"] = urlencode_all(text)
+            return req
+
+
+        def req_edit_in_directory(req: Request):
+            param = req.query.get("directory")
+            if param is not None:
+                return urldecode(param)
+
+
+        def req_edit_out_directory(req: Request, text: bytes):
+            req.query["directory"] = urlencode_all(text)
+            return req
+        ```
+
+    -   You will have a tab for the "filename" parameter and a tab for the "directory" parameter
+        ![multiple_params](assets/multiple_params.png)
+        ![multiple_tabs](assets/multiple_tabs.png)
