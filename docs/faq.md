@@ -9,7 +9,7 @@
     -   If the error message doesn't help you solve the issue, please file an issue with "Output" and "Errors" logs and your system information (OS / Distribution version, CPU architecture, jdk and python version and installation path, environnement variables which Burp runs with, etc...)
 -   Why using Java with Jep to execute Python when Burp already supports Python extensions with [Jython](https://www.jython.org/) ?
     -   Jython supports up to Python 2.7, and no support at all for Python 3. Python 2.7 is basically a dead language and nobody should still be using it.
-    -   Burp's developers have released a [new API](https://portswigger.net/burp/documentation/desktop/extensions/creating) for extension and deprecated the old one. The new one only supports Python.
+    -   Burp's developers have released a [new API](https://portswigger.net/burp/documentation/desktop/extensions/creating) for extensions and deprecated the old one. The new one only supports Python.
 -   Scalpel requires python >=3.10 but my distribution is outdated and doesn't allow installing such recent Python versions using the package manager
     -   You can try updating your distribution.
     -   If you cannot update your distribution, you must setup a separate Python >=3.10 installation and run Burp with the appropriate environnement so that your separate installation will be used.
