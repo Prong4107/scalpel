@@ -2,7 +2,7 @@
 
 -   Scalpel allows you to programatically intercept and modify HTTP requests and response that goes through Burp as well as creating custom request/response editors with Python.
 
--   To do that you simply have to write a Python script containing your code in functions that followed defined names and load the file with Scalpel through Burp GUI: ![script](assets/choose_script.png)
+-   To do that you simply have to write a Python script containing your code in functions that follows defined names and load the file with Scalpel Burp GUI: ![script](assets/choose_script.png)
 -   You can intercept requests/response by creating a `request()` and `response()` functions in your script:
 
     -   E.g: Hooks that adds an arbitrary header to every requests and response:
@@ -107,6 +107,6 @@
         -   Same for `response()`
     -   If `req_edit_in()` or `res_edit_in()` returns `None`, the editor tab will not be displayed
     -   If `req_edit_out()` or `res_edit_out()` returns `None`, the request will not be modified.
-    -   If `req_edit_out()` / `res_edit_out()` isn't declared but `req_edit_in()` / `res_edit_in()` is, the corresponding editor will be read-only.
+    -   If `req_edit_out()` / `res_edit_out()` isn't declared but `req_edit_in()` / `res_edit_in()` is, the corresponding editor will be **read-only**.
 
 -   You do not have to declare every hook if you don't need them, if you only want to modify requests, you can declare the `request()` hook only.
