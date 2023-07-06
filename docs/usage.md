@@ -98,3 +98,15 @@
     -   You will have a tab for the "filename" parameter and a tab for the "directory" parameter
         ![multiple_params](assets/multiple_params.png)
         ![multiple_tabs](assets/multiple_tabs.png)
+
+## Notes:
+
+-   If your hooks returns `None`, it will pass the original object without any modification
+
+    -   If `request()` returns `None`, the original request will be forwarded without modifications.
+        -   Same for `response()`
+    -   If `req_edit_in()` or `res_edit_in()` returns `None`, the editor tab will not be displayed
+    -   If `req_edit_out()` or `res_edit_out()` returns `None`, the request will not be modified.
+    -   If `req_edit_out()` / `res_edit_out()` isn't declared but `req_edit_in()` / `res_edit_in()` is, the corresponding editor will be read-only.
+
+-   You do not have to declare every hook if you don't need them, if you only want to modify requests, you can declare the `request()` hook only.
