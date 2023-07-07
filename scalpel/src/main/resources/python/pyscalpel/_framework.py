@@ -22,7 +22,7 @@ class DebugLogger:
         """
         print(msg)
 
-    def logToError(self, msg: str):  # pylint: disable=invalid-name
+    def error(self, msg: str):  # pylint: disable=invalid-name
         """Prints the message to the standard error
 
         Args:
@@ -144,8 +144,8 @@ try:
                 logger.all(f"Python: _wrapped_cb() for {callback.__name__} called")
                 return callback(*args, **kwargs)
             except Exception as ex:  # pylint: disable=broad-except
-                logger.logToError(f"Python: {callback.__name__}() error:\n\t{ex}")
-                logger.logToError(traceback.format_exc())
+                logger.error(f"Python: {callback.__name__}() error:\n\t{ex}")
+                logger.error(traceback.format_exc())
 
         # Replace the callback with the wrapped one
         return _wrapped_cb
@@ -371,6 +371,6 @@ try:
 except Exception as global_ex:  # pylint: disable=broad-except
     # Global generic exception handler to ensure the error is logged and visible to the user.
     logger.all("Python: Failed loading _framework.py")
-    logger.logToError("Couldn't load script:")
-    logger.logToError(str(global_ex))
-    logger.logToError(traceback.format_exc())
+    logger.error("Couldn't load script:")
+    logger.error(str(global_ex))
+    logger.error(traceback.format_exc())

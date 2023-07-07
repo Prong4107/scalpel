@@ -11,7 +11,7 @@ def unzip_bytes(data):
             uncompressed_data = gz_file.read()
         return uncompressed_data
     except OSError as e:
-        logger.logToError(f"Error: Failed to unzip the data - {e}")
+        logger.error(f"Error: Failed to unzip the data - {e}")
 
 
 def req_edit_in_fs(req: Request) -> bytes | None:

@@ -17,7 +17,6 @@ public class ScalpelLogger {
 		DEBUG(2),
 		INFO(3),
 		WARN(4),
-		ERROR(5),
 		FATAL(6),
 		ALL(7);
 
@@ -88,15 +87,6 @@ public class ScalpelLogger {
 		log(Level.WARN, msg);
 	}
 
-	/**
-	 * Logs the specified message to the Burp Suite output and standard output at the ERROR level.
-	 *
-	 * @param logger The Logging object to use.
-	 * @param msg    The message to log.
-	 */
-	public static void error(String msg) {
-		log(Level.ERROR, msg);
-	}
 
 	/**
 	 * Logs the specified message to the Burp Suite output and standard output at the FATAL level.
@@ -140,7 +130,7 @@ public class ScalpelLogger {
 	 * @param logger The Logging object to use.
 	 * @param msg    The message to log.
 	 */
-	public static void logError(String msg) {
+	public static void error(String msg) {
 		System.err.println(msg);
 		if (logger != null) {
 			logger.logToError(msg);
@@ -154,12 +144,12 @@ public class ScalpelLogger {
 	 * @param throwed The throwable to log.
 	 */
 	public static void logStackTrace(Throwable throwed) {
-		logError("ERROR:");
-		logError(throwed.getMessage());
-		logError(throwed.toString());
+		error("ERROR:");
+		error(throwed.getMessage());
+		error(throwed.toString());
 		Arrays
 			.stream(throwed.getStackTrace())
-			.forEach(el -> logError(el.toString()));
+			.forEach(el -> error(el.toString()));
 	}
 
 	/**
@@ -170,7 +160,7 @@ public class ScalpelLogger {
 	public static void logStackTrace() {
 		Arrays
 			.stream(Thread.currentThread().getStackTrace())
-			.forEach(el -> logError(el.toString()));
+			.forEach(el -> error(el.toString()));
 	}
 
 	/**
@@ -183,7 +173,7 @@ public class ScalpelLogger {
 		Arrays
 			.stream(Thread.currentThread().getStackTrace())
 			.forEach(el -> {
-				if (error) logError(el.toString()); else logger.logToOutput(
+				if (error) error(el.toString()); else logger.logToOutput(
 					el.toString()
 				);
 			});
