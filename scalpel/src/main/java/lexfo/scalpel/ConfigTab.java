@@ -179,7 +179,7 @@ public class ConfigTab extends JFrame {
 				} catch (IOException | InterruptedException e) {
 					final String msg =
 						"Failed to create venv: \n" + e.getMessage();
-					ScalpelLogger.logError(msg);
+					ScalpelLogger.error(msg);
 					ScalpelLogger.logStackTrace(e);
 					JOptionPane.showMessageDialog(
 						this,

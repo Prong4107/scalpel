@@ -51,8 +51,8 @@ class Logging(JavaObject):
     #       * @param message The message to print.
     #
     @abstractmethod
-    def logToError(self, message: str) -> None:
-        """generated source for method logToError"""
+    def error(self, message: str) -> None:
+        """generated source for method error"""
 
     #
     #       * This method can be used to display a debug event in the Burp Suite

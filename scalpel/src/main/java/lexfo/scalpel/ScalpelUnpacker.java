@@ -161,7 +161,7 @@ public class ScalpelUnpacker {
 				"Successfully extracted running .jar to " + ressourcesDirectory
 			);
 		} catch (Exception e) {
-			ScalpelLogger.logError("initializeResourcesDirectory() failed.");
+			ScalpelLogger.error("initializeResourcesDirectory() failed.");
 			ScalpelLogger.logStackTrace(e);
 		}
 	}

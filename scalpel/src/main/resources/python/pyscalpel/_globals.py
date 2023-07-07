@@ -14,7 +14,7 @@ class DefaultLogger:
         """
         print(msg)
 
-    def logToError(self, msg: str):  # pylint: disable=invalid-name
+    def error(self, msg: str):  # pylint: disable=invalid-name
         """Prints the message to the standard error
 
         Args:
