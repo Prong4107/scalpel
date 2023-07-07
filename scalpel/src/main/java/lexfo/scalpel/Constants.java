@@ -1,5 +1,7 @@
 package lexfo.scalpel;
 
+import com.jediterm.terminal.ui.UIUtil;
+
 /**
   Contains constants used by the extension.
 */
@@ -88,7 +90,7 @@ public class Constants {
 	 */
 	public static final String NATIVE_LIBJEP_FILE = Config.isWindows()
 		? "jep.dll"
-		: "libjep.so";
+		: UIUtil.isMac ? "libjep.jnilib": "libjep.so";
 
 	/**
 	 * Python 3 executable filename
