@@ -77,7 +77,7 @@ def res_edit_out(res: Response, text: bytes) -> Response | None:
 ## Cryptography using a session as a secret
 We had the case where the client encrypted its form data using a session token obtained when authenticating.
 
-This script demonstrates that Scalpel can be easily use to deal with stateful behaviours:
+This script demonstrates that Scalpel can be easily used to deal with stateful behaviours:
 > This use case is testable using the test lab in the repository at `test/server.js`
 ```python
 from pyscalpel.http import Request, Response, Flow
