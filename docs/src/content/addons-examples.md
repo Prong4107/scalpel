@@ -11,7 +11,7 @@ menu:
 Here are example scripts to familiarize yourself with Scalpel's Python library a bit more, they have been used against real targets or reproduce very similar behaviours.
 
 ## GZIP-ed API
-For this script we've encoutered the case where an API used a custom protocol that gzipped multiple form-data fields.
+For this case, we've encoutered an API using a custom protocol that gzips multiple form-data fields.
 
 A quick-and-dirty Scalpel script allowed us to directly edit the unzipped data and find hidden secrets:
 ```python
