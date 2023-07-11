@@ -11,7 +11,7 @@
     For example, JSON forms may be converted to URL encoded forms
     by using the php query string syntax:
     
-    ```{"key1": {"key2" : {"key3" : "nested_value"}}} -> ("key1[key2][key3]", "nested_value")```
+    ```{"key1": {"key2" : {"key3" : "nested_value"}}} -> key1[key2][key3]=nested_value```
     
     And vice-versa.
 """
