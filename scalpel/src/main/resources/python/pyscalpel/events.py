@@ -3,18 +3,18 @@ from typing import Literal
 EVENTS = (
     "request",
     "response",
-    "edit_request_in",
-    "edit_request_out",
-    "edit_response_in",
-    "edit_response_out",
+    "req_edit_in",
+    "req_edit_out",
+    "res_edit_in",
+    "res_edit_out",
 )
 
 
 Events = Literal[
     "request",
     "response",
-    "edit_request_in",
-    "edit_request_out",
-    "edit_response_in",
-    "edit_response_out",
+    "req_edit_in",
+    "req_edit_out",
+    "res_edit_in",
+    "res_edit_out",
 ]

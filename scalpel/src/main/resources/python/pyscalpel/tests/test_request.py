@@ -36,8 +36,8 @@ from pyscalpel.http.body import (
     MultiPartFormSerializer,
     MultiPartForm,
     MultiPartFormField,
-    QueryParamsView,
-    QueryParams,
+    URLEncodedFormView,
+    URLEncodedForm,
     JSON_KEY_TYPES,
     JSON_VALUE_TYPES,
     CONTENT_TYPE_TO_SERIALIZER,
@@ -278,21 +278,21 @@ class RequestTestCase(unittest.TestCase):
         request = self.create_request()
 
         # Test getter
-        request._deserialized_content = QueryParams([(b"key1", b"value1")])
+        request._deserialized_content = URLEncodedForm([(b"key1", b"value1")])
         request.headers["Content-Type"] = "application/x-www-form-urlencoded"
         request._serializer = URLEncodedFormSerializer()
         form = request.urlencoded_form
-        self.assertEqual(form, QueryParams([(b"key1", b"value1")]))
+        self.assertEqual(form, URLEncodedForm([(b"key1", b"value1")]))
         self.assertIsInstance(request._serializer, URLEncodedFormSerializer)
 
         # Test setter
-        request.urlencoded_form = QueryParams([(b"key2", b"value2")])
+        request.urlencoded_form = URLEncodedForm([(b"key2", b"value2")])
 
         # WARNING: Previous form has been invalidated
         # self.assertEqual(form, QueryParams([(b"key2", b"value2")]))
 
         form = request.form
-        self.assertEqual(form, QueryParams([(b"key2", b"value2")]))
+        self.assertEqual(form, URLEncodedForm([(b"key2", b"value2")]))
 
         self.assertIsInstance(request._serializer, URLEncodedFormSerializer)
 
@@ -491,14 +491,14 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
 
         # Set urlencoded form
         request.headers["Content-Type"] = "application/x-www-form-urlencoded"
-        request.urlencoded_form = QueryParams(
+        request.urlencoded_form = URLEncodedForm(
             [(b"key1", b"value1"), (b"key2", b"value2")]
         )
 
         # Check urlencoded form
         self.assertEqual(
             request.urlencoded_form,
-            QueryParams([(b"key1", b"value1"), (b"key2", b"value2")]),
+            URLEncodedForm([(b"key1", b"value1"), (b"key2", b"value2")]),
         )
 
         # Transform urlencoded form to multipart form
@@ -533,14 +533,14 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         request = Request.make("GET", "http://localhost")
 
         # Initialize JSON form data
-        request.urlencoded_form = QueryParams(
+        request.urlencoded_form = URLEncodedForm(
             [(b"key1", b"value1"), (b"key2", b"value2")]
         )
 
         # Check initial form data
         form = request.urlencoded_form
         self.assertEqual(
-            form, QueryParams([(b"key1", b"value1"), (b"key2", b"value2")])
+            form, URLEncodedForm([(b"key1", b"value1"), (b"key2", b"value2")])
         )
         self.assertIsInstance(request._serializer, URLEncodedFormSerializer)
 
@@ -568,7 +568,7 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
         # Validate the URL-encoded form
         self.assertEqual(
             urlencoded_form,
-            QueryParams([(b"key1", b"value1"), (b"key2", b"value2")]),
+            URLEncodedForm([(b"key1", b"value1"), (b"key2", b"value2")]),
         )
         self.assertIsInstance(request._serializer, URLEncodedFormSerializer)
 
@@ -862,7 +862,7 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
 
         form = req.urlencoded_form
         self.assertIsNotNone(form)
-        self.assertIsInstance(form, QueryParams)
+        self.assertIsInstance(form, URLEncodedForm)
         expected = ((b"secret", b"MySecretKey"), (b"content", b""))
         self.assertTupleEqual(expected, form.fields)
 
@@ -874,12 +874,12 @@ aHBVVAUAA7usdWR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBNAAAAsQAAAAAA"""
             {"Content-Type": "application/x-www-form-urlencoded"},
         )
 
-        form = cast(QueryParams, req.form)
+        form = cast(URLEncodedForm, req.form)
         self.assertIsNotNone(form)
         content_type = req.headers.get("Content-Type")
         self.assertIsNotNone(content_type)
         self.assertEqual("application/x-www-form-urlencoded", content_type)
-        self.assertIsInstance(form, QueryParams)
+        self.assertIsInstance(form, URLEncodedForm)
         expected = (
             (b"secret", b"MySecretKey"),
             (b"encrypted", b"BNTYvqs5E+E+gx0J+6yCG/UDUChX3yf61ks/ZeUei7k="),

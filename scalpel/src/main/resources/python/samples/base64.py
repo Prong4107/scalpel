@@ -1,7 +1,6 @@
 from base64 import b64decode, b64encode
 import binascii
 from pyscalpel.http import Request, Response
-from typing import cast
 
 
 def req_edit_in(req: Request) -> bytes:

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Protocol, TypeVar, Sequence, Any, TypeAlias, Literal
+from typing import Protocol, TypeVar, TypeAlias
 from abc import ABC, abstractmethod, ABCMeta
 
-from collections.abc import MutableMapping, Mapping
+from collections.abc import MutableMapping
 
 from pyscalpel.http.headers import Headers
 

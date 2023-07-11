@@ -29,8 +29,8 @@ from pyscalpel.http.body import (
     MultiPartFormSerializer,
     MultiPartForm,
     MultiPartFormField,
-    QueryParamsView,
-    QueryParams,
+    URLEncodedFormView,
+    URLEncodedForm,
     JSON_KEY_TYPES,
     JSON_VALUE_TYPES,
     CONTENT_TYPE_TO_SERIALIZER,
@@ -412,13 +412,13 @@ class Request:
         self.path = urllib.parse.urlunparse(["", "", path, params, query, fragment])
 
     @property
-    def query(self) -> QueryParamsView:
+    def query(self) -> URLEncodedFormView:
         """The query string parameters as a dict-like object
 
         Returns:
             QueryParamsView: The query string parameters
         """
-        return QueryParamsView(
+        return URLEncodedFormView(
             multidict.MultiDictView(self._get_query, self._set_query)
         )
 
@@ -690,7 +690,7 @@ class Request:
         self._update_deserialized_content(form)
 
     @property
-    def urlencoded_form(self) -> QueryParams:
+    def urlencoded_form(self) -> URLEncodedForm:
         """The urlencoded form data
 
         Converts the content to the urlencoded form format if needed.
@@ -701,12 +701,12 @@ class Request:
         """
         self._is_form_initialized = True
         return cast(
-            QueryParams,
+            URLEncodedForm,
             self._update_serializer_and_get_form(URLEncodedFormSerializer()),
         )
 
     @urlencoded_form.setter
-    def urlencoded_form(self, form: QueryParams):
+    def urlencoded_form(self, form: URLEncodedForm):
         self._is_form_initialized = True
         self._update_serializer_and_set_form(URLEncodedFormSerializer(), form)
 
