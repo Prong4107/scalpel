@@ -6,5 +6,4 @@ menu:
         weight: 2
 ---
 
-
-TODO: Include javadoc HTML
+<!-- Nothing, this path should serve the Javadoc HTML -->
