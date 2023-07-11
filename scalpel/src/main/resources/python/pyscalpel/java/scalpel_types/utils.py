@@ -38,7 +38,4 @@ class IPythonUtils(JavaObject):
         pass
 
 
-# from lexfo.scalpel import PythonUtils as _PythonUtils  # pylint: disable=import-error # type: ignore
-
-# PythonUtils: IPythonUtils = cast(IPythonUtils, _PythonUtils)
 PythonUtils: IPythonUtils = import_java("lexfo.scalpel", "PythonUtils", IPythonUtils)

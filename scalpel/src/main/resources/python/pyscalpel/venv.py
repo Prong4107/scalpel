@@ -1,3 +1,11 @@
+"""
+    This module provides reimplementations of Python virtual environnements scripts
+    
+    This designed to be used internally, 
+    but in the case where the user desires to dynamically switch venvs using this,
+    they should ensure the selected venv has the required dependencies.
+"""
+
 import os
 import sys
 import glob

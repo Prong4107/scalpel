@@ -1,3 +1,5 @@
+"""Events that can be passed to the match() hook"""
+
 from typing import Literal
 
 EVENTS = (
