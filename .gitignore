@@ -45,3 +45,21 @@ notes/
 log*.txt
 
 __pycache__
+
+generated/
+src/public/
+node_modules/
+public/
+src/resources/_gen/
+.venv/
+build/
+bin/
+.gradle
+.idea
+notes/
+__pycache__
+old_deocs/
+TODO.md
+install.md
+note.md
+burp.licence

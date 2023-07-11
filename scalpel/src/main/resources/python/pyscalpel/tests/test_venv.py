@@ -41,8 +41,8 @@ if os.getenv("_VENV_TESTS"):
             activate(self.venv_path)
             self.assertEqual(sys.prefix, os.path.abspath(self.venv_path))
             deactivate()
-            self.assertEqual(sys.prefix, old_prefix)
-            self.assertEqual(sys.exec_prefix, old_exec_prefix)
+            self.assertEqual(sys.prefix, _old_prefix)
+            self.assertEqual(sys.exec_prefix, _old_exec_prefix)
 
         def tearDown(self):
             if os.path.exists(self.venv_path):

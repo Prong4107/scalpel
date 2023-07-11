@@ -257,7 +257,7 @@ try:
         py_req = Request.from_burp(req, service)
 
         flow = Flow(py_req.scheme, py_req.host, py_req.port, py_req)
-        if not call_match_callback(flow, "edit_request_in"):
+        if not call_match_callback(flow, "req_edit_in"):
             return None
 
         logger.all(f"Python: calling {callback.__name__}")
@@ -290,7 +290,7 @@ try:
         py_req = Request.from_burp(req, service)
 
         flow = Flow(py_req.scheme, py_req.host, py_req.port, py_req, text=bytes(text))
-        if not call_match_callback(flow, "edit_request_out"):
+        if not call_match_callback(flow, "req_edit_out"):
             return None
 
         logger.all(f"Python: calling {callback.__name__}")
@@ -322,7 +322,7 @@ try:
         py_res = Response.from_burp(res, service=service, request=request)
 
         flow = Flow(py_res.scheme, py_res.host, py_res.port, py_res.request, py_res)
-        if not call_match_callback(flow, "edit_response_in"):
+        if not call_match_callback(flow, "res_edit_in"):
             return None
 
         logger.all(f"Python: calling {callback.__name__}")
@@ -358,7 +358,7 @@ try:
         flow = Flow(
             py_res.scheme, py_res.host, py_res.port, py_res.request, py_res, bytes(text)
         )
-        if not call_match_callback(flow, "edit_response_out"):
+        if not call_match_callback(flow, "res_edit_out"):
             return None
 
         logger.all(f"Python: calling {callback.__name__}")

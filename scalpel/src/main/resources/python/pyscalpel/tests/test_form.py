@@ -8,7 +8,7 @@ from pyscalpel.http.body.form import (
     MultiPartForm,
     Mapping,
     cast,
-    QueryParams,
+    URLEncodedForm,
     JSON_KEY_TYPES,
     JSON_VALUE_TYPES,
     JSONForm,
@@ -186,26 +186,26 @@ class URLEncodedFormSerializerTestCase(unittest.TestCase):
     def test_deserialize(self):
         serializer = URLEncodedFormSerializer()
         body = b"name=John&age=30"
-        expected = QueryParams([(b"name", b"John"), (b"age", b"30")])
+        expected = URLEncodedForm([(b"name", b"John"), (b"age", b"30")])
         result = serializer.deserialize(body)
         self.assertEqual(result, expected)
 
     def test_deserialize_empty_body(self):
         serializer = URLEncodedFormSerializer()
         body = b""
-        expected = QueryParams([])
+        expected = URLEncodedForm([])
         result = serializer.deserialize(body)
         self.assertEqual(result, expected)
 
     def test_get_empty_form(self):
         serializer = URLEncodedFormSerializer()
-        expected = QueryParams([])
+        expected = URLEncodedForm([])
         result = serializer.get_empty_form()
         self.assertEqual(result, expected)
 
     def test_deserialized_type(self):
         serializer = URLEncodedFormSerializer()
-        expected = QueryParams
+        expected = URLEncodedForm
         result = serializer.deserialized_type()
         self.assertEqual(result, expected)
 
@@ -222,19 +222,19 @@ class URLEncodedFormSerializerTestCase(unittest.TestCase):
         ]
         serializer = URLEncodedFormSerializer()
         imported_form = serializer.import_form(exported_form)  # type: ignore
-        self.assertIsInstance(imported_form, QueryParams)
+        self.assertIsInstance(imported_form, URLEncodedForm)
         items = list(imported_form.items())
         self.assertEqual(items, expected_fields)
 
     def test_export_form(self):
-        form = QueryParams([(b"key1", b"value1"), (b"key2", b"value2")])
+        form = URLEncodedForm([(b"key1", b"value1"), (b"key2", b"value2")])
         serializer = URLEncodedFormSerializer()
         exported_form = serializer.export_form(form)
         expected_exported_form = ((b"key1", b"value1"), (b"key2", b"value2"))
         self.assertEqual(exported_form, expected_exported_form)
 
     def test_serialize_does_urlencode(self):
-        form = QueryParams(
+        form = URLEncodedForm(
             ((b"secret", b"MySecretKey"), (b"encrypted", b"+ZSV6BfZwcr7c6m3fZTHyg=="))
         )
         serializer = URLEncodedFormSerializer()
@@ -383,7 +383,7 @@ class FormConversionsTestCase(unittest.TestCase):
         json_serializer = JSONFormSerializer()
         urlencode_serializer = URLEncodedFormSerializer()
 
-        form = QueryParams(
+        form = URLEncodedForm(
             [
                 (b"key1[]", b"1"),
                 (b"key1[]", b"2"),
@@ -441,7 +441,7 @@ class FormConversionsTestCase(unittest.TestCase):
             (b"level0[level1][level2]", b"nested"),
         )
 
-        form = QueryParams(list(tupled_form))
+        form = URLEncodedForm(list(tupled_form))
 
         exported = urlencode_serializer.export_form(form)
 
@@ -470,7 +470,7 @@ class FormConversionsTestCase(unittest.TestCase):
         urlencode_serializer = URLEncodedFormSerializer()
         multipart_serializer = MultiPartFormSerializer()
 
-        form = QueryParams(
+        form = URLEncodedForm(
             [
                 (b"key1[]", b"1"),
                 (b"key1[]", b"2"),
@@ -601,7 +601,7 @@ nested\r
 
         imported = urlencode_serializer.import_form(exported, req=req)
 
-        expected_imported = QueryParams(expected_exported)
+        expected_imported = URLEncodedForm(expected_exported)
 
         self.assertEqual(expected_imported, imported)
 
@@ -668,7 +668,7 @@ nested\r
 
         # Convert form to URLEncoded
         imported = URLEncodedFormSerializer().import_form(exported)
-        expected_imported = QueryParams(expected_exported)
+        expected_imported = URLEncodedForm(expected_exported)
 
         self.assertTupleEqual(expected_imported.fields, imported.fields)
 
