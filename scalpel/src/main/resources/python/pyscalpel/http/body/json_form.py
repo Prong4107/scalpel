@@ -32,6 +32,14 @@ JSON_VALUE_TYPES = (
 # TODO: JSON keys are actually only strings, so we should wrap
 #   getter and setter  to always convert the keys to string.
 class JSONForm(dict[JSON_KEY_TYPES, JSON_VALUE_TYPES]):
+    """Form representing a JSON object {}
+
+    Implemented by a plain dict
+
+    Args:
+        dict (_type_): A dict containing JSON-compatible types.
+    """
+
     pass
 
 
