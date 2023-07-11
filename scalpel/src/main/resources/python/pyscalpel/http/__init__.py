@@ -5,6 +5,13 @@
 from .request import Request, Headers
 from .response import Response
 from .flow import Flow
+from .utils import match_patterns, host_is
 
-
-__all__ = ["Request", "Response", "Headers", "Flow"]
+__all__ = [
+    "Request",
+    "Response",
+    "Headers",
+    "Flow",
+    "host_is",
+    "match_patterns",
+]

@@ -40,6 +40,7 @@ DEFAULT_CONTENT_TYPE = "application/octet-stream"
 
 def get_mime(filename: str | None) -> str:
     """Guess the MIME type from a filename based on the extension
+
         Returns the default content-type when passing None
 
     Args:
@@ -82,10 +83,12 @@ def escape_parameter(param: str | bytes, extended=False) -> str:
 
 class MultiPartFormField:
     """
-    This class represents a field in a multipart/form-data request. It provides functionalities
-    to create form fields from various inputs like raw body parts, files and manual construction
-    with name, filename, body, and content type. It also offers properties and methods to interact
-    with the form field's headers and content.
+    This class represents a field in a multipart/form-data request.
+
+    It provides functionalities to create form fields from various inputs like raw body parts,
+    files and manual construction with name, filename, body, and content type.
+
+    It also offers properties and methods to interact with the form field's headers and content.
 
     Raises:
         StopIteration: Raised when the specified Content-Disposition header is not found or could not be parsed.
@@ -323,24 +326,28 @@ class MultiPartFormField:
 
 class MultiPartForm(Mapping[str, MultiPartFormField]):
     """
-    This class represents a multipart/form-data request. It contains a collection of MultiPartFormField objects,
-    providing methods to add, get, and delete form fields. The class also enables the conversion of the entire form
+    This class represents a multipart/form-data request.
+
+    It contains a collection of MultiPartFormField objects, providing methods
+    to add, get, and delete form fields.
+
+    The class also enables the conversion of the entire form
     into bytes for transmission.
 
-    Args:
-        fields (Sequence[MultiPartFormField]): A sequence of MultiPartFormField objects that make up the form.
-        content_type (str): The content type of the form.
-        encoding (str): The encoding of the form.
+    - Args:
+        - fields (Sequence[MultiPartFormField]): A sequence of MultiPartFormField objects that make up the form.
+        - content_type (str): The content type of the form.
+        - encoding (str): The encoding of the form.
 
-    Raises:
-        RuntimeError: Raised when an incorrect type is passed to MultiPartForm.set.
-        KeyError: Raised when trying to access a field that does not exist in the form.
+    - Raises:
+        - RuntimeError: Raised when an incorrect type is passed to MultiPartForm.set.
+        - KeyError: Raised when trying to access a field that does not exist in the form.
 
-    Returns:
-        MultiPartForm: An instance of the class representing a multipart/form-data request.
+    - Returns:
+        - MultiPartForm: An instance of the class representing a multipart/form-data request.
 
-    Yields:
-        Iterator[MultiPartFormField]: Yields each field in the form.
+    - Yields:
+        - Iterator[MultiPartFormField]: Yields each field in the form.
     """
 
     fields: list[MultiPartFormField]
@@ -364,13 +371,13 @@ class MultiPartForm(Mapping[str, MultiPartFormField]):
     ) -> MultiPartForm:
         """Create a MultiPartForm by parsing a raw multipart form
 
-        Args:
-            content (bytes): The multipart form as raw bytes
-            content_type (str): The Content-Type header with the corresponding boundary param (required).
-            encoding (str, optional): The encoding to use (not required). Defaults to "utf-8".
+        - Args:
+            - content (bytes): The multipart form as raw bytes
+            - content_type (str): The Content-Type header with the corresponding boundary param (required).
+            - encoding (str, optional): The encoding to use (not required). Defaults to "utf-8".
 
-        Returns:
-            MultiPartForm: The parsed multipart form
+        - Returns:
+           - MultiPartForm: The parsed multipart form
         """
         decoder = MultipartDecoder(content, content_type, encoding=encoding)
         parts: tuple[BodyPart] = decoder.parts
