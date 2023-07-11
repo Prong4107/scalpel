@@ -58,7 +58,7 @@ class Headers(MITMProxyHeaders):
 
     def to_burp(self) -> list[IHttpHeader]:
         """Convert the headers to a Burp suite HttpHeader array.
-        :return: A Burp suite HttpHeader array with the same headers as the Headers.
+        :return: A Burp suite HttpHeader array.
         """
 
         # Convert the list of tuples: (key, value) to a list of Burp IHttpHeaders
