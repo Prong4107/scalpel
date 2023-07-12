@@ -178,7 +178,7 @@ public class ScalpelExecutor {
 						}
 					} catch (InterruptedException e) {
 						// Log the error.
-						ScalpelLogger.logError("Task " + name + "interrupted:");
+						ScalpelLogger.error("Task " + name + "interrupted:");
 
 						// Log the stack trace.
 						ScalpelLogger.logStackTrace(e);
@@ -377,7 +377,7 @@ public class ScalpelExecutor {
 				// Ensure the result can be cast to the expected type.
 				return Optional.of(castResult);
 			} catch (ClassCastException e) {
-				ScalpelLogger.logError("Failed casting " + name + "'s result:");
+				ScalpelLogger.error("Failed casting " + name + "'s result:");
 				// Log the error stack trace.
 				ScalpelLogger.logStackTrace(e);
 			}
@@ -521,7 +521,7 @@ public class ScalpelExecutor {
 						task.result = Optional.empty();
 
 						if (!e.getMessage().contains("Unable to find object")) {
-							ScalpelLogger.logError("Error in task loop:");
+							ScalpelLogger.error("Error in task loop:");
 							ScalpelLogger.logStackTrace(e);
 						}
 					}
@@ -595,7 +595,7 @@ public class ScalpelExecutor {
 		try {
 			return Venv.getSitePackagesPath(Config.getDefaultVenv()).toString();
 		} catch (IOException e) {
-			ScalpelLogger.logError(
+			ScalpelLogger.error(
 				"Could not find a default include path for JEP"
 			);
 		}
@@ -657,7 +657,7 @@ public class ScalpelExecutor {
 				})
 				.orElseThrow();
 		} catch (Exception e) {
-			ScalpelLogger.logError("Failed to instantiate interpreter:");
+			ScalpelLogger.error("Failed to instantiate interpreter:");
 			ScalpelLogger.logStackTrace(e);
 			throw e;
 		}

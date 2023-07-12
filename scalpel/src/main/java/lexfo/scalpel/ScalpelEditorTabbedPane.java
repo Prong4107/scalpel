@@ -121,7 +121,7 @@ public class ScalpelEditorTabbedPane
 			);
 		} catch (Exception e) {
 			// Log the stack trace.
-			ScalpelLogger.logError("Couldn't instantiate new editor:");
+			ScalpelLogger.error("Couldn't instantiate new editor:");
 			ScalpelLogger.logStackTrace(e);
 
 			// Throw the error again.
