@@ -120,7 +120,7 @@ public class ScalpelRawEditor
 			this.type = type;
 		} catch (Exception e) {
 			// Log the error.
-			ScalpelLogger.logError("Couldn't instantiate new editor:");
+			ScalpelLogger.error("Couldn't instantiate new editor:");
 
 			// Log the stack trace.
 			ScalpelLogger.logStackTrace(e);

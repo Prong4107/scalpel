@@ -2,6 +2,7 @@ package lexfo.scalpel;
 
 import burp.api.montoya.logging.Logging;
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 /**
  * Provides methods for logging messages to the Burp Suite output and standard streams.
@@ -89,16 +90,6 @@ public class ScalpelLogger {
 	}
 
 	/**
-	 * Logs the specified message to the Burp Suite output and standard output at the ERROR level.
-	 *
-	 * @param logger The Logging object to use.
-	 * @param msg    The message to log.
-	 */
-	public static void error(String msg) {
-		log(Level.ERROR, msg);
-	}
-
-	/**
 	 * Logs the specified message to the Burp Suite output and standard output at the FATAL level.
 	 *
 	 * @param logger The Logging object to use.
@@ -117,9 +108,21 @@ public class ScalpelLogger {
 	 */
 	public static void log(Level level, String msg) {
 		if (loggerLevel.value() <= level.value()) {
-			System.out.println(msg);
+			final Boolean error =
+				level.value > Level.ERROR.value && level != Level.ALL;
+
+			final Consumer<String> stdLog = error
+				? System.err::println
+				: System.out::println;
+
+			stdLog.accept(msg);
+
 			if (logger != null) {
-				logger.logToOutput(msg);
+				final Consumer<String> burpLog = error
+					? logger::logToError
+					: logger::logToOutput;
+
+				burpLog.accept(msg);
 			}
 		}
 	}
@@ -140,7 +143,7 @@ public class ScalpelLogger {
 	 * @param logger The Logging object to use.
 	 * @param msg    The message to log.
 	 */
-	public static void logError(String msg) {
+	public static void error(String msg) {
 		System.err.println(msg);
 		if (logger != null) {
 			logger.logToError(msg);
@@ -154,12 +157,12 @@ public class ScalpelLogger {
 	 * @param throwed The throwable to log.
 	 */
 	public static void logStackTrace(Throwable throwed) {
-		logError("ERROR:");
-		logError(throwed.getMessage());
-		logError(throwed.toString());
+		error("ERROR:");
+		error(throwed.getMessage());
+		error(throwed.toString());
 		Arrays
 			.stream(throwed.getStackTrace())
-			.forEach(el -> logError(el.toString()));
+			.forEach(el -> error(el.toString()));
 	}
 
 	/**
@@ -170,7 +173,7 @@ public class ScalpelLogger {
 	public static void logStackTrace() {
 		Arrays
 			.stream(Thread.currentThread().getStackTrace())
-			.forEach(el -> logError(el.toString()));
+			.forEach(el -> error(el.toString()));
 	}
 
 	/**
@@ -183,7 +186,7 @@ public class ScalpelLogger {
 		Arrays
 			.stream(Thread.currentThread().getStackTrace())
 			.forEach(el -> {
-				if (error) logError(el.toString()); else logger.logToOutput(
+				if (error) error(el.toString()); else logger.logToOutput(
 					el.toString()
 				);
 			});

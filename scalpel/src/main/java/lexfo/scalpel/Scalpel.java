@@ -155,7 +155,7 @@ public class Scalpel implements BurpExtension {
 			ScalpelLogger.all(
 				"^ An error has occured, look at the \"Errors\" tab ^"
 			);
-			ScalpelLogger.logError("Failed to initialize scalpel:");
+			ScalpelLogger.error("Failed to initialize scalpel:");
 			ScalpelLogger.logStackTrace(e);
 		}
 	}
