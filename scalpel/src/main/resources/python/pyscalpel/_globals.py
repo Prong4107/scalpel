@@ -1,4 +1,5 @@
 import sys
+from pyscalpel.java.scalpel_types import Context
 
 
 # Define a default logger to use if for some reason the logger is not initialized
@@ -6,7 +7,7 @@ import sys
 class DefaultLogger:
     """Debug logger to use if for some reason the logger is not initialized"""
 
-    def logToOutput(self, msg: str):  # pylint: disable=invalid-name
+    def all(self, msg: str):
         """Prints the message to the standard output
 
         Args:
@@ -14,7 +15,47 @@ class DefaultLogger:
         """
         print(msg)
 
-    def logToError(self, msg: str):  # pylint: disable=invalid-name
+    def trace(self, msg: str):
+        """Prints the message to the standard output
+
+        Args:
+            msg (str): The message to print
+        """
+        print(msg)
+
+    def debug(self, msg: str):
+        """Prints the message to the standard output
+
+        Args:
+            msg (str): The message to print
+        """
+        print(msg)
+
+    def info(self, msg: str):
+        """Prints the message to the standard output
+
+        Args:
+            msg (str): The message to print
+        """
+        print(msg)
+
+    def warn(self, msg: str):
+        """Prints the message to the standard output
+
+        Args:
+            msg (str): The message to print
+        """
+        print(msg)
+
+    def fatal(self, msg: str):
+        """Prints the message to the standard output
+
+        Args:
+            msg (str): The message to print
+        """
+        print(msg)
+
+    def error(self, msg: str):
         """Prints the message to the standard error
 
         Args:
@@ -24,3 +65,5 @@ class DefaultLogger:
 
 
 logger: DefaultLogger = DefaultLogger()
+
+ctx: Context
