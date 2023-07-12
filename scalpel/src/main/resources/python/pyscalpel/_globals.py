@@ -66,4 +66,4 @@ class DefaultLogger:
 
 logger: DefaultLogger = DefaultLogger()
 
-ctx: Context
+ctx: Context = Context()  # type: ignore
