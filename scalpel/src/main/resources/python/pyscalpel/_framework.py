@@ -51,11 +51,11 @@ except NameError:
 
 try:
     from pyscalpel.venv import activate
-    from pyscalpel.java.scalpel_types.scalpel import Scalpel
+    from pyscalpel.java.scalpel_types import Context
 
-    scalpel: Scalpel = cast(Scalpel, __scalpel__)  # type: ignore pylint: disable=undefined-variable
+    ctx: Context = cast(Context, __scalpel__)  # type: ignore pylint: disable=undefined-variable
 
-    VENV = scalpel["venv"]
+    VENV = ctx["venv"]
 
     activate(VENV)
 
@@ -68,9 +68,10 @@ try:
 
     # Set the logger in the globals module
     pyscalpel._globals.logger = logger  # pylint: disable=protected-access
+    pyscalpel._globals.ctx = ctx  # pylint: disable=protected-access
 
     # Get the user script path from the JEP initialized variable
-    user_script: str = scalpel["user_script"]
+    user_script: str = ctx["user_script"]
 
     # Get utils to dynamically import the user script in a convinient way
     import importlib.util

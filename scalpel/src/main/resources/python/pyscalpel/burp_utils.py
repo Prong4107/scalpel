@@ -13,6 +13,8 @@ from pyscalpel.encoding import always_bytes, urldecode, urlencode_all
 
 
 logger = pyscalpel._globals.logger
+ctx = pyscalpel._globals.ctx
+
 
 HttpRequestOrResponse = TypeVar("HttpRequestOrResponse", IHttpRequest, IHttpResponse)
 

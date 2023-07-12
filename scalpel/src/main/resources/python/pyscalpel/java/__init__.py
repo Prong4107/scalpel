@@ -6,5 +6,14 @@
 from .bytes import JavaBytes
 from .import_java import import_java
 from .object import JavaClass, JavaObject
+from . import burp
+from . import scalpel_types
 
-__all__ = ["import_java", "JavaObject", "JavaBytes", "JavaClass"]
+__all__ = [
+    "burp",
+    "scalpel_types",
+    "import_java",
+    "JavaObject",
+    "JavaBytes",
+    "JavaClass",
+]
