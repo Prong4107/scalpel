@@ -8,5 +8,5 @@ PAYLOAD = str(ctx["API"].collaborator().defaultPayloadGenerator().generatePayloa
 
 
 def request(req: Request) -> Request | None:
-    req.headers["Host"] = PAYLOAD
+    req.host_header = PAYLOAD
     return req
