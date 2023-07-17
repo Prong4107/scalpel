@@ -82,8 +82,6 @@ With Burp vanilla, it would make editing the request very tedious (using "copy t
 
 Scalpel's main goal and reason to exist is to make working around such cases trivial.
 
-> Note: One might think existing Burp extensions like piper can handle such cases, but it is actually too limited, for example, when intercepting a response, piper cannot get informations form the originating request, which is required in this case. In general, Scalpel allows you to work around cases more complex than other Burp extensions like Piper or Hackvertor.
-
 ## Reimplementing the encryption / decryption.
 To use Scalpel for handling this API's encryption, we first have to reimplement the encryption process in Python.
 
