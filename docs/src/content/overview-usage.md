@@ -104,7 +104,7 @@ menu:
             return req
         ```
 
-    -   You will have a tab for the "filename" parameter and a tab for the "directory" parameter
+    -   You will have a tab for the "filename" parameter and a tab for the "directory" parameter.
         {{< figure src="/screenshots/multiple_params.png" >}}
         {{< figure src="/screenshots/multiple_tabs.png" >}}
 
@@ -114,7 +114,7 @@ menu:
 
     -   If `request()` returns `None`, the original request will be forwarded without modifications.
         -   Same for `response()`
-    -   If `req_edit_in()` or `res_edit_in()` returns `None`, the editor tab will not be displayed
+    -   If `req_edit_in()` or `res_edit_in()` returns `None`, the editor tab will not be displayed.
     -   If `req_edit_out()` or `res_edit_out()` returns `None`, the request will not be modified.
     -   If `req_edit_out()` / `res_edit_out()` isn't declared but `req_edit_in()` / `res_edit_in()` is, the corresponding editor will be **read-only**.
 
