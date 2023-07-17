@@ -7,15 +7,22 @@ menu:
 
 # Decrypting custom encryption.
 
-## The setup
+## Problem
 
-In this tutorial, I'm going to show you how simple it is to use Scalpel to manually and programatically editing traffic with an API that uses a custom encrypted protocol.
+An IOT appliance adds an obfuscation layer to its HTTP communications by encrypting the body of its requests and responses with a key.
 
-This API can be tested using the code from the Scalpel repository at `test/server.js`
+On every HTTP request, the program sends two POST parameters, secret (the encryption key) and encrypted the ciphertext.
+
+We will use scalpel to provide an additional tab in the repeater which displays the plaintext for each request and response.
+
+Additionally, we'll be able to edit the plaintext, and scalpel will automatically encrypt it when we hit "Send".
+
+We added a mock API to test this case in the Scalpel repository at `test/server.js`
 
 ## Taking a look at the target:
 
 Lets take a first look at our API code:
+
 ```ts
 const { urlencoded } = require("express");
 
@@ -76,6 +83,7 @@ app.post("/encrypt", (req, res) => {
 
 app.listen(3000, ["localhost"]);
 ```
+
 As we can see, every request content is encrypted using AES using a secret passed alongside the content and the response is encrypted using the same provided secret.
 
 With Burp vanilla, it would make editing the request very tedious (using "copy to file"), and when faced against a case like this, people will either work with custom scripts outside of Burp, use tools like [mitmproxy](https://docs.mitmproxy.org/stable/), write their own Burp Extension in Java for this specific use case (which is slow) or give up.
@@ -83,8 +91,8 @@ With Burp vanilla, it would make editing the request very tedious (using "copy t
 Scalpel's main goal and reason to exist is to make working around such cases trivial.
 
 ## Reimplementing the encryption / decryption.
-To use Scalpel for handling this API's encryption, we first have to reimplement the encryption process in Python.
 
+To use Scalpel for handling this API's encryption, we first have to reimplement the encryption process in Python.
 
 ### Installing Python dependencies
 
