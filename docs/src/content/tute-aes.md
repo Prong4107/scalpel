@@ -146,32 +146,37 @@ def encrypt(secret: bytes, data: bytes) -> bytes:
 We can now use our above code to automatically decrypt our content to plaintext and re-encrypt a modified plaintext.
 
 As you should have seen in [Usage]({{< relref "overview-usage" >}}), request editors are created by declaring the `req_edit_in` hook:
+
 ```python
 def req_edit_in_encrypted(req: Request) -> bytes | None:
     ...
 ```
-Here, we added the "_encrypted" suffix to the hook name to give the title "encrypted" to the tab.
 
-This hook receives the request to edit and returns the bytes to display in the editor.
-- We want to display the plain text, so we:
-  - Get the secret and the encrypted content from the body
-  - Decrypt the content using the secret
-  - Return the decrypted bytes.
-  ```python
-  from pyscalpel.http import Request, Response, Flow
+Here, we added the "\_encrypted" suffix to the hook name to give the title "encrypted" to the tab.
 
-  def req_edit_in_encrypted(req: Request) -> bytes | None:
-      secret = req.form[b"secret"]
-      encrypted = req.form[b"encrypted"]
-      if not encrypted:
-          return b""
+This hook is called when Burp opens the request in an editor, it receives the request to edit and returns the bytes to display in the editor.
 
-      return decrypt(secret, encrypted)
-  ```
+-   We want to display the plain text, so we:
+
+    -   Get the secret and the encrypted content from the body
+    -   Decrypt the content using the secret
+    -   Return the decrypted bytes.
+
+    ```python
+    from pyscalpel.http import Request, Response, Flow
+
+    def req_edit_in_encrypted(req: Request) -> bytes | None:
+        secret = req.form[b"secret"]
+        encrypted = req.form[b"encrypted"]
+        if not encrypted:
+            return b""
+
+        return decrypt(secret, encrypted)
+    ```
 
 Now, after loading this script with Scalpel and opening such an encrypted request in Burp, you should see a "Scalpel" tab along the "Pretty", "Raw", and "Hex" tabs:
-  {{< figure src="/screenshots/encrypty-scalpel-tab.png" >}}
-  {{< figure src="/screenshots/encrypt-tab-selected.png" >}}
+{{< figure src="/screenshots/encrypty-scalpel-tab.png" >}}
+{{< figure src="/screenshots/encrypt-tab-selected.png" >}}
 
 Right-now, our custom editor is uneditable as it has no way to encrypt the content back, to do that, we need to implement the `req_edit_out` hook.
 
