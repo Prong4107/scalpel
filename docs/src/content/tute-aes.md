@@ -87,19 +87,25 @@ To use Scalpel for handling this API's encryption, we first have to reimplement 
 
 
 ### Installing Python dependencies
-- To work with AES in Python, we need the `pycryptodome` module, which isn't installed by default.
+
+To work with AES in Python, we need the `pycryptodome` module, which isn't installed by default.
 All Scalpel python scripts run in a virtual env, and Scalpel provides a way to switch venvs and install packages through Burp GUI.
-- First, go to the Burp "Scalpel" tab:
-  {{< figure src="/screenshots/terminal.png" >}}
-- On the left, you can see UI you can use to create and select new venvs.
-  - {{< figure src="/screenshots/venv.png" >}}
-  - Let's create a venv for this use case by entering a name and pressing enter:
-    {{< figure src="/screenshots/aes-venv.png" >}}
-    {{< figure src="/screenshots/venv-installing.png" >}}
-  - We can now select our venv by clicking on it:
-    {{< figure src="/screenshots/select-venv.png" >}}
-  - The central terminal is now activated in the selected venv and can be used to install packages using pip in the usual way:
-    {{< figure src="/screenshots/venv-pycryptodome.png" >}}
+
+Let's jump to the "Scalpel" tab:
+{{< figure src="/screenshots/terminal.png" >}}
+
+On the left, you can see UI you can use to create and select new venvs.
+{{< figure src="/screenshots/venv.png" >}}
+
+Let's create a venv for this use case by entering a name and pressing enter:
+{{< figure src="/screenshots/aes-venv.png" >}}
+{{< figure src="/screenshots/venv-installing.png" >}}
+
+We can now select our venv by clicking on it:
+{{< figure src="/screenshots/select-venv.png" >}}
+
+The central terminal is now activated in the selected venv and can be used to install packages using pip in the usual way:
+{{< figure src="/screenshots/venv-pycryptodome.png" >}}
 
 
 ---
