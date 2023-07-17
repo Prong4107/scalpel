@@ -24,4 +24,6 @@ menu:
     -   If you cannot update your distribution, you must setup a separate Python >=3.10 installation and run Burp with the appropriate environnement so that your separate installation will be used.
         -   Tip: You can use [pyenv](https://github.com/pyenv/pyenv) to easily install and switch Python versions.
 -   Why does scalpel installs mitmproxy ?
-    - Scalpel uses utilities from the mitmproxy package, we may eventually stop using or re-implement this utilities to drop the need to install such a heavy package.
+    -   Scalpel uses utilities from the mitmproxy package, we may eventually stop using or re-implement this utilities to drop the need to install such a heavy package.
+-   I have installed Python using the Microsoft Store and Scalpel doesn't work.
+    -   The Microsoft Store Python is a sandboxed version designed for education purposes, it has multiple different behaviours that are incompatible with Scalpel. To use Scalpel, it is required to install Python from the [official source](https://www.python.org/downloads/windows/).
