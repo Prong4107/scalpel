@@ -142,7 +142,8 @@ def encrypt(secret: bytes, data: bytes) -> bytes:
 ```
 
 ## Creating custom editors
-Now we have everything we need to implement the logic needed to create custom editors that will allow us to edit the content in plaintext and automatically re-encrypt our modifications.
+
+We can now use our above code to automatically decrypt our content to plaintext and re-encrypt a modified plaintext.
 
 As you should have seen in [Usage]({{< relref "overview-usage" >}}), request editors are created by declaring the `req_edit_in` hook:
 ```python
