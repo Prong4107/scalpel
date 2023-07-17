@@ -107,9 +107,12 @@ We can now select our venv by clicking on it:
 The central terminal is now activated in the selected venv and can be used to install packages using pip in the usual way:
 {{< figure src="/screenshots/venv-pycryptodome.png" >}}
 
+We now have pycryptodome installed and we're ready to code our scalpel script.
 
 ---
-Now that we have pycryptodome, we can reimplement the encryption in Python like this:
+
+With pycryptodome, we can reimplement the encryption in Python like this:
+
 ```python
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
