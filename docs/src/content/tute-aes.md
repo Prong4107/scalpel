@@ -198,6 +198,7 @@ By adding this hook, you should now be able to edit the plain text and it will a
 Now, we would like to be able to decrypt the response to see if our changes were reflected.
 
 The process is basically the same:
+
 ```python
 def res_edit_in_encrypted(res: Response) -> bytes | None:
     secret = res.request.form[b"secret"]
@@ -214,5 +215,31 @@ def res_edit_out_encrypted(res: Response, text: bytes) -> Response:
     res.content = encrypt(secret, text)
     return res
 ```
+
     {{< figure src="/screenshots/decrypted-response.png" >}}
 
+You can now edit the responses received by the browser as well.
+
+### Filtering requests/responses sent to hooks.
+
+Scalpel provides a [match()]({{< relref "addons-api#match" >}}) hook to filter unwanted requests from being treated by your hooks.
+
+In this case, the encrypted requests are only sent to the `/encrypt` path and contains a `secret`, so we shouldn't try to decrypt traffic that do not match this.
+
+```python
+from pyscalpel.http import Request, Response, Flow
+
+def match(flow: Flow) -> bool:
+    return flow.path_is("/encrypt*") and flow.request.form.get(b"secret") is not None
+```
+
+# Conclusion
+
+In this tutorial, we've taken a look at how to decrypt a custom encryption in IoT appliance communications using Scalpel.
+This involved understanding the existing API encryption code, recreating the encryption process in Python, installing necessary Python dependencies, and creating custom editors to handle decryption and re-encryption of modified content.
+
+We implemented this process for both request and response flows, allowing us to view and manipulate the plaintext communication, then re-encrypt it before sending. This approach considerably simplifies the process of analyzing and interacting with encrypted data, reducing the need for cumbersome workarounds or additional external tools.
+
+Remember, although we've used a specific case of AES-256-CBC encryption in this tutorial, the general principle and steps can be applied to various other encryption techniques as well. The main requirement is to understand the encryption process and be able to reproduce it in Python.
+
+Scalpel is meant to be a versatile tool in scenarios where we encounter custom encryption, making it easier to analyze and modify such encrypted data for security testing purposes.
