@@ -178,22 +178,22 @@ Now, after loading this script with Scalpel and opening such an encrypted reques
 {{< figure src="/screenshots/encrypty-scalpel-tab.png" >}}
 {{< figure src="/screenshots/encrypt-tab-selected.png" >}}
 
-Right-now, our custom editor is uneditable as it has no way to encrypt the content back, to do that, we need to implement the `req_edit_out` hook.
+Right-now, the additional tab is uneditable as it has no way to encrypt the content back. To do so, we need to implement the `req_edit_out` hook.
 
-- The `req_edit_out` simply has to implement the inverse effect of `req_edit_in`, which means:
-  - Encrypt the plain text using the secret
-  - Replace the old encrypted content in the request
-  - Return the new request.
-  ```python
-  def req_edit_out_encrypted(req: Request, text: bytes) -> Request:
-    secret = req.form[b"secret"]
-    req.form[b"encrypted"] = encrypt(secret, text)
-    return req
-  ```
-  > When present, the req_edit_out suffix has to match the req_edit_in suffix (here: `_encrypted`)
+-   The `req_edit_out` simply has to implement the inverse effect of `req_edit_in`, which means:
+    -   Encrypt the plain text using the secret
+    -   Replace the old encrypted content in the request
+    -   Return the new request.
+    ```python
+    def req_edit_out_encrypted(req: Request, text: bytes) -> Request:
+      secret = req.form[b"secret"]
+      req.form[b"encrypted"] = encrypt(secret, text)
+      return req
+    ```
+    > When present, the req_edit_out suffix has to match the req_edit_in suffix (here: `_encrypted`)
 
 By adding this hook, you should now be able to edit the plain text and it will automatically be encrypted using the hook you just implemented.
-  {{< figure src="/screenshots/encrypt-edited.png" >}}
+{{< figure src="/screenshots/encrypt-edited.png" >}}
 
 Now, we would like to be able to decrypt the response to see if our changes were reflected.
 
