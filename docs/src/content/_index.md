@@ -12,8 +12,8 @@ Scalpel is a Burp extension for intercepting and modifying HTTP trafic using sim
 
 ## Features
 
--   Make scripted changes to HTTP traffic using Python
--   Interactively edit plaintext decoded and encoded by a custom script
+-   Make scripted changes to HTTP traffic using Python.
+-   Interactively edit plaintext decoded and encoded by a custom script.
 
 [GitHub repository](https://REMOVED/scalpel).
 ^TODO: set github repo

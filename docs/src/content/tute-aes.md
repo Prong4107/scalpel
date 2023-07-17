@@ -17,7 +17,7 @@ We will use scalpel to provide an additional tab in the repeater which displays 
 
 Additionally, we'll be able to edit the plaintext, and scalpel will automatically encrypt it when we hit "Send".
 
-We added a mock API to test this case in the Scalpel repository at `test/server.js`
+We added a mock API to test this case in the Scalpel repository at `test/server.js.
 
 ## Taking a look at the target:
 
@@ -166,8 +166,8 @@ This hook is called when Burp opens the request in an editor, it receives the re
 
 -   We want to display the plain text, so we:
 
-    -   Get the secret and the encrypted content from the body
-    -   Decrypt the content using the secret
+    -   Get the secret and the encrypted content from the body.
+    -   Decrypt the content using the secret.
     -   Return the decrypted bytes.
 
     ```python
@@ -189,8 +189,8 @@ Now, after loading this script with Scalpel and opening such an encrypted reques
 Right-now, the additional tab is uneditable as it has no way to encrypt the content back. To do so, we need to implement the `req_edit_out` hook.
 
 -   The `req_edit_out` simply has to implement the inverse effect of `req_edit_in`, which means:
-    -   Encrypt the plain text using the secret
-    -   Replace the old encrypted content in the request
+    -   Encrypt the plain text using the secret.
+    -   Replace the old encrypted content in the request.
     -   Return the new request.
     ```python
     def req_edit_out_encrypted(req: Request, text: bytes) -> Request:

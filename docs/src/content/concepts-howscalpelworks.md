@@ -16,7 +16,7 @@ menu:
 -   User Scripts are executed in a venv the user can select in the "Scalpel" tab.
 -   Scalpel provides a terminal with a shell running in the selected venv to allow you to easily install packages.
 -   You can add existing venvs or create new ones using the dedicated GUI.
--   All data is stored in the `~/.scalpel` directory
+-   All data is stored in the `~/.scalpel` directory.
 
 ## Behaviour
 
