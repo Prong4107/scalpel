@@ -17,7 +17,7 @@ We will use scalpel to provide an additional tab in the repeater which displays 
 
 Additionally, we'll be able to edit the plaintext, and scalpel will automatically encrypt it when we hit "Send".
 
-We added a mock API to test this case in the Scalpel repository at `test/server.js.
+We added a mock API to test this case in the Scalpel repository at `test/server.js`.
 
 ## Taking a look at the target:
 
@@ -240,6 +240,10 @@ from pyscalpel.http import Request, Response, Flow
 def match(flow: Flow) -> bool:
     return flow.path_is("/encrypt*") and flow.request.form.get(b"secret") is not None
 ```
+
+The above match hook receives a [Flow](/api/pyscalpel/http.html#Flow) object, it contains a request, and, when treating a response, it contains both the response and its initiating request.
+
+It ensures the initiating request contained a `secret` field and was sent to a path matching `/encrypt*`
 
 # Conclusion
 
