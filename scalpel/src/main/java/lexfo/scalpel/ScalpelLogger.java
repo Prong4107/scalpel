@@ -47,7 +47,7 @@ public class ScalpelLogger {
 	 * Configured log level
 	 * TODO: Add to configuration.
 	 */
-	private static Level loggerLevel = Level.INFO;
+	private static Level loggerLevel = Level.DEBUG;
 
 	/**
 	 * Logs the specified message to the Burp Suite output and standard output at the TRACE level.
