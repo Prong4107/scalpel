@@ -11,7 +11,7 @@ menu:
 
 An IOT appliance adds an obfuscation layer to its HTTP communications by encrypting the body of its requests and responses with a key.
 
-On every HTTP request, the program sends two POST parameters, secret (the encryption key) and encrypted the ciphertext.
+On every HTTP request, the program sends two POST parameters, `secret` (the encryption key) and `encrypted` (the ciphertext).
 
 We will use scalpel to provide an additional tab in the repeater which displays the plaintext for each request and response.
 
