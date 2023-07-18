@@ -76,7 +76,7 @@ public class ScalpelUnpacker {
 	    @param zipFile The path to the Scalpel JAR file.
 	    @param extractFolder The path to the Scalpel resources directory.
 	*/
-	private void extractPythonRessources(String zipFile, String extractFolder) {
+	private void extractRessources(String zipFile, String extractFolder) {
 		ZipFile zip = null;
 		try {
 			final int BUFFER = 2048;
@@ -96,7 +96,10 @@ public class ScalpelUnpacker {
 				final String currentEntry = entry.getName();
 				final long size = entry.getSize();
 
-				if (!currentEntry.startsWith("python")) {
+				if (
+					!currentEntry.startsWith("python") &&
+					!currentEntry.startsWith("templates")
+				) {
 					continue;
 				}
 
@@ -155,7 +158,7 @@ public class ScalpelUnpacker {
 				);
 
 			ScalpelLogger.all("Extracting to " + ressourcesDirectory);
-			extractPythonRessources(getRunningJarPath(), getResourcesPath());
+			extractRessources(getRunningJarPath(), getResourcesPath());
 
 			ScalpelLogger.all(
 				"Successfully extracted running .jar to " + ressourcesDirectory

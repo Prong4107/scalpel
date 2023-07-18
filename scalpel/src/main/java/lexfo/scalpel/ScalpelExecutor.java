@@ -595,9 +595,7 @@ public class ScalpelExecutor {
 		try {
 			return Venv.getSitePackagesPath(Config.getDefaultVenv()).toString();
 		} catch (IOException e) {
-			ScalpelLogger.error(
-				"Could not find a default include path for JEP"
-			);
+			ScalpelLogger.warn("Could not find a default include path for JEP");
 		}
 		return "";
 	}
@@ -645,7 +643,12 @@ public class ScalpelExecutor {
 					burpEnv.put("framework", framework.getAbsolutePath());
 
 					// Pass the selected venv path so it can be activated by the framework.
-					burpEnv.put("venv", config.getSelectedVenvPath());
+					burpEnv.put(
+						"venv",
+						config.getSelectedVenv() +
+						File.separator +
+						Config.VENV_DIR
+					);
 
 					interp.set("__scalpel__", burpEnv);
 

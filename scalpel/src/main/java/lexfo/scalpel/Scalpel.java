@@ -38,7 +38,7 @@ public class Scalpel implements BurpExtension {
 		ScalpelLogger.all("Script: " + config.getUserScriptPath());
 		ScalpelLogger.all("Venvs: " + config.getVenvPaths());
 		ScalpelLogger.all("Default venv: " + Config.getDefaultVenv());
-		ScalpelLogger.all("Selected venv: " + config.getSelectedVenvPath());
+		ScalpelLogger.all("Selected venv: " + config.getSelectedVenv());
 	}
 
 	private static void setupJepFromConfig(Config config) throws IOException {

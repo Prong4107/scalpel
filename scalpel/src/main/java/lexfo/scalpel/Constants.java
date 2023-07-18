@@ -96,4 +96,8 @@ public class Constants {
 	public static final String PYTHON_BIN = Config.isWindows()
 		? "python.exe"
 		: "python3";
+
+	public static final String DEFAULT_TERMINAL_EDITOR = "vi";
+
+	public static final String DEFAULT_WINDOWS_EDITOR = "notepad.exe";
 }

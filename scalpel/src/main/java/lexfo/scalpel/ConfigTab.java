@@ -5,15 +5,18 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
 import com.jediterm.terminal.ui.JediTermWidget;
-import com.jgoodies.forms.layout.CellConstraints;
-import com.jgoodies.forms.layout.FormLayout;
+import com.jediterm.terminal.ui.UIUtil;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.swing.*;
@@ -45,6 +48,10 @@ public class ConfigTab extends JFrame {
 	private JTextField addVentText;
 	private JButton addVenvButton;
 	private JPanel venvSelectPanel;
+	private JButton editButton;
+	private JButton createButton;
+	private JList venvScriptList;
+	private JPanel listPannel;
 	private final ScalpelExecutor executor;
 	private final Config config;
 	private final Theme theme;
@@ -85,10 +92,15 @@ public class ConfigTab extends JFrame {
 
 		// Update the displayed packages;
 		updatePackagesTable();
+		updateScriptList();
 
 		// Change the venv, terminal and package table when the user selects a venv.
 		venvListComponent.addListSelectionListener(
-			this::handleListSelectionEvent
+			this::handleVenvListSelectionEvent
+		);
+
+		venvScriptList.addListSelectionListener(
+			this::handleScriptListSelectionEvent
 		);
 
 		// Add a new venv when the user clicks the button.
@@ -96,6 +108,10 @@ public class ConfigTab extends JFrame {
 
 		// Add a new venv when the user presses enter in the text field.
 		addVentText.addActionListener(e -> handleVenvButton());
+
+		editButton.addActionListener(e -> handleEditButton());
+
+		createButton.addActionListener(e -> handleNewScriptButton());
 	}
 
 	private static void autoScroll(JTextField field) {
@@ -111,6 +127,189 @@ public class ConfigTab extends JFrame {
 				}
 			}
 		);
+	}
+
+	private void handleScriptListSelectionEvent(ListSelectionEvent event) {
+		if (event.getValueIsAdjusting()) {
+			return;
+		}
+
+		// Get the selected script name.
+		final Optional<String> selected = Optional
+			.ofNullable(venvScriptList.getSelectedValue())
+			.map(s -> s.toString());
+
+		selected.ifPresent(s -> {
+			final Path path = Path
+				.of(config.getSelectedVenv(), s)
+				.toAbsolutePath();
+
+			selectScript(path.toString());
+		});
+	}
+
+	private void updateScriptList() {
+		final JList<String> list = this.venvScriptList;
+		final File selectedVenv = new File(config.getSelectedVenv());
+		final File[] files = selectedVenv.listFiles(f ->
+			f.getName().endsWith(".py")
+		);
+
+		final DefaultListModel<String> listModel = new DefaultListModel<>();
+
+		// Fill the model with the file names
+		if (files != null) {
+			for (File file : files) {
+				listModel.addElement(file.getName());
+			}
+		}
+
+		list.setModel(listModel);
+	}
+
+	private void selectScript(String path) {
+		// Select the script
+		config.setUserScriptPath(path);
+
+		// Update displayed selection.
+		this.scriptPathField.setText(path);
+
+		// Open the script in an editor.
+		handleEditButton();
+	}
+
+	private void handleNewScriptButton() {
+		final File venv = new File(config.getSelectedVenv());
+
+		// Prompt the user for a name
+		String fileName = JOptionPane.showInputDialog(
+			"Enter the name for the new script"
+		);
+
+		if (fileName == null || fileName.trim().isEmpty()) {
+			// The user didn't enter a name
+			JOptionPane.showMessageDialog(
+				null,
+				"You must provide a name for the file."
+			);
+			return;
+		}
+
+		// Append .py extension if it's not there
+		if (!fileName.endsWith(".py")) {
+			fileName += ".py";
+		}
+
+		// Define the source file
+		Path source = Path.of(
+			System.getProperty("user.home"),
+			".scalpel",
+			"extracted",
+			"templates",
+			"default.py"
+		);
+
+		// Define the destination file
+		Path destination = venv.toPath().resolve(fileName);
+
+		// Copy the file
+		try {
+			Files.copy(
+				source,
+				destination,
+				StandardCopyOption.REPLACE_EXISTING
+			);
+			JOptionPane.showMessageDialog(
+				null,
+				"File was successfully created!"
+			);
+
+			final String absolutePath = destination.toAbsolutePath().toString();
+
+			selectScript(absolutePath);
+			updateScriptList();
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(
+				null,
+				"Error copying file: " + e.getMessage()
+			);
+		}
+	}
+
+	/**
+	 * Opens the script in the OS' configured editor
+	 * <p>
+	 * Mostly useful for Windows.
+	 *
+	 * @param fileToEdit
+	 * @return Whether the editor was successfully opened.
+	 */
+	private boolean openDesktopEditor(String fileToEdit) {
+		if (!Desktop.isDesktopSupported()) {
+			ScalpelLogger.error("Desktop is not supported");
+			return false;
+		}
+
+		final Desktop desktop = Desktop.getDesktop();
+		if (!desktop.isSupported(Desktop.Action.EDIT)) {
+			ScalpelLogger.error("EDIT is not supported");
+
+			return false;
+		}
+
+		try {
+			// Provide the full path to the Python file
+			final File file = new File(fileToEdit);
+			desktop.edit(file);
+		} catch (IOException ex) {
+			ScalpelLogger.logStackTrace(ex);
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Opens the script in a terminal editor
+	 * <p>
+	 * Tries to use the EDITOR env var
+	 * Falls back to vi if EDITOR is missing
+	 *
+	 * @param fileToEdit
+	 */
+	private void openEditorInTerminal(String fileToEdit) {
+		final Optional<String> envEditor = Optional.ofNullable(
+			System.getenv("EDITOR")
+		);
+
+		// Set default value
+		final String editor = envEditor.orElse(
+			Constants.DEFAULT_TERMINAL_EDITOR
+		);
+
+		final String cmd = editor + " " + fileToEdit;
+
+		final String cwd = Path.of(fileToEdit).getParent().toString();
+
+		this.updateTerminal(config.getSelectedVenv(), cwd, cmd);
+	}
+
+	private void handleEditButton() {
+		final String script = config.getUserScriptPath();
+		if (openDesktopEditor(script)) {
+			return;
+		}
+
+		if (UIUtil.isWindows) {
+			updateTerminal(
+				config.getSelectedVenv(),
+				Path.of(script).getParent().toString(),
+				Constants.DEFAULT_WINDOWS_EDITOR + " " + script
+			);
+			return;
+		}
+
+		openEditorInTerminal(script);
 	}
 
 	private void handleVenvButton() {
@@ -158,7 +357,7 @@ public class ConfigTab extends JFrame {
 			label -> {
 				// Create the venv and installed required packages. (i.e. mitmproxy)
 				try {
-					Venv.create(path);
+					Venv.create(path + File.separator + Config.VENV_DIR);
 					// Add the venv to the config.
 					config.addVenvPath(path);
 
@@ -193,7 +392,45 @@ public class ConfigTab extends JFrame {
 		);
 	}
 
-	private void handleListSelectionEvent(ListSelectionEvent e) {
+	private void updateTerminal(
+		String selectedVenvPath,
+		String cwd,
+		String cmd
+	) {
+		// Stop the terminal whiile we update it.
+		this.terminalForVenvConfig.stop();
+
+		// Close the terminal to ensure the process is killed.
+		this.terminalForVenvConfig.getTtyConnector().close();
+
+		final var connector = Terminal.createTtyConnector(
+			selectedVenvPath,
+			Optional.ofNullable(cwd),
+			Optional.ofNullable(cmd)
+		);
+
+		// Connect the terminal to the new process in the new venv.
+		this.terminalForVenvConfig.setTtyConnector(connector);
+
+		final int width =
+			this.terminalForVenvConfig.getTerminal().getTerminalWidth();
+
+		final int height =
+			this.terminalForVenvConfig.getTerminal().getTerminalHeight();
+
+		// Tty needs to be resized.
+		final Dimension dimension = new Dimension(width, height);
+		connector.resize(dimension);
+
+		// Start the terminal.
+		this.terminalForVenvConfig.start();
+	}
+
+	private void updateTerminal(String selectedVenvPath) {
+		updateTerminal(selectedVenvPath, null, null);
+	}
+
+	private void handleVenvListSelectionEvent(ListSelectionEvent e) {
 		// Ignore intermediate events.
 		if (e.getValueIsAdjusting()) return;
 
@@ -202,21 +439,7 @@ public class ConfigTab extends JFrame {
 		config.setSelectedVenvPath(selectedVenvPath);
 
 		// Update the package table.
-		updatePackagesTable(__ -> {
-			// Stop the terminal whiile we update it.
-			this.terminalForVenvConfig.stop();
-
-			// Close the terminal to ensure the process is killed.
-			this.terminalForVenvConfig.getTtyConnector().close();
-
-			// Connect the terminal to the new process in the new venv.
-			this.terminalForVenvConfig.createTerminalSession(
-					Terminal.createTtyConnector(selectedVenvPath)
-				);
-
-			// Start the terminal.
-			this.terminalForVenvConfig.start();
-		});
+		updatePackagesTable(__ -> updateTerminal(selectedVenvPath));
 	}
 
 	private void handleBrowseButtonClick(
@@ -246,7 +469,7 @@ public class ConfigTab extends JFrame {
 		final PackageInfo[] installedPackages;
 		try {
 			installedPackages =
-				Venv.getInstalledPackages(config.getSelectedVenvPath());
+				Venv.getInstalledPackages(config.getSelectedVenv());
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(
 				this,
@@ -260,7 +483,7 @@ public class ConfigTab extends JFrame {
 
 		// Create a table model with the appropriate column names
 		final DefaultTableModel tableModel = new DefaultTableModel(
-			new Object[] { "Name", "Version" },
+			new Object[] { "Package", "Version" },
 			0
 		);
 
@@ -346,7 +569,7 @@ public class ConfigTab extends JFrame {
 
 		// Create the TtyConnector
 		terminalForVenvConfig =
-			Terminal.createTerminal(theme, config.getSelectedVenvPath());
+			Terminal.createTerminal(theme, config.getSelectedVenv());
 	}
 
 	/**
@@ -502,9 +725,7 @@ public class ConfigTab extends JFrame {
 		defaultListModel1.addElement("ipsum");
 		defaultListModel1.addElement("aucupatum");
 		defaultListModel1.addElement("versatio");
-		defaultListModel1.addElement(
-			"loremaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatum"
-		);
+		defaultListModel1.addElement("loremaucupatum");
 		defaultListModel1.addElement("ipsum");
 		defaultListModel1.addElement("aucupatum");
 		defaultListModel1.addElement("versatio");
@@ -700,7 +921,7 @@ public class ConfigTab extends JFrame {
 		);
 		browsePanel = new JPanel();
 		browsePanel.setLayout(
-			new GridLayoutManager(3, 3, new Insets(10, 10, 10, 10), 0, -1)
+			new GridLayoutManager(6, 3, new Insets(10, 10, 10, 10), 0, -1)
 		);
 		browsePanel.setBackground(new Color(-5198676));
 		panel3.add(
@@ -727,6 +948,8 @@ public class ConfigTab extends JFrame {
 		frameworkConfigPanel.setLayout(
 			new GridLayoutManager(2, 3, new Insets(0, 0, 10, 10), -1, -1)
 		);
+		frameworkConfigPanel.setEnabled(false);
+		frameworkConfigPanel.setVisible(false);
 		browsePanel.add(
 			frameworkConfigPanel,
 			new GridConstraints(
@@ -895,7 +1118,7 @@ public class ConfigTab extends JFrame {
 			)
 		);
 		scriptPathTextArea = new JTextArea();
-		scriptPathTextArea.setText("script path");
+		scriptPathTextArea.setText("Load script file");
 		scriptConfigPanel.add(
 			scriptPathTextArea,
 			new GridConstraints(
@@ -931,6 +1154,209 @@ public class ConfigTab extends JFrame {
 				GridConstraints.SIZEPOLICY_WANT_GROW,
 				null,
 				new Dimension(50, -1),
+				null,
+				0,
+				false
+			)
+		);
+		final JPanel panel4 = new JPanel();
+		panel4.setLayout(
+			new GridLayoutManager(2, 1, new Insets(0, 0, 10, 10), -1, -1)
+		);
+		browsePanel.add(
+			panel4,
+			new GridConstraints(
+				4,
+				0,
+				1,
+				3,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
+		createButton = new JButton();
+		createButton.setText("Create new script");
+		panel4.add(
+			createButton,
+			new GridConstraints(
+				1,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_NONE,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_FIXED,
+				null,
+				null,
+				null,
+				1,
+				false
+			)
+		);
+		final Spacer spacer3 = new Spacer();
+		panel4.add(
+			spacer3,
+			new GridConstraints(
+				0,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_VERTICAL,
+				1,
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				null,
+				new Dimension(-1, 10),
+				null,
+				0,
+				false
+			)
+		);
+		final JPanel panel5 = new JPanel();
+		panel5.setLayout(
+			new GridLayoutManager(2, 1, new Insets(0, 0, 10, 10), -1, -1)
+		);
+		browsePanel.add(
+			panel5,
+			new GridConstraints(
+				3,
+				0,
+				1,
+				3,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
+		editButton = new JButton();
+		editButton.setText("Edit selected script");
+		panel5.add(
+			editButton,
+			new GridConstraints(
+				1,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_NONE,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_FIXED,
+				null,
+				null,
+				null,
+				1,
+				false
+			)
+		);
+		final Spacer spacer4 = new Spacer();
+		panel5.add(
+			spacer4,
+			new GridConstraints(
+				0,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_VERTICAL,
+				1,
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				null,
+				new Dimension(-1, 10),
+				null,
+				0,
+				false
+			)
+		);
+		listPannel = new JPanel();
+		listPannel.setLayout(
+			new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1)
+		);
+		browsePanel.add(
+			listPannel,
+			new GridConstraints(
+				5,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
+		final JScrollPane scrollPane3 = new JScrollPane();
+		listPannel.add(
+			scrollPane3,
+			new GridConstraints(
+				1,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				1,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
+		venvScriptList = new JList();
+		final DefaultListModel defaultListModel2 = new DefaultListModel();
+		defaultListModel2.addElement("default.py");
+		defaultListModel2.addElement("crypto.py");
+		defaultListModel2.addElement("recon.py");
+		venvScriptList.setModel(defaultListModel2);
+		venvScriptList.setToolTipText("");
+		venvScriptList.putClientProperty("List.isFileList", Boolean.TRUE);
+		scrollPane3.setViewportView(venvScriptList);
+		final JLabel label1 = new JLabel();
+		label1.setHorizontalAlignment(0);
+		label1.setHorizontalTextPosition(0);
+		label1.setText("Scripts available for this venv:");
+		listPannel.add(
+			label1,
+			new GridConstraints(
+				0,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_NONE,
+				GridConstraints.SIZEPOLICY_FIXED,
+				GridConstraints.SIZEPOLICY_FIXED,
+				null,
+				null,
 				null,
 				0,
 				false
