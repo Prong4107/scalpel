@@ -115,9 +115,25 @@ We can now select our venv by clicking on it:
 The central terminal is now activated in the selected venv and can be used to install packages using pip in the usual way:
 {{< figure src="/screenshots/venv-pycryptodome.png" >}}
 
-We now have pycryptodome installed and we're ready to code our scalpel script.
+We now have pycryptodome installed and we're ready to create our scalpel script.
 
----
+## Creating the script in Scalpel
+
+You can create a new script for Scalpel using the GUI:
+
+-   Click the "Create new script" button
+    -   {{< figure src="/screenshots/create-script.png" >}}
+-   Enter the desired filename
+    -   {{< figure src="/screenshots/create-script-prompt.png" >}}
+-   The file should now be successfully created.
+    -   {{< figure src="/screenshots/create-script-success.png" >}}
+
+After following this steps, the script should either be opened in your OS graphical editor or in the terminal provided by Scalpel:
+{{< figure src="/screenshots/create-script-edit.png" >}}
+
+For now, it contains commented hooks declarations, you can remove them, as we will rewrite them further in this tutorial.
+
+## Implementing the encryption algorithm
 
 With pycryptodome, we can reimplement the encryption in Python like this:
 
