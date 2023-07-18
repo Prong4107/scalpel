@@ -52,6 +52,7 @@ public class ConfigTab extends JFrame {
 	private JButton createButton;
 	private JList venvScriptList;
 	private JPanel listPannel;
+	private JButton openFolderButton;
 	private final ScalpelExecutor executor;
 	private final Config config;
 	private final Theme theme;
@@ -112,10 +113,12 @@ public class ConfigTab extends JFrame {
 		editButton.addActionListener(e -> handleEditButton());
 
 		createButton.addActionListener(e -> handleNewScriptButton());
+
+		openFolderButton.addActionListener(e -> handleOpenScriptFolderButton());
 	}
 
 	private static void autoScroll(JTextField field) {
-		DefaultCaret caret = (DefaultCaret) field.getCaret();
+		final DefaultCaret caret = (DefaultCaret) field.getCaret();
 		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
 		// Scroll to the right when the field is selected.
@@ -127,6 +130,33 @@ public class ConfigTab extends JFrame {
 				}
 			}
 		);
+	}
+
+	private void handleOpenScriptFolderButton() {
+		final File folder = new File(config.getUserScriptPath())
+			.getParentFile();
+
+		ScalpelLogger.debug("Opening " + folder.getAbsolutePath());
+
+		// Check if Desktop is supported
+		if (!Desktop.isDesktopSupported()) {
+			System.err.println("Desktop is not supported.");
+			return;
+		}
+
+		Desktop desktop = Desktop.getDesktop();
+
+		if (folder.exists()) {
+			try {
+				desktop.open(folder);
+			} catch (IOException e) {
+				System.err.println("Error opening folder: " + e.getMessage());
+			}
+		} else {
+			System.err.println(
+				"The folder does not exist: " + folder.getAbsolutePath()
+			);
+		}
 	}
 
 	private void handleScriptListSelectionEvent(ListSelectionEvent event) {
@@ -440,6 +470,7 @@ public class ConfigTab extends JFrame {
 
 		// Update the package table.
 		updatePackagesTable(__ -> updateTerminal(selectedVenvPath));
+		updateScriptList();
 	}
 
 	private void handleBrowseButtonClick(
@@ -921,7 +952,7 @@ public class ConfigTab extends JFrame {
 		);
 		browsePanel = new JPanel();
 		browsePanel.setLayout(
-			new GridLayoutManager(6, 3, new Insets(10, 10, 10, 10), 0, -1)
+			new GridLayoutManager(7, 3, new Insets(10, 10, 10, 10), 0, -1)
 		);
 		browsePanel.setBackground(new Color(-5198676));
 		panel3.add(
@@ -1294,7 +1325,7 @@ public class ConfigTab extends JFrame {
 		browsePanel.add(
 			listPannel,
 			new GridConstraints(
-				5,
+				6,
 				0,
 				1,
 				1,
@@ -1338,7 +1369,7 @@ public class ConfigTab extends JFrame {
 		defaultListModel2.addElement("recon.py");
 		venvScriptList.setModel(defaultListModel2);
 		venvScriptList.setToolTipText("");
-		venvScriptList.putClientProperty("List.isFileList", Boolean.TRUE);
+		venvScriptList.putClientProperty("List.isFileList", Boolean.FALSE);
 		scrollPane3.setViewportView(venvScriptList);
 		final JLabel label1 = new JLabel();
 		label1.setHorizontalAlignment(0);
@@ -1357,6 +1388,70 @@ public class ConfigTab extends JFrame {
 				GridConstraints.SIZEPOLICY_FIXED,
 				null,
 				null,
+				null,
+				0,
+				false
+			)
+		);
+		final JPanel panel6 = new JPanel();
+		panel6.setLayout(
+			new GridLayoutManager(2, 1, new Insets(0, 0, 10, 10), -1, -1)
+		);
+		browsePanel.add(
+			panel6,
+			new GridConstraints(
+				5,
+				0,
+				1,
+				3,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_BOTH,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				null,
+				null,
+				null,
+				0,
+				false
+			)
+		);
+		openFolderButton = new JButton();
+		openFolderButton.setText("Open script folder");
+		panel6.add(
+			openFolderButton,
+			new GridConstraints(
+				1,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_NONE,
+				GridConstraints.SIZEPOLICY_CAN_SHRINK |
+				GridConstraints.SIZEPOLICY_CAN_GROW,
+				GridConstraints.SIZEPOLICY_FIXED,
+				null,
+				null,
+				null,
+				1,
+				false
+			)
+		);
+		final Spacer spacer5 = new Spacer();
+		panel6.add(
+			spacer5,
+			new GridConstraints(
+				0,
+				0,
+				1,
+				1,
+				GridConstraints.ANCHOR_CENTER,
+				GridConstraints.FILL_VERTICAL,
+				1,
+				GridConstraints.SIZEPOLICY_WANT_GROW,
+				null,
+				new Dimension(-1, 10),
 				null,
 				0,
 				false

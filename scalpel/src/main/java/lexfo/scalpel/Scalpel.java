@@ -2,7 +2,6 @@ package lexfo.scalpel;
 
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
-import burp.api.montoya.logging.Logging;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
