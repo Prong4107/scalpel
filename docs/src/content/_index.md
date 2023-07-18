@@ -25,6 +25,7 @@ Scalpel is a Burp extension for intercepting and modifying HTTP trafic using sim
 -   Interactively edit plaintext decoded and encoded by a custom script.
 
 [GitHub repository](https://code.corp.lexfo.fr/pentester/scalpel).
+
 ^TODO: set github repo
 
 ## Use-cases
