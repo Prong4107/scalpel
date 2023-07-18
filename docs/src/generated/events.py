@@ -13,7 +13,6 @@ def match(flow: Flow, events: Events) -> bool:
         - bool: Whether the event should be treated.
     """
 
-
 def request(req: Request) -> Request | None:
     """- Intercepts a request and returns one to replace with.
 
