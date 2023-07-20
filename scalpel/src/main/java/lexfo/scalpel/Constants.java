@@ -100,4 +100,10 @@ public class Constants {
 	public static final String DEFAULT_TERMINAL_EDITOR = "vi";
 
 	public static final String DEFAULT_WINDOWS_EDITOR = "notepad.exe";
+
+	public static final String EDITOR_MODE_ANNOTATION_KEY =
+		"scalpel_editor_mode";
+	public static final String HEX_EDITOR_MODE = "hex";
+	public static final String RAW_EDITOR_MODE = "raw";
+	public static final String DEFAULT_EDITOR_MODE = RAW_EDITOR_MODE;
 }
