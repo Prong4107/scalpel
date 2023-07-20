@@ -35,6 +35,14 @@ dependencies {
     implementation 'org.jetbrains.pty4j:pty4j:0.12.11'
 
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.0-rc2'
+
+    // Hex editor
+    // https://bined.exbin.org/library/
+    // https://mvnrepository.com/artifact/org.exbin.bined/bined-swing
+    implementation 'org.exbin.bined:bined-swing:0.2.0'
+    implementation 'org.exbin.auxiliary:paged_data:0.2.0'
+
+
 }
 
 jar {
