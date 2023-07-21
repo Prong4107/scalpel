@@ -1,4 +1,4 @@
-package lexfo.scalpel;
+package lexfo.scalpel.editors;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
@@ -13,6 +13,10 @@ import java.awt.*;
 import java.util.Optional;
 import java.util.UUID;
 import javax.swing.SwingUtilities;
+import lexfo.scalpel.EditorType;
+import lexfo.scalpel.ScalpelEditorTabbedPane;
+import lexfo.scalpel.ScalpelExecutor;
+import lexfo.scalpel.ScalpelLogger;
 
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpResponseEditor.html
@@ -69,7 +73,7 @@ public abstract class AbstractEditor implements IMessageEditor {
 		@param provider The ScalpelProvidedEditor object that instantiated this editor.
 		@param executor The executor to use.
 	*/
-	AbstractEditor(
+	public AbstractEditor(
 		String name,
 		Boolean editable,
 		MontoyaApi API,
@@ -367,7 +371,7 @@ public abstract class AbstractEditor implements IMessageEditor {
 		Also initializes the editor with Python callbacks output of the inputted HTTP message.
 		(called by Burp)
 
-		@param _requestResponse The HttpRequestResponse to be edited.
+		@param reqRes The HttpRequestResponse to be edited.
 	*/
 	@Override
 	public final boolean isEnabledFor(HttpRequestResponse reqRes) {

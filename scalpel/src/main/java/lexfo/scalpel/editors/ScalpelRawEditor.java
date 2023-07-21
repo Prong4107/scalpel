@@ -1,4 +1,4 @@
-package lexfo.scalpel;
+package lexfo.scalpel.editors;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
@@ -7,6 +7,10 @@ import burp.api.montoya.ui.editor.RawEditor;
 import burp.api.montoya.ui.editor.extension.EditorCreationContext;
 import burp.api.montoya.ui.editor.extension.EditorMode;
 import java.awt.*;
+import lexfo.scalpel.EditorType;
+import lexfo.scalpel.ScalpelEditorTabbedPane;
+import lexfo.scalpel.ScalpelExecutor;
+import lexfo.scalpel.ScalpelLogger;
 
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpResponseEditor.html
@@ -28,7 +32,7 @@ public class ScalpelRawEditor extends AbstractEditor {
 		@param executor The executor to use.
 	*/
 
-	ScalpelRawEditor(
+	public ScalpelRawEditor(
 		String name,
 		Boolean editable,
 		MontoyaApi API,
