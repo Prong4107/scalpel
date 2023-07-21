@@ -1,4 +1,4 @@
-package lexfo.scalpel;
+package lexfo.scalpel.editors;
 
 import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.HttpService;
@@ -8,6 +8,8 @@ import burp.api.montoya.ui.Selection;
 import burp.api.montoya.ui.editor.extension.EditorCreationContext;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpResponseEditor;
+import lexfo.scalpel.EditorType;
+
 import java.util.Optional;
 
 /**

@@ -1,4 +1,4 @@
-package lexfo.scalpel;
+package lexfo.scalpel.editors;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ByteArray;
@@ -8,8 +8,13 @@ import burp.api.montoya.ui.editor.extension.EditorMode;
 import java.awt.*;
 import java.io.IOException;
 import java.util.Optional;
+import lexfo.scalpel.EditorType;
+import lexfo.scalpel.ScalpelEditorTabbedPane;
+import lexfo.scalpel.ScalpelExecutor;
+import lexfo.scalpel.ScalpelLogger;
 import org.exbin.auxiliary.paged_data.BinaryData;
 import org.exbin.auxiliary.paged_data.ByteArrayEditableData;
+import org.exbin.bined.CodeType;
 import org.exbin.bined.EditMode;
 import org.exbin.bined.SelectionRange;
 import org.exbin.bined.swing.basic.CodeArea;
@@ -21,9 +26,9 @@ import org.exbin.bined.swing.basic.CodeArea;
   Users can press their keyboard's INSER key to enter insertion mode
   (which is impossible in Burp's native hex editor)
 */
-public class ScalpelHexEditor extends AbstractEditor {
+public class ScalpelGenericBinaryEditor extends AbstractEditor {
 
-	private final CodeArea editor;
+	protected final CodeArea editor;
 
 	private BinaryData oldContent = null;
 
@@ -36,19 +41,24 @@ public class ScalpelHexEditor extends AbstractEditor {
 		@param provider The ScalpelProvidedEditor object that instantiated this editor.
 		@param executor The executor to use.
 	*/
-	ScalpelHexEditor(
+	public ScalpelGenericBinaryEditor(
 		String name,
 		Boolean editable,
 		MontoyaApi API,
 		EditorCreationContext creationContext,
 		EditorType type,
 		ScalpelEditorTabbedPane provider,
-		ScalpelExecutor executor
+		ScalpelExecutor executor,
+		CodeType mode
 	) {
 		super(name, editable, API, creationContext, type, provider, executor);
 		try {
 			// Create the base BinEd editor component.
 			this.editor = new CodeArea();
+			this.editor.setCodeType(mode);
+
+			// Charset to display whitespaces as something else.
+			// editor.setCharset(new DisplayableWhiteSpaceCharset());
 
 			// Decide wherever the editor must be editable or read only depending on context.
 			final boolean isEditable =

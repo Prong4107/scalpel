@@ -27,6 +27,13 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import lexfo.scalpel.ScalpelExecutor.CallableData;
+import lexfo.scalpel.editors.AbstractEditor;
+import lexfo.scalpel.editors.IMessageEditor;
+import lexfo.scalpel.editors.ScalpelBinaryEditor;
+import lexfo.scalpel.editors.ScalpelDecimalEditor;
+import lexfo.scalpel.editors.ScalpelHexEditor;
+import lexfo.scalpel.editors.ScalpelOctalEditor;
+import lexfo.scalpel.editors.ScalpelRawEditor;
 
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpResponseEditor.html
@@ -177,7 +184,13 @@ public class ScalpelEditorTabbedPane
 		"raw",
 		ScalpelRawEditor.class,
 		"hex",
-		ScalpelHexEditor.class
+		ScalpelHexEditor.class,
+		"octal",
+		ScalpelOctalEditor.class,
+		"decimal",
+		ScalpelDecimalEditor.class,
+		"binary",
+		ScalpelBinaryEditor.class
 	);
 
 	/**
@@ -207,10 +220,10 @@ public class ScalpelEditorTabbedPane
 		try {
 			return executor.getCallables();
 		} catch (RuntimeException e) {
-			ScalpelLogger.error(
+			ScalpelLogger.debug(
 				"recreateEditors(): Could not call get_callables"
 			);
-			ScalpelLogger.logStackTrace(e);
+			ScalpelLogger.debug(e.toString());
 			return null;
 		}
 	}
@@ -326,7 +339,7 @@ public class ScalpelEditorTabbedPane
 					// There should be a better way to do this..
 					editor =
 						dispatchedEditor
-							.getDeclaredConstructor(
+							.getConstructor(
 								String.class,
 								Boolean.class,
 								MontoyaApi.class,
