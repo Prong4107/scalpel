@@ -97,6 +97,11 @@ public class Constants {
 		? "python.exe"
 		: "python3";
 
+	public static final String PIP_BIN = Config.isWindows() ? "pip.exe" : "pip";
+	public static final String VENV_BIN_DIR = Config.isWindows()
+		? "Scripts"
+		: "bin";
+
 	public static final String DEFAULT_TERMINAL_EDITOR = "vi";
 
 	public static final String DEFAULT_WINDOWS_EDITOR = "notepad.exe";

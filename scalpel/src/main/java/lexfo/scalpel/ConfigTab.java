@@ -317,7 +317,7 @@ public class ConfigTab extends JFrame {
 			Constants.DEFAULT_TERMINAL_EDITOR
 		);
 
-		final String cmd = editor + " " + fileToEdit;
+		final String cmd = editor + " " + Terminal.escapeshellarg(fileToEdit);
 
 		final String cwd = Path.of(fileToEdit).getParent().toString();
 
