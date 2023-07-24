@@ -1,6 +1,7 @@
 package lexfo.scalpel;
 
 import java.io.BufferedReader;
+import java.io.File;
 /**
  * The Venv class is used to manage Python virtual environments.
  */
@@ -13,6 +14,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -206,12 +208,21 @@ public class Venv {
 
 	public static Path getExecutablePath(String venvPath, String filename)
 		throws IOException {
-		final String binDir = Config.isWindows() ? "Scripts" : "bin";
+		final String binDir = Constants.VENV_BIN_DIR;
+		final Path validatedVenvPath = Optional
+			.ofNullable(new File(venvPath))
+			.map(File::toPath)
+			.orElseThrow(() ->
+				new RuntimeException("Failed to resolve '" + venvPath + "'")
+			);
+
 		return Files
-			.walk(Paths.get(venvPath))
+			.walk(validatedVenvPath)
 			.filter(Files::isDirectory)
 			.filter(p -> p.getFileName().toString().equalsIgnoreCase(binDir))
-			.filter(p -> Files.exists(p.resolve(filename)))
+			.map(p -> p.resolve(filename))
+			.filter(Files::exists)
+			.map(Path::toAbsolutePath)
 			.findFirst()
 			.orElseThrow(() ->
 				new RuntimeException(
@@ -222,16 +233,11 @@ public class Venv {
 					" .\n" +
 					"Make sure dependencies are correctly installed. (python3,pip,venv,jdk)"
 				)
-			)
-			.resolve(filename)
-			.toAbsolutePath();
+			);
 	}
 
 	public static Path getPipPath(String venvPath) throws IOException {
-		return getExecutablePath(
-			venvPath,
-			Config.isWindows() ? "pip.exe" : "pip"
-		);
+		return getExecutablePath(venvPath, Constants.PIP_BIN);
 	}
 
 	/**
