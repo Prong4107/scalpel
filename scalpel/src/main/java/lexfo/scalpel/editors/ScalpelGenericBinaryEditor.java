@@ -30,7 +30,7 @@ public class ScalpelGenericBinaryEditor extends AbstractEditor {
 
 	protected final CodeArea editor;
 
-	private BinaryData oldContent = null;
+	private ByteArray oldContent = null;
 
 	/**
 		Constructs a new Scalpel editor.
@@ -56,7 +56,7 @@ public class ScalpelGenericBinaryEditor extends AbstractEditor {
 			// Create the base BinEd editor component.
 			this.editor = new CodeArea();
 			this.editor.setCodeType(mode);
-
+			this.editor.setFont(API.userInterface().currentEditorFont());
 			// Charset to display whitespaces as something else.
 			// editor.setCharset(new DisplayableWhiteSpaceCharset());
 
@@ -124,12 +124,20 @@ public class ScalpelGenericBinaryEditor extends AbstractEditor {
 		editor.setContentData(newContent);
 
 		// Keep the old content for isModified()
-		oldContent = newContent;
+		oldContent = bytes;
 	}
 
 	protected ByteArray getEditorContent() {
-		// Convert BinEd format to Burp format
-		return binaryDataToByteArray(editor.getContentData());
+		try {
+			// Convert BinEd format to Burp format
+			return binaryDataToByteArray(editor.getContentData());
+		} catch (RuntimeException ex) {
+			// We have to catch and handle this here because otherwise Burp explodes
+			ScalpelLogger.error("Couldn't convert bytes:");
+			ScalpelLogger.logStackTrace(ex);
+
+			return oldContent;
+		}
 	}
 
 	/**
@@ -171,7 +179,7 @@ public class ScalpelGenericBinaryEditor extends AbstractEditor {
 	public boolean isModified() {
 		// Check if current content is the same as the provided data.
 		return Optional
-			.ofNullable(editor.getContentData())
+			.ofNullable(this.getEditorContent())
 			.map(c -> c.equals(oldContent))
 			.orElse(false);
 	}
