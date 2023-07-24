@@ -597,10 +597,17 @@ public class ScalpelExecutor {
 	}
 
 	private String getDefaultIncludePath() {
+		final String defaultVenv =
+			Config.getDefaultVenv() + File.separator + Config.VENV_DIR;
 		try {
-			return Venv.getSitePackagesPath(Config.getDefaultVenv()).toString();
+			return Venv.getSitePackagesPath(defaultVenv).toString();
 		} catch (IOException e) {
-			ScalpelLogger.warn("Could not find a default include path for JEP");
+			ScalpelLogger.warn(
+				"Could not find a default include path for JEP (with venv " +
+				defaultVenv +
+				")"
+			);
+			ScalpelLogger.logStackTrace(e);
 		}
 		return "";
 	}
