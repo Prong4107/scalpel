@@ -204,8 +204,8 @@ public class ConfigTab extends JFrame {
 		// Update displayed selection.
 		this.scriptPathField.setText(path);
 
-		// Open the script in an editor.
-		handleEditButton();
+		// Display the script in the terminal.
+		openEditorInTerminal(path);
 	}
 
 	private void handleNewScriptButton() {
@@ -281,16 +281,31 @@ public class ConfigTab extends JFrame {
 		}
 
 		final Desktop desktop = Desktop.getDesktop();
+		final Desktop.Action action;
 		if (!desktop.isSupported(Desktop.Action.EDIT)) {
-			ScalpelLogger.error("EDIT is not supported");
-
-			return false;
+			ScalpelLogger.error("Desktop action EDIT is not supported");
+			if (!desktop.isSupported(Desktop.Action.OPEN)) {
+				ScalpelLogger.error("Desktop action OPEN is not supported");
+				return false;
+			}
+			action = Desktop.Action.OPEN;
+		} else {
+			action = Desktop.Action.EDIT;
 		}
 
 		try {
 			// Provide the full path to the Python file
 			final File file = new File(fileToEdit);
-			desktop.edit(file);
+			switch (action) {
+				case OPEN:
+					desktop.open(file);
+					break;
+				case EDIT:
+					desktop.edit(file);
+					break;
+				default:
+					break;
+			}
 		} catch (IOException ex) {
 			ScalpelLogger.logStackTrace(ex);
 			return false;
