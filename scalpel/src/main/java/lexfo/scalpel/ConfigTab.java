@@ -331,7 +331,6 @@ public class ConfigTab extends JFrame {
 		final String editor = envEditor.orElse(
 			Constants.DEFAULT_TERMINAL_EDITOR
 		);
-
 		final String cmd = editor + " " + Terminal.escapeshellarg(fileToEdit);
 
 		final String cwd = Path.of(fileToEdit).getParent().toString();
@@ -406,9 +405,6 @@ public class ConfigTab extends JFrame {
 					// Add the venv to the config.
 					config.addVenvPath(path);
 
-					// Display the venv in the list.
-					venvListComponent.setListData(config.getVenvPaths());
-
 					// Clear the text field.
 					addVentText.setText("");
 
@@ -420,6 +416,9 @@ public class ConfigTab extends JFrame {
 						displayed += stdout.readLine();
 						label.setText(displayed);
 					}
+
+					// Display the venv in the list.
+					venvListComponent.setListData(config.getVenvPaths());
 				} catch (IOException | InterruptedException e) {
 					final String msg =
 						"Failed to create venv: \n" + e.getMessage();
