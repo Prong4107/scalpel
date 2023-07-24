@@ -180,7 +180,7 @@ public class ScalpelGenericBinaryEditor extends AbstractEditor {
 		// Check if current content is the same as the provided data.
 		return Optional
 			.ofNullable(this.getEditorContent())
-			.map(c -> c.equals(oldContent))
+			.map(c -> !c.equals(oldContent))
 			.orElse(false);
 	}
 }
