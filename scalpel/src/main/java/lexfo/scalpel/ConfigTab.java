@@ -1,6 +1,7 @@
 package lexfo.scalpel;
 
 import burp.api.montoya.ui.Theme;
+import com.google.common.base.Function;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -16,9 +17,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
@@ -356,6 +359,18 @@ public class ConfigTab extends JFrame {
 		openEditorInTerminal(script);
 	}
 
+	private void installDefaultsAndLog(String venv)
+		throws IOException, InterruptedException {
+		final Process proc = Venv.installDefaults(venv, Map.of(), false);
+		final var stdout = proc.inputReader();
+
+		while (proc.isAlive()) {
+			Optional
+				.ofNullable(stdout.readLine())
+				.ifPresent(ScalpelLogger::all);
+		}
+	}
+
 	private void handleVenvButton() {
 		final String value = addVentText.getText().trim();
 
@@ -408,14 +423,7 @@ public class ConfigTab extends JFrame {
 					// Clear the text field.
 					addVentText.setText("");
 
-					final Process proc = Venv.installDefaults(path);
-					final var stdout = proc.inputReader();
-					String displayed = "";
-
-					while (proc.isAlive()) {
-						displayed += stdout.readLine();
-						label.setText(displayed);
-					}
+					installDefaultsAndLog(path);
 
 					// Display the venv in the list.
 					venvListComponent.setListData(config.getVenvPaths());
