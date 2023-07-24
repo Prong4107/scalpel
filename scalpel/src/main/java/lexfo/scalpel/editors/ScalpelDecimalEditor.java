@@ -28,6 +28,6 @@ public class ScalpelDecimalEditor extends ScalpelGenericBinaryEditor {
 			executor,
 			CodeType.DECIMAL
 		);
-		this.editor.setMaxBytesPerRow(11);
+		// this.editor.setMaxBytesPerRow(11);
 	}
 }
