@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * Manage Python virtual environments.
@@ -49,10 +51,33 @@ public class Venv {
 		return process;
 	}
 
+	public static Process installDefaults(
+		String path,
+		Map<String, String> env,
+		Boolean installJep
+	) throws IOException, InterruptedException {
+		// Install the default packages
+
+		// Dependencies required for Java to initiate a Python interpreter (jep)
+		final var javaDeps = Constants.DEFAULT_VENV_DEPENDENCIES;
+
+		// Dependencies required by the Scalpel Python library.
+		final var scriptDeps = Constants.PYTHON_DEPENDENCIES;
+
+		final String[] pkgsToInstall;
+		if (installJep) {
+			pkgsToInstall = ArrayUtils.addAll(javaDeps, scriptDeps);
+		} else {
+			pkgsToInstall = scriptDeps;
+		}
+
+		return install(path, env, pkgsToInstall);
+	}
+
 	public static Process installDefaults(String path)
 		throws IOException, InterruptedException {
 		// Install the default packages
-		return install(path, Constants.PYTHON_DEPENDENCIES);
+		return installDefaults(path, Map.of(), true);
 	}
 
 	/**

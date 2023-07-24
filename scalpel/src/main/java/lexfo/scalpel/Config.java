@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.text.html.Option;
 
 /**
  * Scalpel configuration.
@@ -435,16 +436,18 @@ public class Config {
 
 		// Run pip install <dependencies>
 		try {
-			final Process proc = Venv.install_background(
+			final Process proc = Venv.installDefaults(
 				path,
 				Map.of("JAVA_HOME", javaHome),
-				Constants.PYTHON_DEPENDENCIES
+				true
 			);
 
 			// Log pip output
 			final var stdout = proc.inputReader();
 			while (proc.isAlive()) {
-				ScalpelLogger.all(stdout.readLine());
+				Optional
+					.ofNullable(stdout.readLine())
+					.ifPresent(ScalpelLogger::all);
 			}
 
 			if (proc.exitValue() != 0) {

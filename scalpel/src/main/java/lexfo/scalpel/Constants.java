@@ -69,8 +69,14 @@ public class Constants {
 	/**
 	 * Required python packages
 	 */
-	public static final String[] PYTHON_DEPENDENCIES = new String[] {
+	public static final String[] DEFAULT_VENV_DEPENDENCIES = new String[] {
 		"jep",
+	};
+
+	/**
+	 * Required python packages
+	 */
+	public static final String[] PYTHON_DEPENDENCIES = new String[] {
 		"requests",
 		"requests-toolbelt",
 		"mitmproxy",
