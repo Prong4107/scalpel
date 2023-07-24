@@ -34,6 +34,7 @@ modules = [
     "pyscalpel.java.burp",
     "qs",
     here / ".." / "src" / "generated" / "events.py",
+    here / ".." / "src" / "generated" / "editors.py",
 ]
 
 pdoc.pdoc(*modules, output_directory=here / ".." / "src" / "generated" / "api")
