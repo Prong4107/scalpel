@@ -1301,7 +1301,7 @@ public class ConfigTab extends JFrame {
 			)
 		);
 		editButton = new JButton();
-		editButton.setText("Edit selected script");
+		editButton.setText("Open selected script");
 		panel5.add(
 			editButton,
 			new GridConstraints(
