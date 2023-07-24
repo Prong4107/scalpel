@@ -28,6 +28,6 @@ public class ScalpelBinaryEditor extends ScalpelGenericBinaryEditor {
 			executor,
 			CodeType.BINARY
 		);
-		this.editor.setMaxBytesPerRow(5);
+		this.editor.setMaxBytesPerRow(8);
 	}
 }

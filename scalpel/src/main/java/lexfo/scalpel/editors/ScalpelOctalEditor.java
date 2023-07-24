@@ -28,6 +28,6 @@ public class ScalpelOctalEditor extends ScalpelGenericBinaryEditor {
 			executor,
 			CodeType.OCTAL
 		);
-		this.editor.setMaxBytesPerRow(10);
+		// this.editor.setMaxBytesPerRow(10);
 	}
 }
