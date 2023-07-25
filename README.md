@@ -89,4 +89,4 @@ Scalpel is licensed under [INSERT LICENSE HERE].
 
 ## Contact
 
-For any questions or feedback, please contact [INSERT CONTACT INFORMATION HERE].
+For any questions or feedback, please create an issue or contact [INSERT CONTACT INFORMATION HERE].
