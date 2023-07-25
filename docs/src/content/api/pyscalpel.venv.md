@@ -6,7 +6,7 @@ url: "api/pyscalpel/venv.html"
 menu:
     addons:
         parent: 'Event Hooks & API'
-        weight: 4
+        weight: 5
 ---
 
 {{< readfile file="/generated/api/pyscalpel/venv.html" >}}
