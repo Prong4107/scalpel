@@ -23,6 +23,7 @@ import jep.ClassList;
 import jep.Interpreter;
 import jep.JepConfig;
 import jep.SubInterpreter;
+import jep.python.PyObject;
 import lexfo.scalpel.ScalpelLogger.Level;
 
 /**
@@ -241,6 +242,8 @@ public class ScalpelExecutor {
 	 */
 	private Boolean isRunnerAlive = false;
 
+	private Boolean isRunnerStarting = true;
+
 	/**
 	 * The ScalpelUnpacker object to get the ressources paths.
 	 */
@@ -309,7 +312,7 @@ public class ScalpelExecutor {
 
 		synchronized (tasks) {
 			// Ensure the runner is alive.
-			if (isRunnerAlive) {
+			if (isRunnerAlive || isRunnerStarting) {
 				// Queue the task.
 				tasks.add(task);
 
@@ -476,6 +479,7 @@ public class ScalpelExecutor {
 			// Instantiate the interpreter.
 			final SubInterpreter interp = initInterpreter();
 			isRunnerAlive = true;
+			isRunnerStarting = false;
 
 			while (true) {
 				// Relaunch interpreter when files have changed (hot reload).
@@ -557,6 +561,7 @@ public class ScalpelExecutor {
 		ScalpelLogger.log("Task loop has crashed");
 
 		isRunnerAlive = false;
+		isRunnerStarting = false;
 
 		// Relaunch the task thread
 		this.runner = launchTaskRunner();
@@ -592,10 +597,17 @@ public class ScalpelExecutor {
 	}
 
 	private String getDefaultIncludePath() {
+		final String defaultVenv =
+			Config.getDefaultVenv() + File.separator + Config.VENV_DIR;
 		try {
-			return Venv.getSitePackagesPath(Config.getDefaultVenv()).toString();
+			return Venv.getSitePackagesPath(defaultVenv).toString();
 		} catch (IOException e) {
-			ScalpelLogger.warn("Could not find a default include path for JEP");
+			ScalpelLogger.warn(
+				"Could not find a default include path for JEP (with venv " +
+				defaultVenv +
+				")"
+			);
+			ScalpelLogger.logStackTrace(e);
 		}
 		return "";
 	}
@@ -1066,10 +1078,27 @@ public class ScalpelExecutor {
 		);
 	}
 
+	public record CallableData(
+		String name,
+		HashMap<String, String> annotations
+	) {}
+
 	@SuppressWarnings({ "unchecked" })
-	public List<String> getCallables() throws RuntimeException {
+	public List<CallableData> getCallables() throws RuntimeException {
 		// Jep doesn't offer any way to list functions, so we have to implement it Python side.
+		// Python returns ~ [{"name": <function name>, "annotations": <func.__annotations__>},...]
 		return this.safeJepInvoke(Constants.GET_CB_NAME, List.class)
+			.map(l -> (List<HashMap<String, Object>>) l)
+			.map(l -> l.stream())
+			.map(s ->
+				s.map(c ->
+					new CallableData(
+						(String) c.get("name"),
+						(HashMap<String, String>) c.get("annotations")
+					)
+				)
+			)
+			.map(s -> s.toList())
 			.orElseThrow(() ->
 				new RuntimeException(Constants.GET_CB_NAME + " was not found.")
 			);

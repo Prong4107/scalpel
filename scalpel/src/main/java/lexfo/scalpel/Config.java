@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.text.html.Option;
 
 /**
  * Scalpel configuration.
@@ -112,9 +114,12 @@ public class Config {
 	// Venv that will be created and used when none exists
 	public static final String DEFAULT_VENV_NAME = "default";
 	public static final String VENV_DIR = "venv";
+	private final ScalpelUnpacker unpacker;
 	private String _jdkPath = null;
 
-	public Config(MontoyaApi API, ScalpelUnpacker unpacker) {
+	public Config(final MontoyaApi API, final ScalpelUnpacker unpacker) {
+		this.unpacker = unpacker;
+
 		// Get the extension data to store and get the project ID back.
 		final PersistedObject extensionData = API.persistence().extensionData();
 
@@ -429,22 +434,30 @@ public class Config {
 					Constants.PYTHON_BIN + " -m venv " + path
 				);
 			}
+
+			// Add default script.
+			copyScriptToVenv(
+				defaultPath.getParent(),
+				unpacker.getDefaultScriptPath()
+			);
 		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
 		}
 
 		// Run pip install <dependencies>
 		try {
-			final Process proc = Venv.install_background(
+			final Process proc = Venv.installDefaults(
 				path,
 				Map.of("JAVA_HOME", javaHome),
-				Constants.PYTHON_DEPENDENCIES
+				true
 			);
 
 			// Log pip output
 			final var stdout = proc.inputReader();
 			while (proc.isAlive()) {
-				ScalpelLogger.all(stdout.readLine());
+				Optional
+					.ofNullable(stdout.readLine())
+					.ifPresent(ScalpelLogger::all);
 			}
 
 			if (proc.exitValue() != 0) {
@@ -625,5 +638,45 @@ public class Config {
 	public void removeVenvPath(String venvPath) {
 		globalConfig.venvPaths.remove(venvPath);
 		this.saveGlobalConfig();
+	}
+
+	/**
+	 * Copy the script to the selected venv
+	 * @param scriptPath The script to copy
+	 * @return The new file path
+	 */
+	public static String copyScriptToVenv(
+		final String venv,
+		final String scriptPath
+	) {
+		final File original = new File(scriptPath);
+		final String baseErrMsg =
+			"Could not copy " + scriptPath + " to " + venv + "\n";
+
+		final Path destination = Optional
+			.ofNullable(original)
+			.filter(File::exists)
+			.map(File::getName)
+			.map(n -> Path.of(venv).resolve(n))
+			.orElseThrow(() ->
+				new RuntimeException(baseErrMsg + "File not found")
+			);
+
+		if (Files.exists(destination)) {
+			throw new RuntimeException(baseErrMsg + "File already exists");
+		}
+
+		try {
+			return Files
+				.copy(
+					original.toPath(),
+					destination,
+					StandardCopyOption.REPLACE_EXISTING
+				)
+				.toAbsolutePath()
+				.toString();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

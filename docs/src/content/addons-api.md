@@ -35,3 +35,7 @@ def response(res: Response) -> Response:
 The following list all available event hooks.
 
 {{< readfile file="/generated/api/events.html" >}}
+
+## Editors
+
+{{< readfile file="/generated/api/editors.html" >}}

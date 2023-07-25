@@ -9,6 +9,8 @@ import com.jediterm.terminal.ui.UIUtil;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -50,7 +53,7 @@ public class ConfigTab extends JFrame {
 	private JPanel venvSelectPanel;
 	private JButton editButton;
 	private JButton createButton;
-	private JList venvScriptList;
+	private JList<String> venvScriptList;
 	private JPanel listPannel;
 	private JButton openFolderButton;
 	private final ScalpelExecutor executor;
@@ -76,7 +79,7 @@ public class ConfigTab extends JFrame {
 		scriptBrowseButton.addActionListener(e ->
 			handleBrowseButtonClick(
 				scriptPathField::getText,
-				this::setAndStoreScriptPath
+				this::setAndStoreScript
 			)
 		);
 
@@ -100,8 +103,26 @@ public class ConfigTab extends JFrame {
 			this::handleVenvListSelectionEvent
 		);
 
+		addListDoubleClickListener(
+			venvListComponent,
+			this::handleVenvListSelectionEvent
+		);
+
 		venvScriptList.addListSelectionListener(
 			this::handleScriptListSelectionEvent
+		);
+
+		addListDoubleClickListener(
+			venvScriptList,
+			__ -> {
+				final var val =
+					config.getSelectedVenv() +
+					File.separator +
+					venvScriptList.getSelectedValue();
+
+				openDesktopEditor(val);
+				openEditorInTerminal(val);
+			}
 		);
 
 		// Add a new venv when the user clicks the button.
@@ -115,6 +136,43 @@ public class ConfigTab extends JFrame {
 		createButton.addActionListener(e -> handleNewScriptButton());
 
 		openFolderButton.addActionListener(e -> handleOpenScriptFolderButton());
+	}
+
+	/**
+	 * JList doesn't natively support double click events, so we implment it ourselves.
+	 * @param <T>
+	 * @param list The list to add the listener to.
+	 * @param handler The listener handler callback.
+	 */
+	private <T> void addListDoubleClickListener(
+		JList<T> list,
+		Consumer<ListSelectionEvent> handler
+	) {
+		list.addMouseListener(
+			new MouseAdapter() {
+				public void mouseClicked(MouseEvent evt) {
+					if (evt.getClickCount() != 2) {
+						// Not a double click
+						return;
+					}
+
+					// Get the selected list elem from the click coordinates
+					final var selectedIndex = list.locationToIndex(
+						evt.getPoint()
+					);
+
+					// Convert the MouseEvent into a corresponding ListSelectionEvent
+					final var passedEvent = new ListSelectionEvent(
+						evt.getSource(),
+						selectedIndex,
+						selectedIndex,
+						false
+					);
+
+					handler.accept(passedEvent);
+				}
+			}
+		);
 	}
 
 	private static void autoScroll(JTextField field) {
@@ -204,8 +262,8 @@ public class ConfigTab extends JFrame {
 		// Update displayed selection.
 		this.scriptPathField.setText(path);
 
-		// Open the script in an editor.
-		handleEditButton();
+		// Display the script in the terminal.
+		openEditorInTerminal(path);
 	}
 
 	private void handleNewScriptButton() {
@@ -281,16 +339,31 @@ public class ConfigTab extends JFrame {
 		}
 
 		final Desktop desktop = Desktop.getDesktop();
+		final Desktop.Action action;
 		if (!desktop.isSupported(Desktop.Action.EDIT)) {
-			ScalpelLogger.error("EDIT is not supported");
-
-			return false;
+			ScalpelLogger.error("Desktop action EDIT is not supported");
+			if (!desktop.isSupported(Desktop.Action.OPEN)) {
+				ScalpelLogger.error("Desktop action OPEN is not supported");
+				return false;
+			}
+			action = Desktop.Action.OPEN;
+		} else {
+			action = Desktop.Action.EDIT;
 		}
 
 		try {
 			// Provide the full path to the Python file
 			final File file = new File(fileToEdit);
-			desktop.edit(file);
+			switch (action) {
+				case OPEN:
+					desktop.open(file);
+					break;
+				case EDIT:
+					desktop.edit(file);
+					break;
+				default:
+					break;
+			}
 		} catch (IOException ex) {
 			ScalpelLogger.logStackTrace(ex);
 			return false;
@@ -316,8 +389,7 @@ public class ConfigTab extends JFrame {
 		final String editor = envEditor.orElse(
 			Constants.DEFAULT_TERMINAL_EDITOR
 		);
-
-		final String cmd = editor + " " + fileToEdit;
+		final String cmd = editor + " " + Terminal.escapeshellarg(fileToEdit);
 
 		final String cwd = Path.of(fileToEdit).getParent().toString();
 
@@ -340,6 +412,18 @@ public class ConfigTab extends JFrame {
 		}
 
 		openEditorInTerminal(script);
+	}
+
+	private void installDefaultsAndLog(String venv)
+		throws IOException, InterruptedException {
+		final Process proc = Venv.installDefaults(venv, Map.of(), false);
+		final var stdout = proc.inputReader();
+
+		while (proc.isAlive()) {
+			Optional
+				.ofNullable(stdout.readLine())
+				.ifPresent(ScalpelLogger::all);
+		}
 	}
 
 	private void handleVenvButton() {
@@ -391,20 +475,13 @@ public class ConfigTab extends JFrame {
 					// Add the venv to the config.
 					config.addVenvPath(path);
 
-					// Display the venv in the list.
-					venvListComponent.setListData(config.getVenvPaths());
-
 					// Clear the text field.
 					addVentText.setText("");
 
-					final Process proc = Venv.installDefaults(path);
-					final var stdout = proc.inputReader();
-					String displayed = "";
+					installDefaultsAndLog(path);
 
-					while (proc.isAlive()) {
-						displayed += stdout.readLine();
-						label.setText(displayed);
-					}
+					// Display the venv in the list.
+					venvListComponent.setListData(config.getVenvPaths());
 				} catch (IOException | InterruptedException e) {
 					final String msg =
 						"Failed to create venv: \n" + e.getMessage();
@@ -566,11 +643,27 @@ public class ConfigTab extends JFrame {
 		config.setFrameworkPath(path);
 	}
 
-	private void setAndStoreScriptPath(String path) {
-		setUserScriptPath(path);
+	private void setAndStoreScript(final String path) {
+		final String copied;
+		try {
+			copied = Config.copyScriptToVenv(config.getSelectedVenv(), path);
+		} catch (RuntimeException e) {
+			// Error popup
+			JOptionPane.showMessageDialog(
+				this,
+				e.getMessage(),
+				"Could not copy script to venv.",
+				JOptionPane.ERROR_MESSAGE
+			);
+			return;
+		}
+
+		setUserScriptPath(copied);
 
 		// Store the path in the config. (writes to disk)
-		config.setUserScriptPath(path);
+		config.setUserScriptPath(copied);
+		updateScriptList();
+		selectScript(copied);
 	}
 
 	/**
@@ -1279,7 +1372,7 @@ public class ConfigTab extends JFrame {
 			)
 		);
 		editButton = new JButton();
-		editButton.setText("Edit selected script");
+		editButton.setText("Open selected script");
 		panel5.add(
 			editButton,
 			new GridConstraints(

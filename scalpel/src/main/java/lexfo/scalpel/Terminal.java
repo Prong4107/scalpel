@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 public class Terminal {
 
@@ -55,7 +56,16 @@ public class Terminal {
 		return widget;
 	}
 
-	private static String escapeshellarg(String str) {
+	public static String escapeshellarg(String str) {
+		if (UIUtil.isWindows) {
+			// Handle cmd.exe
+			final String specialChars = "&|<>^";
+
+			return Stream
+				.of(specialChars.split(""))
+				.reduce(str, (s, ch) -> s.replace(ch, "^" + ch));
+		}
+		// Handle posix-y shell
 		return "'" + str.replace("'", "'\\''") + "'";
 	}
 

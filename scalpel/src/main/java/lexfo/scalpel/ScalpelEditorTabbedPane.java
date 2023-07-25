@@ -1,30 +1,39 @@
 package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.HttpService;
 import burp.api.montoya.http.message.HttpMessage;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.ui.Selection;
+import burp.api.montoya.ui.editor.RawEditor;
 import burp.api.montoya.ui.editor.extension.EditorCreationContext;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpResponseEditor;
-import com.google.common.base.Function;
+import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Container;
+import java.awt.Dimension;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import javax.swing.JLayer;
+import java.util.stream.Stream;
+import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
-import lexfo.scalpel.ScalpelLogger.Level;
+import lexfo.scalpel.ScalpelExecutor.CallableData;
+import lexfo.scalpel.editors.AbstractEditor;
+import lexfo.scalpel.editors.IMessageEditor;
+import lexfo.scalpel.editors.ScalpelBinaryEditor;
+import lexfo.scalpel.editors.ScalpelDecimalEditor;
+import lexfo.scalpel.editors.ScalpelHexEditor;
+import lexfo.scalpel.editors.ScalpelOctalEditor;
+import lexfo.scalpel.editors.ScalpelRawEditor;
 
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpRequestEditor.html
 // https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/ui/editor/extension/ExtensionProvidedHttpResponseEditor.html
@@ -41,7 +50,6 @@ public class ScalpelEditorTabbedPane
 		The editor swing UI component.
 	*/
 	private final JTabbedPane pane = new JTabbedPane();
-
 	/**
 		The HTTP request or response being edited.
 	*/
@@ -77,7 +85,22 @@ public class ScalpelEditorTabbedPane
 	*/
 	private final ScalpelExecutor executor;
 
-	private final ArrayList<ScalpelRawEditor> editors = new ArrayList<>();
+	private final ArrayList<IMessageEditor> editors = new ArrayList<>();
+
+	/**
+		req_edit_ or res_edit
+	 */
+	private final String hookPrefix;
+
+	/**
+		req_edit_in_<tab_name> or res_edit_in_<tab_name>
+	 */
+	private final String hookInPrefix;
+
+	/**
+		req_edit_out_<tab_name> or res_edit_out_<tab_name>
+	 */
+	private final String hookOutPrefix;
 
 	/**
 		Constructs a new Scalpel editor.
@@ -113,6 +136,18 @@ public class ScalpelEditorTabbedPane
 		// Set the editor type (REQUEST or RESPONSE).
 		this.type = type;
 
+		this.hookPrefix =
+			(
+				type == EditorType.REQUEST
+					? Constants.REQ_EDIT_PREFIX
+					: Constants.RES_EDIT_PREFIX
+			);
+
+		// req_edit_in / res_edit_in
+		this.hookInPrefix = this.hookPrefix + Constants.IN_SUFFIX;
+		// req_edit_out / res_edit_out
+		this.hookOutPrefix = this.hookPrefix + Constants.OUT_SUFFIX;
+
 		try {
 			this.recreateEditors();
 			ScalpelLogger.log(
@@ -129,95 +164,213 @@ public class ScalpelEditorTabbedPane
 		}
 	}
 
+	private int getTabNameOffsetInHookName(String hookName) {
+		return hookName.startsWith(hookInPrefix)
+			? hookInPrefix.length()
+			: hookOutPrefix.length();
+	}
+
+	private String getHookSuffix(String hookName) {
+		return hookName
+			.substring(getTabNameOffsetInHookName(hookName))
+			.replaceFirst("^_", "");
+	}
+
+	private String getHookPrefix(String hookName) {
+		return hookName.substring(0, getTabNameOffsetInHookName(hookName));
+	}
+
+	public static final Map<String, Class<? extends AbstractEditor>> modeToEditorMap = Map.of(
+		"raw",
+		ScalpelRawEditor.class,
+		"hex",
+		ScalpelHexEditor.class,
+		"octal",
+		ScalpelOctalEditor.class,
+		"decimal",
+		ScalpelDecimalEditor.class,
+		"binary",
+		ScalpelBinaryEditor.class
+	);
+
+	/**
+	 * A tab can be associated with at most two hooks
+	 * (e.g req_edit_in and req_edit_out)
+	 *
+	 * This stores the informations related to only one hook and is later merged with the second hook information into a HookTabInfo
+	 */
+	private record PartialHookTabInfo(
+		String name,
+		String mode,
+		String direction
+	) {}
+
+	/**
+	 * This stores all the informations required to create a tab.
+	 * .directions contains the whole prefix and not just "in" or "out"
+	 */
+	private record HookTabInfo(
+		String name, // for req_edit_in_tab1 -> tab1
+		String mode, // hex / raw
+		Set<String> directions // re[qs]_edit_in / re[qs]_edit_out
+	) {}
+
+	private List<CallableData> getCallables() {
+		// List Python callbacks.
+		try {
+			return executor.getCallables();
+		} catch (RuntimeException e) {
+			ScalpelLogger.debug(
+				"recreateEditors(): Could not call get_callables"
+			);
+			ScalpelLogger.debug(e.toString());
+			return null;
+		}
+	}
+
+	/**
+	 * Retain hooks for editing a request / response and parses them.
+	 * @param callables All the Python callable objects that were found.
+	 * @return Parsed hook infos
+	 */
+	private Stream<PartialHookTabInfo> filterEditorHooks(
+		List<CallableData> callables
+	) {
+		return callables
+			.parallelStream()
+			.filter(c ->
+				c.name().startsWith(this.hookInPrefix) ||
+				c.name().startsWith(this.hookOutPrefix)
+			)
+			.map(c ->
+				new PartialHookTabInfo(
+					this.getHookSuffix(c.name()),
+					c
+						.annotations()
+						.getOrDefault(
+							Constants.EDITOR_MODE_ANNOTATION_KEY,
+							Constants.DEFAULT_EDITOR_MODE
+						),
+					this.getHookPrefix(c.name())
+				)
+			);
+	}
+
+	/**
+	 * Takes all the hooks infos and merge the corresponding ones
+	 * E.g:
+	 * Given the hook req_edit_in_tab1
+	 * To create a tab, we need to know if req_edit_in_tab1 has a corresponding req_edit_out_tab1
+	 * The editor mode (raw or hex) must be taken from the req_edit_in_tab1 annotations (@edit("hex"))
+	 *
+	 * @param infos The hooks individual infos.
+	 * @return The hook informations required to create a Scalpel editor tab.
+	 */
+	private Stream<HookTabInfo> mergeHookTabInfo(
+		Stream<PartialHookTabInfo> infos
+	) {
+		// Group the hooks individual infos by their tab name (as in req_edit_in_<tab name>)
+		final Map<String, List<PartialHookTabInfo>> grouped = infos.collect(
+			Collectors.groupingBy(PartialHookTabInfo::name)
+		);
+
+		// Merge the grouped individual infos into a single object.
+		return grouped
+			.entrySet()
+			.parallelStream()
+			.map(entry -> {
+				final String name = entry.getKey();
+				final List<PartialHookTabInfo> partials = entry.getValue();
+				final Set<String> directions = partials
+					.parallelStream()
+					.map(PartialHookTabInfo::direction)
+					.collect(Collectors.toSet());
+
+				// Discard the "out" hook editor mode and only account for the "in" hook.
+				final Optional<PartialHookTabInfo> inHook = partials
+					.parallelStream()
+					.filter(p -> p.direction().equals(this.hookInPrefix))
+					.findFirst();
+
+				// inHook can be empty in the case where the user specified an "out" hook
+				// but not an "in" hook, which is a noop case, we handle this for safety.
+				final String mode = inHook
+					.map(PartialHookTabInfo::mode)
+					.orElse(Constants.DEFAULT_EDITOR_MODE);
+
+				return new HookTabInfo(name, mode, directions);
+			});
+	}
+
 	/**
 		Recreates the editors tabs.
 		
 		Calls Python to get the tabs name.
 	*/
 	public void recreateEditors() {
-		// Destroy existing editors
-		this.pane.removeAll();
-		this.editors.clear();
+		SwingUtilities.invokeLater(() -> {
+			// Destroy existing editors
+			this.pane.removeAll();
+			this.editors.clear();
 
-		// List Python callbacks.
-		final List<String> callables;
-		try {
-			callables = executor.getCallables();
-		} catch (RuntimeException e) {
-			ScalpelLogger.log(
-				Level.TRACE,
-				"recreateEditors(): Could not call get_callables"
-			);
-			return;
-		}
-
-		final String prefix =
-			(
-				type == EditorType.REQUEST
-					? Constants.REQ_EDIT_PREFIX
-					: Constants.RES_EDIT_PREFIX
-			);
-
-		// req_edit_in / res_edit_in
-		final String inPrefix = prefix + Constants.IN_SUFFIX;
-		// req_edit_out / res_edit_out
-		final String outPrefix = prefix + Constants.OUT_SUFFIX;
-
-		// Retain only correct prefixes
-		var callbacks = callables
-			.stream()
-			.filter(c -> c.startsWith(inPrefix) || c.startsWith(outPrefix));
-
-		// Helpers for groupBy
-		Function<String, Integer> getOffset =
-			(
-				name ->
-					name.startsWith(inPrefix)
-						? inPrefix.length()
-						: outPrefix.length()
-			);
-
-		// Allow missing suffix (req_edit_in(...) vs req_edit_in_<tabName>(...))
-		Function<String, String> getSuffix =
-			(n -> n.substring(getOffset.apply(n)).replaceFirst("^_", ""));
-
-		Function<String, String> getPrefix =
-			(name -> name.substring(0, getOffset.apply(name)));
-
-		// Group "in" and "out" callbacks by their tab name (suffix)
-		Map<String, Set<String>> grouped = callbacks.collect(
-			Collectors.groupingBy(
-				getSuffix,
-				Collectors.mapping(getPrefix, Collectors.toSet())
-			)
-		);
-
-		grouped.forEach((tabName, cbDirections) -> {
-			final ScalpelRawEditor editor = new ScalpelRawEditor(
-				tabName,
-				cbDirections.contains(outPrefix), // Read-only tab if no out method.
-				API,
-				ctx,
-				type,
-				this,
-				executor
-			);
-
-			this.editors.add(editor);
-
-			if (
-				this._requestResponse != null &&
-				editor.setRequestResponseInternal(_requestResponse)
-			) {
-				final var displayedName = tabName.trim().isEmpty()
-					? Integer.toString(this.pane.getTabCount())
-					: tabName;
-
-				this.pane.addTab(
-						displayedName,
-						new JLayer<>(editor.uiComponent())
-					);
+			final var callables = getCallables();
+			if (callables == null) {
+				return;
 			}
+
+			// Retain only correct prefixes and parse hook name
+			Stream<PartialHookTabInfo> hooks = filterEditorHooks(callables);
+
+			// Merge the individual hooks infos
+			final Stream<HookTabInfo> mergedTabInfo = mergeHookTabInfo(hooks);
+
+			// Create the editors
+			mergedTabInfo.forEach(tabInfo -> {
+				ScalpelLogger.debug("Creating tab for " + tabInfo);
+
+				// Get editor implementation corresponding to mode.
+				final Class<? extends AbstractEditor> dispatchedEditor = modeToEditorMap.getOrDefault(
+					tabInfo.mode(),
+					ScalpelRawEditor.class
+				);
+
+				final AbstractEditor editor;
+				try {
+					// There should be a better way to do this..
+					editor =
+						dispatchedEditor
+							.getConstructor(
+								String.class,
+								Boolean.class,
+								MontoyaApi.class,
+								EditorCreationContext.class,
+								EditorType.class,
+								ScalpelEditorTabbedPane.class,
+								ScalpelExecutor.class
+							)
+							.newInstance(
+								tabInfo.name(),
+								tabInfo.directions.contains(this.hookOutPrefix), // Read-only tab if no out method.
+								API,
+								ctx,
+								type,
+								this,
+								executor
+							);
+				} catch (Exception ex) {
+					// Should never happen as long as the constructor has not been overriden by an abstract declaration.
+					throw new RuntimeException(ex);
+				}
+
+				this.editors.add(editor);
+
+				if (
+					this._requestResponse != null &&
+					editor.setRequestResponseInternal(_requestResponse)
+				) {
+					this.addEditorToDisplayedTabs(editor);
+				}
+			});
 		});
 	}
 
@@ -228,26 +381,6 @@ public class ScalpelEditorTabbedPane
 	*/
 	public EditorType getEditorType() {
 		return type;
-	}
-
-	/**
-		Prints the UI component hierarchy tree. (debugging)
-	*/
-	private void printUiTrace() {
-		LinkedList<Container> lst = new LinkedList<>();
-		Container current = uiComponent().getParent();
-
-		while (current != null) {
-			lst.push(current);
-			current = current.getParent();
-		}
-
-		// https://stackoverflow.com/questions/38402493/local-variable-log-defined-in-an-enclosing-scope-must-be-final-or-effectively-fi
-		final AtomicReference<String> pad = new AtomicReference<>("");
-		lst.forEach(c -> {
-			ScalpelLogger.trace(pad.get() + c.hashCode() + ":" + c);
-			pad.set(pad.get() + "  ");
-		});
 	}
 
 	/**
@@ -279,7 +412,7 @@ public class ScalpelEditorTabbedPane
 	 *
 	 * @return
 	 */
-	public ScalpelRawEditor selectEditor() {
+	public IMessageEditor selectEditor() {
 		final var selectedEditor = editors.get(pane.getSelectedIndex());
 		if (selectedEditor.isModified()) {
 			return selectedEditor;
@@ -354,6 +487,21 @@ public class ScalpelEditorTabbedPane
 	}
 
 	/**
+	 * Adds the editor to the tabbed pane
+	 * If the editor caption is blank, the displayed name will be the tab index.
+	 * @param editor The editor to add
+	 */
+	private void addEditorToDisplayedTabs(IMessageEditor editor) {
+		final String displayedName = editor.caption().isBlank()
+			? Integer.toString(this.pane.getTabCount())
+			: editor.caption();
+
+		final var component = editor.uiComponent();
+
+		pane.addTab(displayedName, component);
+	}
+
+	/**
 		Sets the HttpRequestResponse to be edited.
 		(called by Burp)
 
@@ -370,11 +518,7 @@ public class ScalpelEditorTabbedPane
 		editors
 			.parallelStream()
 			.filter(e -> e.setRequestResponseInternal(requestResponse))
-			.forEach(e ->
-				SwingUtilities.invokeLater(() ->
-					pane.addTab(e.caption(), e.uiComponent())
-				)
-			);
+			.forEach(this::addEditorToDisplayedTabs);
 	}
 
 	/**
@@ -443,6 +587,7 @@ public class ScalpelEditorTabbedPane
 	*/
 	@Override
 	public Component uiComponent() {
+		// return codeArea;
 		return this.pane;
 	}
 
@@ -465,6 +610,6 @@ public class ScalpelEditorTabbedPane
 	*/
 	@Override
 	public boolean isModified() {
-		return editors.stream().anyMatch(e -> e.isModified());
+		return editors.stream().anyMatch(IMessageEditor::isModified);
 	}
 }
