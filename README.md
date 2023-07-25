@@ -1,6 +1,8 @@
 # Scalpel
 
-Scalpel is a powerful Burp Suite extension that allows you to script Burp and intercept, rewrite HTTP traffic on the fly, and program custom Burp editors using Python. It provides an interactive way to edit encoded/encrypted data as plaintext and offers an easy-to-use Python library as an alternative to Burp's Java API.
+Scalpel is a powerful Burp Suite extension that allows you to script Burp and intercept, rewrite HTTP traffic on the fly, and program custom Burp editors using Python.
+
+It provides an interactive way to edit encoded/encrypted data as plaintext and offers an easy-to-use Python library as an alternative to Burp's Java API.
 
 ## Features
 
