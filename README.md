@@ -27,7 +27,7 @@ You can download the latest release of Scalpel from the GitHub releases page. Th
 
 ## Usage
 
-Scalpel works by creating a script with the GUI the extension embeds in Burp, and implementing a set of functions with well-known names.
+Scalpel works by creating a script with the GUI the extension embeds in Burp, and implementing a set of functions with predefined names.
 
 Here is an example script:
 
