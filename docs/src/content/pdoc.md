@@ -1,5 +1,5 @@
 ---
-title: "Pdoc"
+title: "pdoc"
 menu: "techdoc"
 menu:
     techdoc:

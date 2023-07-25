@@ -71,12 +71,12 @@ public class ScalpelUnpacker {
 
 	// https://stackoverflow.com/questions/9324933/what-is-a-good-java-library-to-zip-unzip-files#:~:text=Extract%20zip%20file%20and%20all%20its%20subfolders%2C%20using%20only%20the%20JDK%3A
 	/**
-	    Extracts the Scalpel resources from the Scalpel JAR file.
+	    Extracts the Scalpel python resources from the Scalpel JAR file.
 
 	    @param zipFile The path to the Scalpel JAR file.
 	    @param extractFolder The path to the Scalpel resources directory.
 	*/
-	private void extractFolder(String zipFile, String extractFolder) {
+	private void extractRessources(String zipFile, String extractFolder) {
 		ZipFile zip = null;
 		try {
 			final int BUFFER = 2048;
@@ -94,11 +94,18 @@ public class ScalpelUnpacker {
 				final ZipEntry entry = (ZipEntry) zipFileEntries.nextElement();
 
 				final String currentEntry = entry.getName();
-				if (!currentEntry.startsWith("python")) {
+				final long size = entry.getSize();
+
+				if (
+					!currentEntry.startsWith("python") &&
+					!currentEntry.startsWith("templates")
+				) {
 					continue;
 				}
 
-				ScalpelLogger.debug("Extracting " + currentEntry);
+				ScalpelLogger.debug(
+					"Extracting " + currentEntry + " (" + size + " bytes)"
+				);
 
 				final File destFile = new File(newPath, currentEntry);
 				final File destinationParent = destFile.getParentFile();
@@ -107,22 +114,18 @@ public class ScalpelUnpacker {
 				destinationParent.mkdirs();
 
 				if (!entry.isDirectory()) {
-					final BufferedInputStream is = new BufferedInputStream(
-						zip.getInputStream(entry)
-					);
+					final var is = zip.getInputStream(entry);
+
 					int currentByte;
 					// establish buffer for writing file
 					final byte data[] = new byte[BUFFER];
 
 					// write the current file to disk
 					final FileOutputStream fos = new FileOutputStream(destFile);
-					final BufferedOutputStream dest = new BufferedOutputStream(
-						fos,
-						BUFFER
-					);
+					final var dest = fos;
 
 					// read and write until last byte is encountered
-					while ((currentByte = is.read(data, 0, BUFFER)) != -1) {
+					while ((currentByte = is.read(data)) != -1) {
 						dest.write(data, 0, currentByte);
 					}
 					dest.flush();
@@ -155,13 +158,13 @@ public class ScalpelUnpacker {
 				);
 
 			ScalpelLogger.all("Extracting to " + ressourcesDirectory);
-			extractFolder(getRunningJarPath(), getResourcesPath());
+			extractRessources(getRunningJarPath(), getResourcesPath());
 
 			ScalpelLogger.all(
 				"Successfully extracted running .jar to " + ressourcesDirectory
 			);
 		} catch (Exception e) {
-			ScalpelLogger.logError("initializeResourcesDirectory() failed.");
+			ScalpelLogger.error("initializeResourcesDirectory() failed.");
 			ScalpelLogger.logStackTrace(e);
 		}
 	}

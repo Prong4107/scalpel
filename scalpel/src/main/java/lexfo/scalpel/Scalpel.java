@@ -2,10 +2,11 @@ package lexfo.scalpel;
 
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
-import burp.api.montoya.logging.Logging;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Arrays;
+
 import jep.MainInterpreter;
 
 // Burp will auto-detect and load any class that extends BurpExtension.
@@ -36,9 +37,9 @@ public class Scalpel implements BurpExtension {
 		ScalpelLogger.all("Config:");
 		ScalpelLogger.all("Framework: " + config.getFrameworkPath());
 		ScalpelLogger.all("Script: " + config.getUserScriptPath());
-		ScalpelLogger.all("Venvs: " + config.getVenvPaths());
+		ScalpelLogger.all("Venvs: " + Arrays.stream(config.getVenvPaths()));
 		ScalpelLogger.all("Default venv: " + Config.getDefaultVenv());
-		ScalpelLogger.all("Selected venv: " + config.getSelectedVenvPath());
+		ScalpelLogger.all("Selected venv: " + config.getSelectedVenv());
 	}
 
 	private static void setupJepFromConfig(Config config) throws IOException {
@@ -155,7 +156,7 @@ public class Scalpel implements BurpExtension {
 			ScalpelLogger.all(
 				"^ An error has occured, look at the \"Errors\" tab ^"
 			);
-			ScalpelLogger.logError("Failed to initialize scalpel:");
+			ScalpelLogger.error("Failed to initialize scalpel:");
 			ScalpelLogger.logStackTrace(e);
 		}
 	}

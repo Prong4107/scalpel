@@ -19,9 +19,11 @@ menu:
 -   Why using Java with Jep to execute Python when Burp already supports Python extensions with [Jython](https://www.jython.org/) ?
     -   Jython supports up to Python 2.7, and no support at all for Python 3. Python 2.7 is basically a dead language and nobody should still be using it.
     -   Burp's developers have released a [new API](https://portswigger.net/burp/documentation/desktop/extensions/creating) for extensions and deprecated the old one. The new one only supports Java, so we had no choice but reimplementing a partial Python scripting support for Burp ourself.
--   Scalpel requires python >=3.10 but my distribution is outdated and doesn't allow installing such recent Python versions using the package manager
+-   Scalpel requires python >=3.10 but my distribution is outdated and doesn't allow installing such recent Python versions using the package manager.
     -   You can try updating your distribution.
     -   If you cannot update your distribution, you must setup a separate Python >=3.10 installation and run Burp with the appropriate environnement so that your separate installation will be used.
-        - Tip: You can use [pyenv](https://github.com/pyenv/pyenv) to easily install and switch Python versions.
+        -   Tip: You can use [pyenv](https://github.com/pyenv/pyenv) to easily install and switch Python versions.
 -   Why does scalpel installs mitmproxy ?
-    - Scalpel uses utilities from the mitmproxy package, we may eventually stop using or re-implement this utilities to drop the need to install such a heavy package.
+    -   Scalpel uses utilities from the mitmproxy package, we may eventually stop using or re-implement this utilities to drop the need to install such a heavy package.
+-   I have installed Python using the Microsoft Store and Scalpel doesn't work.
+    -   The Microsoft Store Python is a sandboxed version designed for education purposes, it has multiple different behaviours that are incompatible with Scalpel. To use Scalpel on Windows, it is required to install Python from the [official source](https://www.python.org/downloads/windows/).

@@ -5,15 +5,16 @@ menu:
         weight: 6
 ---
 
-
 # Script examples
 
-Here are example scripts to familiarize yourself with Scalpel's Python library a bit more, they have been used against real targets or reproduce very similar behaviours.
+Here are example scripts to familiarize yourself with Scalpel's Python library a bit more. They were designed for real use-cases.
 
 ## GZIP-ed API
-For this case, we've encoutered an API using a custom protocol that gzips multiple form-data fields.
+
+For this case, we've encountered an API using a custom protocol that gzips multiple form-data fields.
 
 A quick-and-dirty Scalpel script allowed us to directly edit the unzipped data and find hidden secrets:
+
 ```python
 from pyscalpel.http import Request, Response
 from pyscalpel.burp_utils import logger
@@ -28,7 +29,7 @@ def unzip_bytes(data):
             uncompressed_data = gz_file.read()
         return uncompressed_data
     except OSError as e:
-        logger.logToError(f"Error: Failed to unzip the data - {e}")
+        logger.error(f"Error: Failed to unzip the data - {e}")
 
 
 def req_edit_in_fs(req: Request) -> bytes | None:
@@ -72,13 +73,16 @@ def res_edit_in(res: Response) -> bytes | None:
 def res_edit_out(res: Response, text: bytes) -> Response | None:
     res.content = text
     return res
-``` 
+```
 
 ## Cryptography using a session as a secret
+
 We had the case where the client encrypted its form data using a session token obtained when authenticating.
 
 This script demonstrates that Scalpel can be easily used to deal with stateful behaviours:
-> This use case is testable using the test lab in the repository at `test/server.js`
+
+> This use case is testable using the test lab in the repository at `test/server.js`.
+
 ```python
 from pyscalpel.http import Request, Response, Flow
 from Crypto.Cipher import AES
@@ -157,4 +161,5 @@ def res_edit_out_encrypted(res: Response, text: bytes) -> Response:
 ```
 
 ---
+
 > Feel free to contact us to add your own one if you had an interesting case !

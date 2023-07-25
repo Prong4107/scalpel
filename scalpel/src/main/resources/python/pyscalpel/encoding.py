@@ -1,5 +1,5 @@
 """
-    Utilities for converting data.
+    Utilities for encoding data.
 """
 
 from urllib.parse import unquote_to_bytes as urllibdecode

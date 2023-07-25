@@ -6,7 +6,7 @@ url: "api/pyscalpel/encoding.html"
 menu:
     addons:
         parent: 'Event Hooks & API'
-        weight: 6
+        weight: 7
 ---
 
 {{< readfile file="/generated/api/pyscalpel/encoding.html" >}}

@@ -16,4 +16,7 @@ menu:
 -   It should look like this when Scalpel is properly initialized {{< figure src="/screenshots/init.png" >}}
 -   If Scalpel is properly installed, you should now have a "Scalpel" tab in the Request/Response editor {{< figure src="/screenshots/tabs.png" >}}
 -   You should also have a Scalpel config tab where you have a terminal you can use to install new packages {{< figure src="/screenshots/terminal.png" >}}
--   See [Usage]({{< relref "overview-usage" >}}) to know how to use Scalpel.
+
+-   Scalpel is now properly installed and initialized !
+-   You can now see [Usage]({{< relref "overview-usage" >}}) to know how to use Scalpel.
+-   You can also read this [tutorial]({{< relref "tute-aes" >}}) to see Scalpel in action for a real use case.
