@@ -1,7 +1,7 @@
 import traceback
 from sys import _getframe
 import inspect
-from typing import Callable, TypeVar, cast
+from typing import Callable, TypeVar, cast, Any, TypedDict
 import sys
 from functools import wraps
 
@@ -14,20 +14,25 @@ from functools import wraps
 class DebugLogger:
     """Debug logger to use if for some reason the logger is not initialized"""
 
-    def all(self, msg: str):  # pylint: disable=invalid-name
-        """Prints the message to the standard output
-
-        Args:
-            msg (str): The message to print
-        """
+    def all(self, msg: str):
         print(msg)
 
-    def error(self, msg: str):  # pylint: disable=invalid-name
-        """Prints the message to the standard error
+    def trace(self, msg: str):
+        print(msg)
 
-        Args:
-            msg (str): The message to print
-        """
+    def debug(self, msg: str):
+        print(msg)
+
+    def info(self, msg: str):
+        print(msg)
+
+    def warn(self, msg: str):
+        print(msg)
+
+    def fatal(self, msg: str):
+        print(msg)
+
+    def error(self, msg: str):
         print(msg, file=sys.stderr)
 
 
@@ -46,11 +51,11 @@ except NameError:
 
 try:
     from pyscalpel.venv import activate
-    from pyscalpel.java.scalpel_types.scalpel import Scalpel
+    from pyscalpel.java.scalpel_types import Context
 
-    scalpel: Scalpel = cast(Scalpel, __scalpel__)  # type: ignore pylint: disable=undefined-variable
+    ctx: Context = cast(Context, __scalpel__)  # type: ignore pylint: disable=undefined-variable
 
-    VENV = scalpel["venv"]
+    VENV = ctx["venv"]
 
     activate(VENV)
 
@@ -63,9 +68,10 @@ try:
 
     # Set the logger in the globals module
     pyscalpel._globals.logger = logger  # pylint: disable=protected-access
+    pyscalpel._globals.ctx = ctx  # pylint: disable=protected-access
 
     # Get the user script path from the JEP initialized variable
-    user_script: str = scalpel["user_script"]
+    user_script: str = ctx["user_script"]
 
     # Get utils to dynamically import the user script in a convinient way
     import importlib.util
@@ -105,8 +111,19 @@ try:
         lambda _, __: True
     )
 
-    def _get_callables() -> list[str]:
-        return list(callable_objs.keys())
+    class CallableData(TypedDict):
+        name: str
+        annotations: dict[str, Any]
+
+    def _get_callables() -> list[CallableData]:
+        logger.all("Python: _get_callables() called")
+        # Also return the annotations because they contain the editor mode (hex,raw)
+        # Annotations are a dict so they will be converted to HashMap
+        # https://github.com/ninia/jep/wiki/How-Jep-Works#objects:~:text=Dict%20%2D%3E%20java.util.HashMap
+        return list(
+            {"name": name, "annotations": hook.__annotations__}
+            for name, hook in callable_objs.items()
+        )
 
     def call_match_callback(*args) -> bool:
         """Calls the match callback with the correct parameters.
@@ -257,7 +274,7 @@ try:
         py_req = Request.from_burp(req, service)
 
         flow = Flow(py_req.scheme, py_req.host, py_req.port, py_req)
-        if not call_match_callback(flow, "edit_request_in"):
+        if not call_match_callback(flow, "req_edit_in"):
             return None
 
         logger.all(f"Python: calling {callback.__name__}")
@@ -290,7 +307,7 @@ try:
         py_req = Request.from_burp(req, service)
 
         flow = Flow(py_req.scheme, py_req.host, py_req.port, py_req, text=bytes(text))
-        if not call_match_callback(flow, "edit_request_out"):
+        if not call_match_callback(flow, "req_edit_out"):
             return None
 
         logger.all(f"Python: calling {callback.__name__}")
@@ -322,7 +339,7 @@ try:
         py_res = Response.from_burp(res, service=service, request=request)
 
         flow = Flow(py_res.scheme, py_res.host, py_res.port, py_res.request, py_res)
-        if not call_match_callback(flow, "edit_response_in"):
+        if not call_match_callback(flow, "res_edit_in"):
             return None
 
         logger.all(f"Python: calling {callback.__name__}")
@@ -358,7 +375,7 @@ try:
         flow = Flow(
             py_res.scheme, py_res.host, py_res.port, py_res.request, py_res, bytes(text)
         )
-        if not call_match_callback(flow, "edit_response_out"):
+        if not call_match_callback(flow, "res_edit_out"):
             return None
 
         logger.all(f"Python: calling {callback.__name__}")

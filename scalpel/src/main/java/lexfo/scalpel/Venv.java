@@ -1,6 +1,7 @@
 package lexfo.scalpel;
 
 import java.io.BufferedReader;
+import java.io.File;
 /**
  * The Venv class is used to manage Python virtual environments.
  */
@@ -13,7 +14,10 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * Manage Python virtual environments.
@@ -47,10 +51,33 @@ public class Venv {
 		return process;
 	}
 
+	public static Process installDefaults(
+		String path,
+		Map<String, String> env,
+		Boolean installJep
+	) throws IOException, InterruptedException {
+		// Install the default packages
+
+		// Dependencies required for Java to initiate a Python interpreter (jep)
+		final var javaDeps = Constants.DEFAULT_VENV_DEPENDENCIES;
+
+		// Dependencies required by the Scalpel Python library.
+		final var scriptDeps = Constants.PYTHON_DEPENDENCIES;
+
+		final String[] pkgsToInstall;
+		if (installJep) {
+			pkgsToInstall = ArrayUtils.addAll(javaDeps, scriptDeps);
+		} else {
+			pkgsToInstall = scriptDeps;
+		}
+
+		return install(path, env, pkgsToInstall);
+	}
+
 	public static Process installDefaults(String path)
 		throws IOException, InterruptedException {
 		// Install the default packages
-		return install(path, Constants.PYTHON_DEPENDENCIES);
+		return installDefaults(path, Map.of(), true);
 	}
 
 	/**
@@ -206,12 +233,21 @@ public class Venv {
 
 	public static Path getExecutablePath(String venvPath, String filename)
 		throws IOException {
-		final String binDir = Config.isWindows() ? "Scripts" : "bin";
+		final String binDir = Constants.VENV_BIN_DIR;
+		final Path validatedVenvPath = Optional
+			.ofNullable(new File(venvPath))
+			.map(File::toPath)
+			.orElseThrow(() ->
+				new RuntimeException("Failed to resolve '" + venvPath + "'")
+			);
+
 		return Files
-			.walk(Paths.get(venvPath))
+			.walk(validatedVenvPath)
 			.filter(Files::isDirectory)
 			.filter(p -> p.getFileName().toString().equalsIgnoreCase(binDir))
-			.filter(p -> Files.exists(p.resolve(filename)))
+			.map(p -> p.resolve(filename))
+			.filter(Files::exists)
+			.map(Path::toAbsolutePath)
 			.findFirst()
 			.orElseThrow(() ->
 				new RuntimeException(
@@ -222,16 +258,11 @@ public class Venv {
 					" .\n" +
 					"Make sure dependencies are correctly installed. (python3,pip,venv,jdk)"
 				)
-			)
-			.resolve(filename)
-			.toAbsolutePath();
+			);
 	}
 
 	public static Path getPipPath(String venvPath) throws IOException {
-		return getExecutablePath(
-			venvPath,
-			Config.isWindows() ? "pip.exe" : "pip"
-		);
+		return getExecutablePath(venvPath, Constants.PIP_BIN);
 	}
 
 	/**

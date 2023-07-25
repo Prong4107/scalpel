@@ -1,26 +1,7 @@
-import sys
+from pyscalpel.java.scalpel_types import Context
+from pyscalpel.logger import Logger
 
 
-# Define a default logger to use if for some reason the logger is not initialized
-# (e.g. running the script from pdoc)
-class DefaultLogger:
-    """Debug logger to use if for some reason the logger is not initialized"""
+logger: Logger = Logger()
 
-    def logToOutput(self, msg: str):  # pylint: disable=invalid-name
-        """Prints the message to the standard output
-
-        Args:
-            msg (str): The message to print
-        """
-        print(msg)
-
-    def error(self, msg: str):  # pylint: disable=invalid-name
-        """Prints the message to the standard error
-
-        Args:
-            msg (str): The message to print
-        """
-        print(msg, file=sys.stderr)
-
-
-logger: DefaultLogger = DefaultLogger()
+ctx: Context = Context()  # type: ignore

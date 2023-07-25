@@ -4,20 +4,17 @@ from typing import Sequence, Any
 
 import sys
 import qs
-
-from mitmproxy.coretypes import multidict
-
-
 from pyscalpel.encoding import always_bytes, always_str
 from pyscalpel.http.body.abstract import (
     ExportedForm,
     TupleExportedForm,
 )
-
 from .abstract import FormSerializer, ExportedForm
 
+from mitmproxy.coretypes import multidict
 
-class QueryParamsView(multidict.MultiDictView[str, str]):
+
+class URLEncodedFormView(multidict.MultiDictView[str, str]):
     def __init__(self, origin: multidict.MultiDictView[str, str]) -> None:
         super().__init__(origin._getter, origin._setter)
 
@@ -25,7 +22,7 @@ class QueryParamsView(multidict.MultiDictView[str, str]):
         super().__setitem__(always_str(key), always_str(value))
 
 
-class QueryParams(multidict.MultiDict[bytes, bytes]):
+class URLEncodedForm(multidict.MultiDict[bytes, bytes]):
     def __init__(self, fields: Sequence[tuple[str | bytes, str | bytes]]) -> None:
         super().__init__(fields)
 
@@ -52,7 +49,7 @@ class URLEncodedFormSerializer(FormSerializer):
             for field in deserialized_body.fields
         )
 
-    def deserialize(self, body: bytes, req=...) -> QueryParams:
+    def deserialize(self, body: bytes, req=...) -> URLEncodedForm:
         try:
             # XXX: urllib is broken when passing bytes to parse_qsl because it tries to decode it
             # but doesn't pass the specified encoding and instead the internal one is used (i.e: ascii, which can't decode some bytes)
@@ -70,18 +67,18 @@ class URLEncodedFormSerializer(FormSerializer):
                 )
                 for key, val in parsed
             )
-            return QueryParams(fields)
+            return URLEncodedForm(fields)
         except UnicodeEncodeError as exc:
             print("Query string crashed urrlib parser:", body, file=sys.stderr)
             raise exc
 
     def get_empty_form(self, req=...) -> Any:
-        return QueryParams(tuple())
+        return URLEncodedForm(tuple())
 
-    def deserialized_type(self) -> type[QueryParams]:
-        return QueryParams
+    def deserialized_type(self) -> type[URLEncodedForm]:
+        return URLEncodedForm
 
-    def import_form(self, exported: ExportedForm, req=...) -> QueryParams:
+    def import_form(self, exported: ExportedForm, req=...) -> URLEncodedForm:
         match exported:
             case tuple():
                 fields = list()
@@ -94,10 +91,10 @@ class URLEncodedFormSerializer(FormSerializer):
                     fields.append(
                         (convert_for_urlencode(key), convert_for_urlencode(val))
                     )
-                return QueryParams(fields)
+                return URLEncodedForm(fields)
             case dict():
                 mapped_qs = qs.build_qs(exported)
                 return self.deserialize(mapped_qs.encode())
 
-    def export_form(self, source: QueryParams) -> TupleExportedForm:
+    def export_form(self, source: URLEncodedForm) -> TupleExportedForm:
         return source.fields

@@ -2,6 +2,7 @@ package lexfo.scalpel;
 
 import burp.api.montoya.logging.Logging;
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 /**
  * Provides methods for logging messages to the Burp Suite output and standard streams.
@@ -17,6 +18,7 @@ public class ScalpelLogger {
 		DEBUG(2),
 		INFO(3),
 		WARN(4),
+		ERROR(5),
 		FATAL(6),
 		ALL(7);
 
@@ -45,7 +47,7 @@ public class ScalpelLogger {
 	 * Configured log level
 	 * TODO: Add to configuration.
 	 */
-	private static Level loggerLevel = Level.INFO;
+	private static Level loggerLevel = Level.DEBUG;
 
 	/**
 	 * Logs the specified message to the Burp Suite output and standard output at the TRACE level.
@@ -87,7 +89,6 @@ public class ScalpelLogger {
 		log(Level.WARN, msg);
 	}
 
-
 	/**
 	 * Logs the specified message to the Burp Suite output and standard output at the FATAL level.
 	 *
@@ -107,9 +108,21 @@ public class ScalpelLogger {
 	 */
 	public static void log(Level level, String msg) {
 		if (loggerLevel.value() <= level.value()) {
-			System.out.println(msg);
+			final Boolean error =
+				level.value > Level.ERROR.value && level != Level.ALL;
+
+			final Consumer<String> stdLog = error
+				? System.err::println
+				: System.out::println;
+
+			stdLog.accept(msg);
+
 			if (logger != null) {
-				logger.logToOutput(msg);
+				final Consumer<String> burpLog = error
+					? logger::logToError
+					: logger::logToOutput;
+
+				burpLog.accept(msg);
 			}
 		}
 	}

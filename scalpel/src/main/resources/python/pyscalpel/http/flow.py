@@ -8,6 +8,8 @@ from pyscalpel.http.utils import host_is
 
 @dataclass(frozen=True)
 class Flow:
+    """Contains request and response and some utilities for match()"""
+
     scheme: Literal["http", "https"] = "http"
     host: str = ""
     port: int = 0
@@ -16,9 +18,21 @@ class Flow:
     text: bytes | None = None
 
     def host_is(self, *patterns: str) -> bool:
+        """Matches a wildcard pattern againt the target host
+
+        Returns:
+            bool: True if at least one pattern matched
+        """
         return host_is(self.host, *patterns)
 
     def path_is(self, *patterns: str) -> bool:
+        """Matches a wildcard pattern againt the request path
+
+        Includes query string `?` and fragment `#`
+
+        Returns:
+            bool: True if at least one pattern matched
+        """
         req = self.request
         if req is None:
             return False

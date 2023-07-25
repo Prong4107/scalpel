@@ -1,10 +1,18 @@
+"""
+    This module provides reimplementations of Python virtual environnements scripts
+    
+    This is designed to be used internally, 
+    but in the case where the user desires to dynamically switch venvs using this,
+    they should ensure the selected venv has the dependencies required by Scalpel.
+"""
+
 import os
 import sys
 import glob
 import subprocess
 
-old_prefix = sys.prefix
-old_exec_prefix = sys.exec_prefix
+_old_prefix = sys.prefix
+_old_exec_prefix = sys.exec_prefix
 
 # Python's virtualenv's activate/deactivate ported from the bash script to Python code.
 # https://docs.python.org/3/library/venv.html#:~:text=each%20provided%20path.-,How%20venvs%20work%C2%B6,-When%20a%20Python
@@ -21,8 +29,8 @@ def deactivate() -> None:
     if "VIRTUAL_ENV" in os.environ:
         del os.environ["VIRTUAL_ENV"]
 
-    sys.prefix = old_prefix
-    sys.exec_prefix = old_exec_prefix
+    sys.prefix = _old_prefix
+    sys.exec_prefix = _old_exec_prefix
 
 
 def activate(path: str | None) -> None:
