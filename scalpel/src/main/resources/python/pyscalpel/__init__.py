@@ -5,6 +5,42 @@ It provides many utilities to manipulate HTTP requests, responses and converting
 """
 
 from pyscalpel.http import Request, Response, Flow
-from pyscalpel.burp_utils import ctx
+from pyscalpel.edit import editor
+from pyscalpel.burp_utils import ctx as _context, logger as _logger
+from pyscalpel.java.scalpel_types import Context
+from pyscalpel.logger import Logger
+from . import http
+from . import java
+from . import encoding
+from . import utils
+from . import burp_utils
+from . import venv
+from . import edit
 
-__all__ = ["Request", "Response", "Flow", "ctx"]
+ctx: Context = _context
+"""The Scalpel Python execution context
+
+Contains the Burp Java API object, the venv directory, the user script path,
+the path to the file loading the user script and a logging object
+"""
+
+logger: Logger = _logger
+"""Provides methods for logging messages to the Burp Suite output and standard streams."""
+
+__all__ = [
+    "http",
+    "java",
+    "encoding",
+    "utils",
+    "burp_utils",
+    "venv",
+    "edit",
+    "Request",
+    "Response",
+    "Flow",
+    "ctx",
+    "Context",
+    "editor",
+    "logger",
+    "Logger",
+]

@@ -5,6 +5,8 @@ import burp.api.montoya.MontoyaApi;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Arrays;
+
 import jep.MainInterpreter;
 
 // Burp will auto-detect and load any class that extends BurpExtension.
@@ -35,7 +37,7 @@ public class Scalpel implements BurpExtension {
 		ScalpelLogger.all("Config:");
 		ScalpelLogger.all("Framework: " + config.getFrameworkPath());
 		ScalpelLogger.all("Script: " + config.getUserScriptPath());
-		ScalpelLogger.all("Venvs: " + config.getVenvPaths());
+		ScalpelLogger.all("Venvs: " + Arrays.stream(config.getVenvPaths()));
 		ScalpelLogger.all("Default venv: " + Config.getDefaultVenv());
 		ScalpelLogger.all("Selected venv: " + config.getSelectedVenv());
 	}

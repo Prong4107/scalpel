@@ -26,14 +26,15 @@ pdoc.render_helpers.formatter.cssclass = "chroma pdoc-code"
 modules = [
     "pyscalpel.http",
     "pyscalpel.http.body",
+    "pyscalpel.edit",
     "pyscalpel.events",
     "pyscalpel.venv",
     "pyscalpel.utils",
     "pyscalpel.encoding",
     "pyscalpel.java",
     "pyscalpel.java.burp",
-    "qs",
     here / ".." / "src" / "generated" / "events.py",
+    here / ".." / "src" / "generated" / "editors.py",
 ]
 
 pdoc.pdoc(*modules, output_directory=here / ".." / "src" / "generated" / "api")

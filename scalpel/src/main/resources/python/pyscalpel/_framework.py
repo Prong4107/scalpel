@@ -1,7 +1,7 @@
 import traceback
 from sys import _getframe
 import inspect
-from typing import Callable, TypeVar, cast
+from typing import Callable, TypeVar, cast, Any, TypedDict
 import sys
 from functools import wraps
 
@@ -111,8 +111,19 @@ try:
         lambda _, __: True
     )
 
-    def _get_callables() -> list[str]:
-        return list(callable_objs.keys())
+    class CallableData(TypedDict):
+        name: str
+        annotations: dict[str, Any]
+
+    def _get_callables() -> list[CallableData]:
+        logger.all("Python: _get_callables() called")
+        # Also return the annotations because they contain the editor mode (hex,raw)
+        # Annotations are a dict so they will be converted to HashMap
+        # https://github.com/ninia/jep/wiki/How-Jep-Works#objects:~:text=Dict%20%2D%3E%20java.util.HashMap
+        return list(
+            {"name": name, "annotations": hook.__annotations__}
+            for name, hook in callable_objs.items()
+        )
 
     def call_match_callback(*args) -> bool:
         """Calls the match callback with the correct parameters.
