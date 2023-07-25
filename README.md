@@ -85,8 +85,6 @@ Scalpel is compatible with Windows and Linux.
 
 Pull requests are welcome!
 
-Please try to respect the existing coding style.
-
 ## License
 
 Scalpel is licensed under [INSERT LICENSE HERE].
