@@ -12,7 +12,7 @@ It provides an interactive way to edit encoded/encrypted data as plaintext and o
 
 -   **Python Library**: Scalpel provides a Python library that is easier to use than Burp's Java API.
 
--   **Hex Editor**: Scalpel can create better hex editors than the native Burp one.
+-   **Hex Editor**: Scalpel can create better hex editors than the native one.
 
 ## Requirements
 
