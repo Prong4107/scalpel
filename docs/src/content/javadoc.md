@@ -1,5 +1,5 @@
 ---
-title: "Javadoc"
+title: "Scalpel Javadoc"
 menu: "techdoc"
 menu:
     techdoc:

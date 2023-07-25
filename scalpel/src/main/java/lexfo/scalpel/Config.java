@@ -7,14 +7,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.text.html.Option;
 
 /**
  * Scalpel configuration.
@@ -97,7 +100,7 @@ public class Config {
 
 	// UUID generated to identify the project (because the project name cannot be fetched)
 	// This is stored in the extension data which is specific to the project.
-	private final String projectID;
+	public final String projectID;
 
 	// Path to the project configuration file
 	private final File projectScalpelConfig;
@@ -109,19 +112,23 @@ public class Config {
 	private static final String DATA_PROJECT_ID_KEY = DATA_PREFIX + "projectID";
 
 	// Venv that will be created and used when none exists
-	private static final String DEFAULT_VENV_NAME = "default";
+	public static final String DEFAULT_VENV_NAME = "default";
+	public static final String VENV_DIR = "venv";
+	private final ScalpelUnpacker unpacker;
 	private String _jdkPath = null;
 
-	public Config(MontoyaApi API, ScalpelUnpacker unpacker) {
+	public Config(final MontoyaApi API, final ScalpelUnpacker unpacker) {
+		this.unpacker = unpacker;
+
 		// Get the extension data to store and get the project ID back.
-		PersistedObject extensionData = API.persistence().extensionData();
+		final PersistedObject extensionData = API.persistence().extensionData();
 
 		// Get the project ID from the extension data or generate a new one when it doesn't exist.
 		this.projectID =
 			Optional
 				.ofNullable(extensionData.getString(DATA_PROJECT_ID_KEY))
 				.orElseGet(() -> {
-					String id = java.util.UUID.randomUUID().toString();
+					String id = UUID.randomUUID().toString();
 					extensionData.setString(DATA_PROJECT_ID_KEY, id);
 					return id;
 				});
@@ -130,58 +137,66 @@ public class Config {
 		this.projectScalpelConfig =
 			new File(getScalpelDir(), projectID + CONFIG_EXT);
 
+		this.globalConfig = initGlobalConfig(unpacker);
+
+		this._jdkPath = this.globalConfig.jdkPath;
+
+		// Load project config or create a new one on failure. (e.g. file doesn't exist)
+		this.projectConfig = this.initProjectConfig();
+
+		// Write the global config to the file if they didn't exist.
+		saveAllConfig();
+	}
+
+	private _GlobalData initGlobalConfig(ScalpelUnpacker unpacker) {
 		// Load global config
 		File globalConfigFile = getGlobalConfigFile();
 
 		// Load global config or create a new one on failure. (e.g. file doesn't exist)
-		globalConfig =
-			Optional
-				.of(globalConfigFile)
-				.filter(File::exists)
-				.map(file -> IO.readJSON(file, _GlobalData.class))
-				.map(d -> {
-					// Remove venvs that were deleted by an external process.
-					d.venvPaths.removeIf(path -> !new File(path).exists());
-					if (d.jdkPath == null) {
-						d.jdkPath = IO.ioWrap(this::findJdkPath);
-					}
+		_GlobalData _globalConfig = Optional
+			.of(globalConfigFile)
+			.filter(File::exists)
+			.map(file -> IO.readJSON(file, _GlobalData.class))
+			.map(d -> {
+				// Remove venvs that were deleted by an external process.
+				d.venvPaths.removeIf(path -> !new File(path).exists());
+				if (d.jdkPath == null) {
+					d.jdkPath = IO.ioWrap(this::findJdkPath);
+				}
 
-					// Ensure that there is at least one venv.
-					if (d.venvPaths.size() == 0) {
-						d.venvPaths.add(getOrCreateDefaultVenv(d.jdkPath));
-					}
+				// Ensure that there is at least one venv.
+				if (d.venvPaths.size() == 0) {
+					d.venvPaths.add(getOrCreateDefaultVenv(d.jdkPath));
+				}
 
-					// Select the first venv if the default one doesn't exist anymore or if it's not set.
-					d.defaultVenvPath =
-						Optional
-							.ofNullable(d.defaultVenvPath)
-							.filter(path -> new File(path).exists())
-							.orElseGet(() -> d.venvPaths.get(0));
+				// Select the first venv if the default one doesn't exist anymore or if it's not set.
+				d.defaultVenvPath =
+					Optional
+						.ofNullable(d.defaultVenvPath)
+						.filter(path -> new File(path).exists())
+						.orElseGet(() -> d.venvPaths.get(0));
 
-					return d;
-				})
-				.orElseGet(() -> getDefaultGlobalData(unpacker));
+				return d;
+			})
+			.orElseGet(() -> getDefaultGlobalData(unpacker));
 
-		_jdkPath = globalConfig.jdkPath;
+		return _globalConfig;
+	}
 
-		// Load project config or create a new one on failure. (e.g. file doesn't exist)
-		projectConfig =
-			Optional
-				.of(projectScalpelConfig)
-				.filter(File::exists)
-				.map(file -> IO.readJSON(file, _ProjectData.class))
-				.map(d -> {
-					d.venvPath =
-						Optional
-							.ofNullable(d.venvPath) // Ensure the venv path is set.
-							.filter(p -> globalConfig.venvPaths.contains(p)) // Ensure the selected venv is registered.
-							.orElse(globalConfig.defaultVenvPath); // Otherwise, use the default venv.
-					return d;
-				})
-				.orElseGet(this::getDefaultProjectData);
-
-		// Write the global config to the file if they didn't exist.
-		saveAllConfig();
+	private _ProjectData initProjectConfig() {
+		return Optional
+			.of(projectScalpelConfig)
+			.filter(File::exists)
+			.map(file -> IO.readJSON(file, _ProjectData.class))
+			.map(d -> {
+				d.venvPath =
+					Optional
+						.ofNullable(d.venvPath) // Ensure the venv path is set.
+						.filter(p -> globalConfig.venvPaths.contains(p)) // Ensure the selected venv is registered.
+						.orElse(globalConfig.defaultVenvPath); // Otherwise, use the default venv.
+				return d;
+			})
+			.orElseGet(this::getDefaultProjectData);
 	}
 
 	public static boolean isWindows() {
@@ -337,12 +352,12 @@ public class Config {
 				);
 
 				// Include a filechooser to choose the path
-				JFileChooser fileChooser = new JFileChooser();
+				final JFileChooser fileChooser = new JFileChooser();
 				fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
-				int option = fileChooser.showOpenDialog(null);
+				final int option = fileChooser.showOpenDialog(null);
 				if (option == JFileChooser.APPROVE_OPTION) {
-					File file = fileChooser.getSelectedFile();
+					final File file = fileChooser.getSelectedFile();
 					return file.getPath();
 				} else {
 					return null;
@@ -394,15 +409,15 @@ public class Config {
 	 * @return The default venv path.
 	 */
 	public String getOrCreateDefaultVenv(String javaHome) {
-		final File defaultPath = new File(
-			getDefaultVenvsDir(),
-			DEFAULT_VENV_NAME
-		);
+		final File defaultPath = Path
+			.of(getDefaultVenvsDir().getPath(), DEFAULT_VENV_NAME, VENV_DIR)
+			.toFile();
+
 		final String path = defaultPath.getAbsolutePath();
 
 		// Return if default venv dir already exists.
 		if (!defaultPath.exists()) {
-			defaultPath.mkdir();
+			defaultPath.mkdirs();
 		} else if (!defaultPath.isDirectory()) {
 			throw new RuntimeException("Default venv path is not a directory");
 		} else {
@@ -419,22 +434,30 @@ public class Config {
 					Constants.PYTHON_BIN + " -m venv " + path
 				);
 			}
+
+			// Add default script.
+			copyScriptToVenv(
+				defaultPath.getParent(),
+				unpacker.getDefaultScriptPath()
+			);
 		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
 		}
 
 		// Run pip install <dependencies>
 		try {
-			final Process proc = Venv.install_background(
+			final Process proc = Venv.installDefaults(
 				path,
 				Map.of("JAVA_HOME", javaHome),
-				Constants.PYTHON_DEPENDENCIES
+				true
 			);
 
 			// Log pip output
 			final var stdout = proc.inputReader();
 			while (proc.isAlive()) {
-				ScalpelLogger.all(stdout.readLine());
+				Optional
+					.ofNullable(stdout.readLine())
+					.ifPresent(ScalpelLogger::all);
 			}
 
 			if (proc.exitValue() != 0) {
@@ -462,7 +485,7 @@ public class Config {
 			);
 			throw new RuntimeException(e);
 		}
-		return path;
+		return Path.of(path).getParent().toString();
 	}
 
 	/**
@@ -535,7 +558,7 @@ public class Config {
 	 *
 	 * @return The selected venv path.
 	 */
-	public String getSelectedVenvPath() {
+	public String getSelectedVenv() {
 		return projectConfig.venvPath;
 	}
 
@@ -615,5 +638,45 @@ public class Config {
 	public void removeVenvPath(String venvPath) {
 		globalConfig.venvPaths.remove(venvPath);
 		this.saveGlobalConfig();
+	}
+
+	/**
+	 * Copy the script to the selected venv
+	 * @param scriptPath The script to copy
+	 * @return The new file path
+	 */
+	public static String copyScriptToVenv(
+		final String venv,
+		final String scriptPath
+	) {
+		final File original = new File(scriptPath);
+		final String baseErrMsg =
+			"Could not copy " + scriptPath + " to " + venv + "\n";
+
+		final Path destination = Optional
+			.ofNullable(original)
+			.filter(File::exists)
+			.map(File::getName)
+			.map(n -> Path.of(venv).resolve(n))
+			.orElseThrow(() ->
+				new RuntimeException(baseErrMsg + "File not found")
+			);
+
+		if (Files.exists(destination)) {
+			throw new RuntimeException(baseErrMsg + "File already exists");
+		}
+
+		try {
+			return Files
+				.copy(
+					original.toPath(),
+					destination,
+					StandardCopyOption.REPLACE_EXISTING
+				)
+				.toAbsolutePath()
+				.toString();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

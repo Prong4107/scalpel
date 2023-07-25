@@ -29,7 +29,6 @@ public class WorkingPopup {
 		label.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
 		dialog.add(label, BorderLayout.CENTER);
 
-		dialog.setSize(200, 100);
 		dialog.setLocationRelativeTo(parent);
 
 		final Thread taskThread = new Thread(() -> {
@@ -41,6 +40,9 @@ public class WorkingPopup {
 		});
 		taskThread.start();
 
-		SwingUtilities.invokeLater(() -> dialog.setVisible(true));
+		SwingUtilities.invokeLater(() -> {
+			dialog.pack();
+			dialog.setVisible(true);
+		});
 	}
 }

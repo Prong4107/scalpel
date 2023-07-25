@@ -10,18 +10,28 @@ menu:
 
 Scalpel is a Burp extension for intercepting and modifying HTTP trafic using simple Python scripting.
 
+# Index
+
+-   [Installation]({{< relref "overview-installation" >}})
+-   [Usage]({{< relref "overview-usage" >}})
+-   [FAQ]({{< relref "overview-faq" >}})
+-   [Technical documentation]({{< relref "addons-api" >}})
+-   [Example use-case]({{< relref "tute-aes" >}})
+-   [How scalpel works]({{< relref "concepts-howscalpelworks" >}})
+
 ## Features
 
--   Make scripted changes to HTTP traffic using Python
--   Interactively edit plaintext decoded and encoded by a custom script
+-   Make scripted changes to HTTP traffic using Python.
+-   Interactively edit plaintext decoded and encoded by a custom script.
+-   Better hexadecimal editor.
 
 [GitHub repository](https://code.corp.lexfo.fr/pentester/scalpel).
+
 ^TODO: set github repo
 
-# Index
-- [Installation]({{< relref "overview-installation" >}})
-- [Usage]({{< relref "overview-usage" >}})
-- [FAQ]({{< relref "overview-faq" >}})
-- [Technical documentation]({{< relref "addons-api" >}})
-- [Example use-case]({{< relref "tute-aes" >}})
-- [How scalpel works]({{< relref "concepts-howscalpelworks" >}})
+## Use-cases
+
+-   [Decrypting custom encryption]({{< relref "tute-aes" >}})
+-   [Editing encoded requests/responses]({{< relref "addons-examples#GZIP" >}})
+
+> Note: One might think existing Burp extensions like piper can handle such cases, but it is actually too limited, for example, when intercepting a response, piper cannot get informations form the originating request, which is required in the above case. In general, Scalpel allows you to work around cases more complex than other Burp extensions like Piper or Hackvertor.

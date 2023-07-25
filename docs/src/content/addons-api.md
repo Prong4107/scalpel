@@ -6,14 +6,14 @@ aliases:
 layout: single
 menu:
     addons:
-        weight: 3
+        weight: 1
 ---
 
 # Event Hooks
 
-Scalpel scripts hook into Burps's internal mechanisms through event hooks. These are
-implemented as methods with a set of well-known names. Events
-receive `Request`, `Response`, `Flow` and `bytes` objects as arguments - by modifying these objects, scripts can
+Scalpel scripts hook into Burps's internal mechanisms through event hooks.
+These are implemented as methods with a set of well-known names.
+Events receive `Request`, `Response`, `Flow` and `bytes` objects as arguments - by modifying these objects, scripts can
 change traffic on the fly and program custom request/response editors. For instance, here is an script that adds a response
 header with a count of the number of responses seen:
 
@@ -34,6 +34,8 @@ def response(res: Response) -> Response:
 
 The following list all available event hooks.
 
-
 {{< readfile file="/generated/api/events.html" >}}
 
+## Editors
+
+{{< readfile file="/generated/api/editors.html" >}}
