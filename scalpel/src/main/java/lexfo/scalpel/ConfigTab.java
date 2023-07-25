@@ -1,7 +1,6 @@
 package lexfo.scalpel;
 
 import burp.api.montoya.ui.Theme;
-import com.google.common.base.Function;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.uiDesigner.core.Spacer;
@@ -10,6 +9,8 @@ import com.jediterm.terminal.ui.UIUtil;
 import java.awt.*;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -21,7 +22,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListSelectionEvent;
@@ -53,7 +53,7 @@ public class ConfigTab extends JFrame {
 	private JPanel venvSelectPanel;
 	private JButton editButton;
 	private JButton createButton;
-	private JList venvScriptList;
+	private JList<String> venvScriptList;
 	private JPanel listPannel;
 	private JButton openFolderButton;
 	private final ScalpelExecutor executor;
@@ -79,7 +79,7 @@ public class ConfigTab extends JFrame {
 		scriptBrowseButton.addActionListener(e ->
 			handleBrowseButtonClick(
 				scriptPathField::getText,
-				this::setAndStoreScriptPath
+				this::setAndStoreScript
 			)
 		);
 
@@ -103,8 +103,26 @@ public class ConfigTab extends JFrame {
 			this::handleVenvListSelectionEvent
 		);
 
+		addListDoubleClickListener(
+			venvListComponent,
+			this::handleVenvListSelectionEvent
+		);
+
 		venvScriptList.addListSelectionListener(
 			this::handleScriptListSelectionEvent
+		);
+
+		addListDoubleClickListener(
+			venvScriptList,
+			__ -> {
+				final var val =
+					config.getSelectedVenv() +
+					File.separator +
+					venvScriptList.getSelectedValue();
+
+				openDesktopEditor(val);
+				openEditorInTerminal(val);
+			}
 		);
 
 		// Add a new venv when the user clicks the button.
@@ -118,6 +136,43 @@ public class ConfigTab extends JFrame {
 		createButton.addActionListener(e -> handleNewScriptButton());
 
 		openFolderButton.addActionListener(e -> handleOpenScriptFolderButton());
+	}
+
+	/**
+	 * JList doesn't natively support double click events, so we implment it ourselves.
+	 * @param <T>
+	 * @param list The list to add the listener to.
+	 * @param handler The listener handler callback.
+	 */
+	private <T> void addListDoubleClickListener(
+		JList<T> list,
+		Consumer<ListSelectionEvent> handler
+	) {
+		list.addMouseListener(
+			new MouseAdapter() {
+				public void mouseClicked(MouseEvent evt) {
+					if (evt.getClickCount() != 2) {
+						// Not a double click
+						return;
+					}
+
+					// Get the selected list elem from the click coordinates
+					final var selectedIndex = list.locationToIndex(
+						evt.getPoint()
+					);
+
+					// Convert the MouseEvent into a corresponding ListSelectionEvent
+					final var passedEvent = new ListSelectionEvent(
+						evt.getSource(),
+						selectedIndex,
+						selectedIndex,
+						false
+					);
+
+					handler.accept(passedEvent);
+				}
+			}
+		);
 	}
 
 	private static void autoScroll(JTextField field) {
@@ -588,11 +643,27 @@ public class ConfigTab extends JFrame {
 		config.setFrameworkPath(path);
 	}
 
-	private void setAndStoreScriptPath(String path) {
-		setUserScriptPath(path);
+	private void setAndStoreScript(final String path) {
+		final String copied;
+		try {
+			copied = Config.copyScriptToVenv(config.getSelectedVenv(), path);
+		} catch (RuntimeException e) {
+			// Error popup
+			JOptionPane.showMessageDialog(
+				this,
+				e.getMessage(),
+				"Could not copy script to venv.",
+				JOptionPane.ERROR_MESSAGE
+			);
+			return;
+		}
+
+		setUserScriptPath(copied);
 
 		// Store the path in the config. (writes to disk)
-		config.setUserScriptPath(path);
+		config.setUserScriptPath(copied);
+		updateScriptList();
+		selectScript(copied);
 	}
 
 	/**
