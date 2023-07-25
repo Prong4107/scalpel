@@ -26,6 +26,7 @@ pdoc.render_helpers.formatter.cssclass = "chroma pdoc-code"
 modules = [
     "pyscalpel.http",
     "pyscalpel.http.body",
+    "pyscalpel.edit",
     "pyscalpel.events",
     "pyscalpel.venv",
     "pyscalpel.utils",
