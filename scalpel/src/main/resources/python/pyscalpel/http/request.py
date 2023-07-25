@@ -56,7 +56,7 @@ class FormNotParsedException(Exception):
     """Exception raised when a form deserialization failed
 
     Args:
-        Exception (_type_): _description_
+        Exception (Exception): The base exception
     """
 
 
