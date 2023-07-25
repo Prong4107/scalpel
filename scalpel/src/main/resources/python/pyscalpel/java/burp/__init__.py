@@ -10,7 +10,7 @@ from .http_request import IHttpRequest, HttpRequest
 from .http_response import IHttpResponse, HttpResponse
 from .http_parameter import IHttpParameter, HttpParameter
 from .http_service import IHttpService, HttpService
-
+from .logging import Logging
 
 __all__ = [
     "IHttpRequest",
@@ -26,4 +26,5 @@ __all__ = [
     "HttpService",
     "IByteArray",
     "ByteArray",
+    "Logging",
 ]

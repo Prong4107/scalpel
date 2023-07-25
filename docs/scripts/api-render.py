@@ -32,7 +32,6 @@ modules = [
     "pyscalpel.encoding",
     "pyscalpel.java",
     "pyscalpel.java.burp",
-    "qs",
     here / ".." / "src" / "generated" / "events.py",
     here / ".." / "src" / "generated" / "editors.py",
 ]
