@@ -17,6 +17,8 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public class Terminal {
 
@@ -42,17 +44,28 @@ public class Terminal {
 
 	private static JediTermWidget createTerminalWidget(
 		Theme theme,
-		String venvPath
+		String venvPath,
+		Optional<String> cwd,
+		Optional<String> cmd
 	) {
 		JediTermWidget widget = new JediTermWidget(
 			createSettingsProvider(theme)
 		);
-		widget.setTtyConnector(createTtyConnector(venvPath));
+		widget.setTtyConnector(createTtyConnector(venvPath, cwd, cmd));
 		widget.start();
 		return widget;
 	}
 
-	private static String escapeshellarg(String str) {
+	public static String escapeshellarg(String str) {
+		if (UIUtil.isWindows) {
+			// Handle cmd.exe
+			final String specialChars = "&|<>^";
+
+			return Stream
+				.of(specialChars.split(""))
+				.reduce(str, (s, ch) -> s.replace(ch, "^" + ch));
+		}
+		// Handle posix-y shell
 		return "'" + str.replace("'", "'\\''") + "'";
 	}
 
@@ -63,15 +76,32 @@ public class Terminal {
 	 * @return The TtyConnector.
 	 */
 	public static TtyConnector createTtyConnector(String venvPath) {
-		Map<String, String> envs = System.getenv();
-		String[] command;
+		return createTtyConnector(venvPath, Optional.empty(), Optional.empty());
+	}
+
+	/**
+	 * Creates a TtyConnector that will run a shell in the virtualenv.
+	 *
+	 * @param venvPath The path to the virtualenv.
+	 * @return The TtyConnector.
+	 */
+	protected static TtyConnector createTtyConnector(
+		String venvPath,
+		Optional<String> cwd,
+		Optional<String> cmd
+	) {
+		Map<String, String> env = System.getenv();
+		final String[] commandToRun;
 
 		final String sep = File.separator;
 		final String binDir = UIUtil.isWindows ? "Scripts" : "bin";
-		final String activatePath = venvPath + sep + binDir + sep + "activate";
+		final String activatePath =
+			venvPath + sep + Config.VENV_DIR + sep + binDir + sep + "activate";
+
+		ScalpelLogger.debug("Activating terminal with " + activatePath);
 
 		if (UIUtil.isWindows) {
-			command = new String[] { "cmd.exe", "/K", activatePath };
+			commandToRun = new String[] { "cmd.exe", "/K", activatePath };
 		} else {
 			// Override the default bash load order to ensure that the virtualenv activate script is correctly loaded
 			// and we don't lose any interactive functionality.
@@ -96,20 +126,43 @@ public class Terminal {
 
 			IO.writeFile(initFilePath, tmpInitFileContent);
 
-			command =
-				new String[] { "/bin/bash", "--init-file", initFilePath, "-i" };
+			final String shell = Optional
+				.ofNullable(System.getenv("SHELL"))
+				.orElse("/bin/bash");
+
+			cmd = cmd.map(c -> c + ";" + shell);
+
+			if (cmd.isPresent()) {
+				commandToRun =
+					new String[] {
+						"/bin/bash",
+						"--init-file",
+						initFilePath,
+						"-i",
+						"-c",
+						cmd.get(),
+					};
+			} else {
+				commandToRun =
+					new String[] {
+						"/bin/bash",
+						"--init-file",
+						initFilePath,
+						"-i",
+					};
+			}
 
 			// Tell the shell the terminal is xterm like.
-			envs = new HashMap<>(envs);
-			envs.put("TERM", "xterm-256color");
+			env = new HashMap<>(env);
+			env.put("TERM", "xterm-256color");
 		}
 
 		try {
 			// Start the process in the virtualenv directory.
 			final PtyProcess process = new PtyProcessBuilder()
-				.setCommand(command)
-				.setEnvironment(envs)
-				.setDirectory(venvPath)
+				.setCommand(commandToRun)
+				.setEnvironment(env)
+				.setDirectory(cwd.orElse(venvPath))
 				.start();
 			return new PtyProcessTtyConnector(process, StandardCharsets.UTF_8);
 		} catch (Exception e) {
@@ -125,6 +178,33 @@ public class Terminal {
 	 * @return The JediTermWidget.
 	 */
 	public static JediTermWidget createTerminal(Theme theme, String venvPath) {
-		return createTerminalWidget(theme, venvPath);
+		return createTerminalWidget(
+			theme,
+			venvPath,
+			Optional.empty(),
+			Optional.empty()
+		);
+	}
+
+	/**
+	 * Creates a JediTermWidget that will run a shell in the virtualenv.
+	 *
+	 * @param theme The theme to use. (Dark or Light)
+	 * @param venvPath The path to the virtualenv.
+	 * @param cmd The command to run
+	 * @return The JediTermWidget.
+	 */
+	public static JediTermWidget createTerminal(
+		Theme theme,
+		String venvPath,
+		String cwd,
+		String cmd
+	) {
+		return createTerminalWidget(
+			theme,
+			venvPath,
+			Optional.of(cwd),
+			Optional.of(cmd)
+		);
 	}
 }

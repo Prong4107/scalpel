@@ -1,37 +1,14 @@
-# Scalpel
+#  Documentation
 
-Python scripting Burp extension.
+This directory houses the  documentation available at <https://docs..org/>.
 
-## Install:
+## Prerequisites
 
-### Requirements:
+ 1. Install [hugo "extended"](https://gohugo.io/getting-started/installing/). 
+ 2. Windows users: Depending on your git settings, you may need to manually create a symlink from `/docs/src/examples` to `/examples`.
 
--   openjdk >= 17
--   python >= 3.10
--   pip
--   [Visual C++ >=14.0 build tools](https://visualstudio.microsoft.com/fr/visual-cpp-build-tools/) (Windows only)
--   [Xcode](https://github.com/ninia/jep/wiki/OS-X) (OS X only)
+## Editing docs locally
 
----
-
-Simply import the Scalpel jar in Burp and it should automatically install it's Python dependencies in a venv.
-
-## Build:
-
-### Requirements:
-
--   \> JDK 17
-
----
-
-```bash
-./gradlew build
-```
-
-Will generate `scalpel/build/libs/scalpel-1.0.0.jar` which can be imported in Burp.
-
----
-
-## Testing:
-
-You can run the unit tests with run_tests.sh
+ 1. Make sure the  Python package is installed and the virtual python environment was activated. See [CONTRIBUTING.md](../CONTRIBUTING.md#development-setup) for details.
+ 2. Run `./build.py` to generate additional documentation source files.
+ 3. Now you can change your working directory to `./src` and run `hugo server -D`.

@@ -5,9 +5,7 @@
     <constraints>
       <xy x="59" y="42" width="960" height="540"/>
     </constraints>
-    <!-- <properties>
-      <background color="-12828863"/>
-    </properties> -->
+    <properties/>
     <border type="none" title=""/>
     <children>
       <grid id="47089" binding="venvSelectPanel" layout-manager="GridLayoutManager" row-count="4" column-count="2" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
@@ -15,9 +13,7 @@
         <constraints>
           <grid row="0" column="0" row-span="1" col-span="2" vsize-policy="3" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
-        <!-- <properties>
-          <background color="-12828863"/>
-        </properties> -->
+        <properties/>
         <border type="none" title="Manage virtualenvs"/>
         <children>
           <grid id="925d" layout-manager="BorderLayout" hgap="0" vgap="0">
@@ -48,9 +44,7 @@
             <constraints>
               <grid row="0" column="1" row-span="4" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
             </constraints>
-            <!-- <properties>
-              <background color="-12828863"/>
-            </properties> -->
+            <properties/>
           </component>
           <grid id="b57e7" layout-manager="GridLayoutManager" row-count="3" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
             <margin top="0" left="0" bottom="0" right="0"/>
@@ -75,7 +69,7 @@
                         <item value="ipsum"/>
                         <item value="aucupatum"/>
                         <item value="versatio"/>
-                        <item value="loremaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatumaucupatum"/>
+                        <item value="loremaucupatum"/>
                         <item value="ipsum"/>
                         <item value="aucupatum"/>
                         <item value="versatio"/>
@@ -240,10 +234,12 @@
         <properties/>
         <border type="none"/>
         <children>
-          <grid id="7080e" binding="browsePanel" layout-manager="GridLayoutManager" row-count="3" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="0" vgap="-1">
+          <grid id="7080e" binding="browsePanel" layout-manager="GridLayoutManager" row-count="7" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="0" vgap="-1">
             <margin top="10" left="10" bottom="10" right="10"/>
             <constraints>
-              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false"/>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="3" anchor="1" fill="1" indent="0" use-parent-layout="false">
+                <maximum-size width="300" height="-1"/>
+              </grid>
             </constraints>
             <properties>
               <background color="-5198676"/>
@@ -255,7 +251,10 @@
                 <constraints>
                   <grid row="1" column="0" row-span="1" col-span="3" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                 </constraints>
-                <properties/>
+                <properties>
+                  <enabled value="false"/>
+                  <visible value="false"/>
+                </properties>
                 <border type="none"/>
                 <children>
                   <component id="aeda0" class="javax.swing.JButton" binding="frameworkBrowseButton">
@@ -322,7 +321,7 @@
                       </grid>
                     </constraints>
                     <properties>
-                      <text value="script path"/>
+                      <text value="Load script file"/>
                     </properties>
                   </component>
                   <component id="b21e7" class="javax.swing.JTextField" binding="scriptPathField">
@@ -335,6 +334,124 @@
                       <text value=""/>
                     </properties>
                   </component>
+                </children>
+              </grid>
+              <grid id="cf434" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                <margin top="0" left="0" bottom="10" right="10"/>
+                <constraints>
+                  <grid row="4" column="0" row-span="1" col-span="3" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="4d99c" class="javax.swing.JButton" binding="createButton">
+                    <constraints>
+                      <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="1" use-parent-layout="false"/>
+                    </constraints>
+                    <properties>
+                      <text value="Create new script"/>
+                    </properties>
+                  </component>
+                  <vspacer id="5c127">
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false">
+                        <preferred-size width="-1" height="10"/>
+                      </grid>
+                    </constraints>
+                  </vspacer>
+                </children>
+              </grid>
+              <grid id="1a0fc" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                <margin top="0" left="0" bottom="10" right="10"/>
+                <constraints>
+                  <grid row="3" column="0" row-span="1" col-span="3" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="e7fa9" class="javax.swing.JButton" binding="editButton">
+                    <constraints>
+                      <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="1" use-parent-layout="false"/>
+                    </constraints>
+                    <properties>
+                      <text value="Open selected script"/>
+                    </properties>
+                  </component>
+                  <vspacer id="30913">
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false">
+                        <preferred-size width="-1" height="10"/>
+                      </grid>
+                    </constraints>
+                  </vspacer>
+                </children>
+              </grid>
+              <grid id="ce69b" binding="listPannel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                <margin top="0" left="0" bottom="0" right="0"/>
+                <constraints>
+                  <grid row="6" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <scrollpane id="48d89">
+                    <constraints>
+                      <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="1" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                    <properties/>
+                    <border type="none"/>
+                    <children>
+                      <component id="f773f" class="javax.swing.JList" binding="venvScriptList">
+                        <constraints/>
+                        <properties>
+                          <model>
+                            <item value="default.py"/>
+                            <item value="crypto.py"/>
+                            <item value="recon.py"/>
+                          </model>
+                          <toolTipText value=""/>
+                        </properties>
+                        <clientProperties>
+                          <List.isFileList class="java.lang.Boolean" value="false"/>
+                        </clientProperties>
+                      </component>
+                    </children>
+                  </scrollpane>
+                  <component id="56895" class="javax.swing.JLabel">
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+                    </constraints>
+                    <properties>
+                      <horizontalAlignment value="0"/>
+                      <horizontalTextPosition value="0"/>
+                      <text value="Scripts available for this venv:"/>
+                    </properties>
+                  </component>
+                </children>
+              </grid>
+              <grid id="9a6fa" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+                <margin top="0" left="0" bottom="10" right="10"/>
+                <constraints>
+                  <grid row="5" column="0" row-span="1" col-span="3" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <component id="57d73" class="javax.swing.JButton" binding="openFolderButton">
+                    <constraints>
+                      <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="1" use-parent-layout="false"/>
+                    </constraints>
+                    <properties>
+                      <text value="Open script folder"/>
+                    </properties>
+                  </component>
+                  <vspacer id="e310e">
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false">
+                        <preferred-size width="-1" height="10"/>
+                      </grid>
+                    </constraints>
+                  </vspacer>
                 </children>
               </grid>
             </children>

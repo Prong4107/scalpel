@@ -1,3 +1,7 @@
+"""
+    Utilities for encoding data.
+"""
+
 from urllib.parse import unquote_to_bytes as urllibdecode
 from mitmproxy.utils import strutils
 

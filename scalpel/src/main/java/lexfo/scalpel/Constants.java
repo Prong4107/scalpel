@@ -71,8 +71,14 @@ public class Constants {
 	/**
 	 * Required python packages
 	 */
-	public static final String[] PYTHON_DEPENDENCIES = new String[] {
+	public static final String[] DEFAULT_VENV_DEPENDENCIES = new String[] {
 		"jep",
+	};
+
+	/**
+	 * Required python packages
+	 */
+	public static final String[] PYTHON_DEPENDENCIES = new String[] {
 		"requests",
 		"requests-toolbelt",
 		"mitmproxy",
@@ -98,4 +104,19 @@ public class Constants {
 	public static final String PYTHON_BIN = Config.isWindows()
 		? "python.exe"
 		: "python3";
+
+	public static final String PIP_BIN = Config.isWindows() ? "pip.exe" : "pip";
+	public static final String VENV_BIN_DIR = Config.isWindows()
+		? "Scripts"
+		: "bin";
+
+	public static final String DEFAULT_TERMINAL_EDITOR = "vi";
+
+	public static final String DEFAULT_WINDOWS_EDITOR = "notepad.exe";
+
+	public static final String EDITOR_MODE_ANNOTATION_KEY =
+		"scalpel_editor_mode";
+	public static final String HEX_EDITOR_MODE = "hex";
+	public static final String RAW_EDITOR_MODE = "raw";
+	public static final String DEFAULT_EDITOR_MODE = RAW_EDITOR_MODE;
 }
