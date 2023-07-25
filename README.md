@@ -1,18 +1,35 @@
 # Scalpel
 
-Scalpel is a powerful Burp Suite extension that allows you to script Burp to intercept and rewrite HTTP traffic on the fly. Its main feature is the ability to program custom Burp editors using Python. This tool is designed to provide an alternative to Burp's Java API by offering a user-friendly Python library.
+Scalpel is a powerful Burp Suite extension that allows you to script Burp and intercept, rewrite HTTP traffic on the fly, and program custom Burp editors using Python. It provides an interactive way to edit encoded/encrypted data as plaintext and offers an easy-to-use Python library as an alternative to Burp's Java API.
 
 ## Features
 
--   **Scripting**: Scalpel allows you to create scripts using a GUI embedded in the Burp Suite. These scripts can be used to manipulate HTTP requests and responses in real-time.
--   **Custom Editors**: With Scalpel, you can create custom Burp editors using Python. This feature is particularly useful for interactively editing encoded or encrypted data as plaintext.
--   **Hex Editors**: Scalpel can be used to create advanced hex editors, providing a more robust solution than the native Burp Suite options.
+-   **Intercept and Rewrite HTTP Traffic**: Scalpel provides a set of predefined function names that you can implement to intercept and modify HTTP requests and responses.
 
-## How It Works
+-   **Custom Burp Editors**: You can program custom Burp editors using Python. This feature allows you to handle encoded or encrypted data as plaintext.
 
-Scalpel works by implementing a set of functions with well-known names. Here's an example script that adds debug headers:
+-   **Python Library**: Scalpel provides a Python library that is easier to use than Burp's Java API.
 
-```python
+-   **Hex Editors**: Scalpel can create better hex editors than the native Burp ones.
+
+## Requirements
+
+-   Python >= 3.10
+-   JDK >= 17
+
+## Installation
+
+To use Scalpel, you need to have Python >= 3.10 and any JDK >= 17 installed on your machine.
+
+You can download the latest release of Scalpel from the GitHub releases page. The release file is a .jar file that you can add to your Burp Suite as an extension.
+
+## Usage
+
+Scalpel works by creating a script with the GUI the extension embeds in Burp, and implementing a set of functions with well-known names.
+
+Here is an example script:
+
+```py
 from pyscalpel.http import Request, Response
 
 def request(req: Request) -> Request | None:
@@ -42,34 +59,34 @@ def res_edit_out(_: Response, text: bytes) -> Response | None:
     return res
 ```
 
-You can also create a hex editor by using a decorator on a hook:
+## Documentation
 
-```python
-@editor("hex")
-def req_edit_in(req: Request) -> bytes | None:
-    req.headers["X-Python-In-Request-Editor"] = "req_edit_in"
-    return bytes(req)
-```
+User documentation is available at [userdoc.scalpel.com](http://userdoc.scalpel.com).
 
-## Installation
+## Examples
 
-1. Download the latest release of Scalpel from the GitHub repository.
-2. Open Burp Suite and navigate to the Extender tab.
-3. Click on the Add button and select the downloaded Scalpel jar file.
-4. Ensure that the Scalpel extension is enabled.
+Example scripts are available in the `examples/` directory of the project.
 
-## Usage
+## Building
 
-To use Scalpel, navigate to the Scalpel tab in Burp Suite. Here, you can create and manage your scripts. To create a new script, click on the 'New' button and start scripting in the provided editor.
+The project can be built using `./gradlew build`, which generates a .jar file in `./scalpel/build/libs/scalpel-0.0.1.jar`.
+
+## Testing
+
+Unit tests can be run with `./run_tests.sh`.
+
+## Compatibility
+
+Scalpel is compatible with Windows and Linux.
 
 ## Contributing
 
-Contributions to Scalpel are welcome! Please read the contributing guidelines before making any changes.
+Contributions are welcome! Please read our contributing guidelines and code of conduct before you start.
 
 ## License
 
-Scalpel is licensed under the <on met quelle licence ?>. See the LICENSE file for more details.
+Scalpel is licensed under [INSERT LICENSE HERE].
 
-## Support
+## Contact
 
-If you encounter any issues or have any questions about Scalpel, please open an issue on the GitHub repository.
+For any questions or feedback, please contact [INSERT CONTACT INFORMATION HERE].
