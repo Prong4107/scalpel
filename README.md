@@ -61,7 +61,7 @@ def res_edit_out(_: Response, text: bytes) -> Response | None:
 
 ## Documentation
 
-User documentation is available at [userdoc.scalpel.com](http://userdoc.scalpel.com).
+User documentation is available at [[INSERT DOCUMENTATION LINK]](http://userdoc.scalpel.com).
 
 ## Examples
 
