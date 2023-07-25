@@ -83,7 +83,9 @@ Scalpel is compatible with Windows and Linux.
 
 ## Contributing
 
-Contributions are welcome! Please read our contributing guidelines and code of conduct before you start.
+Pull requests are welcome!
+
+Please try to respect the existing coding style.
 
 ## License
 
