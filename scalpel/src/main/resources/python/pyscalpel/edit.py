@@ -2,10 +2,10 @@
     Scalpel allows choosing between normal and binary editors,
     to do so, the user can apply the `editor` decorator to the `req_edit_in` / `res_edit_int` hook:
 """
-from typing import Callable, Literal
+from typing import Callable, Literal, get_args
 
-EDITOR_MODES = set(("raw", "hex", "octal", "binary", "decimal"))
 EditorMode = Literal["raw", "hex", "octal", "binary", "decimal"]
+EDITOR_MODES: set[EditorMode] = set(get_args(EditorMode))
 
 
 def editor(mode: EditorMode):
