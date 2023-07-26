@@ -10,6 +10,64 @@ def list_to_dict(lst: list):
     return {i: value for i, value in enumerate(lst)}
 
 
+def _is_valid_php_query(name: str) -> bool:
+    """
+    Check if a given name follows PHP query string syntax.
+    This implementation assumes that names will be structured like:
+    field
+    field[key]
+    field[key1][key2]
+    field[]
+    """
+    pattern = r"^[a-zA-Z_]\w*(\[\w*\])*$"
+    return bool(re.match(pattern, name))
+
+
+def _get_name_value(tokens: dict, name: str, value: str, urlencoded: bool):
+    if urlencoded:
+        name = unquote(name.replace("+", " "))
+        value = unquote(value.replace("+", " "))
+
+    # If name doesn't follow PHP query string syntax, treat it as a single key
+    if not _is_valid_php_query(name):
+        tokens[name] = value
+        return
+
+    matches = re.findall(r"([\s\w]+|\[\]|\[\w+\])", name)
+
+    new_value: str | list | dict = value
+    for i, match in enumerate(matches[::-1]):
+        match match:
+            case "[]":
+                if i == 0:
+                    new_value = [new_value]
+                else:
+                    new_value += new_value  # type: ignore
+            case _ if re.match(r"\[\w+\]", match):
+                name = re.sub(r"[\[\]]", "", match)
+                new_value = {name: new_value}
+            case _:
+                if match not in tokens:
+                    match new_value:
+                        case list() | tuple():
+                            tokens[match] = []
+                        case dict():
+                            tokens[match] = {}
+
+                match new_value:
+                    case _ if i == 0:
+                        tokens[match] = new_value
+                    case dict():
+                        tokens[match] = merge(new_value, tokens[match])
+                    case list() | tuple():
+                        tokens[match] = tokens[match] + list(new_value)
+                    case _:
+                        if not isinstance(tokens[match], list):
+                            # The key is duplicated, so we transform the first value into a list so we can append the new one
+                            tokens[match] = [tokens[match]]
+                        tokens[match].append(new_value)
+
+
 def merge_dict_in_list(source: dict, destination: list) -> list | dict:
     # Retain only integer keys:
     int_keys = sorted([key for key in source.keys() if isinstance(key, int)])
@@ -55,43 +113,6 @@ def qs_parse(qs: str, keep_blank_values: bool = True, strict_parsing: bool = Fal
     tokens = {}
     pairs = [s2 for s1 in qs.split("&") for s2 in s1.split(";")]
 
-    def get_name_value(name: str, value: str):
-        name = unquote(name.replace("+", " "))
-        value = unquote(value.replace("+", " "))
-        matches = re.findall(r"([\s\w]+|\[\]|\[\w+\])", name)
-
-        new_value: str | list | dict = value
-        for i, match in enumerate(matches[::-1]):
-            match match:
-                case "[]":
-                    if i == 0:
-                        new_value = [new_value]
-                    else:
-                        new_value += new_value  # type: ignore
-                case _ if re.match(r"\[\w+\]", match):
-                    name = re.sub(r"[\[\]]", "", match)
-                    new_value = {name: new_value}
-                case _:
-                    if match not in tokens:
-                        match new_value:
-                            case list() | tuple():
-                                tokens[match] = []
-                            case dict():
-                                tokens[match] = {}
-
-                    match new_value:
-                        case _ if i == 0:
-                            tokens[match] = new_value
-                        case dict():
-                            tokens[match] = merge(new_value, tokens[match])
-                        case list() | tuple():
-                            tokens[match] = tokens[match] + list(new_value)
-                        case _:
-                            if not isinstance(tokens[match], list):
-                                # The key is duplicated, so we transform the first value into a list so we can append the new one
-                                tokens[match] = [tokens[match]]
-                            tokens[match].append(new_value)
-
     for name_val in pairs:
         if not name_val and not strict_parsing:
             continue
@@ -107,7 +128,7 @@ def qs_parse(qs: str, keep_blank_values: bool = True, strict_parsing: bool = Fal
                 continue
 
         if len(nv[1]) or keep_blank_values:
-            get_name_value(nv[0], nv[1])
+            _get_name_value(tokens, nv[0], nv[1], urlencoded=True)
 
     return tokens
 
@@ -162,41 +183,6 @@ def qs_parse_pairs(
 ) -> dict:
     tokens = {}
 
-    def get_name_value(name: str, value: str):
-        matches = re.findall(r"([\s\w]+|\[\]|\[\w+\])", name)
-
-        new_value: str | list | dict = value
-        for i, match in enumerate(matches[::-1]):
-            match match:
-                case "[]":
-                    if i == 0:
-                        new_value = [new_value]
-                    else:
-                        new_value += new_value  # type: ignore
-                case _ if re.match(r"\[\w+\]", match):
-                    name = re.sub(r"[\[\]]", "", match)
-                    new_value = {name: new_value}
-                case _:
-                    if match not in tokens:
-                        match new_value:
-                            case list() | tuple():
-                                tokens[match] = []
-                            case dict():
-                                tokens[match] = {}
-
-                    match new_value:
-                        case _ if i == 0:
-                            tokens[match] = new_value
-                        case dict():
-                            tokens[match] = merge(new_value, tokens[match])
-                        case list() | tuple():
-                            tokens[match] = tokens[match] + list(new_value)
-                        case _:
-                            if not isinstance(tokens[match], list):
-                                # The key is duplicated, so we transform the first value into a list so we can append the new one
-                                tokens[match] = [tokens[match]]
-                            tokens[match].append(new_value)
-
     for name_val in pairs:
         if not name_val and not strict_parsing:
             continue
@@ -212,6 +198,6 @@ def qs_parse_pairs(
                 continue
 
         if len(nv[1]) or keep_blank_values:
-            get_name_value(nv[0], nv[1])
+            _get_name_value(tokens, nv[0], nv[1], False)
 
     return tokens
