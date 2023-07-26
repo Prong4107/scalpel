@@ -28,6 +28,9 @@ def editor(mode: EditorMode):
         mode (EDITOR_MODE): The editor mode (raw, hex,...)
     """
 
+    if mode not in EDITOR_MODES:
+        raise ValueError(f"Argument must be one of {EDITOR_MODES}")
+
     def decorator(hook: Callable):
         hook.__annotations__["scalpel_editor_mode"] = mode
         return hook
