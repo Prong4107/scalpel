@@ -73,7 +73,7 @@ try:
     # Get the user script path from the JEP initialized variable
     user_script: str = ctx["user_script"]
 
-    # Get utils to dynamically import the user script in a convinient way
+    # Get utils to dynamically import the user script in a convenient way
     import importlib.util
 
     # specify the absolute path of the script you want to import
