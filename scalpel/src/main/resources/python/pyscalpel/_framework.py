@@ -12,7 +12,10 @@ from functools import wraps
 #
 # Output will be printed to the terminal
 class DebugLogger:
-    """Debug logger to use if for some reason the logger is not initialized"""
+    """
+    Debug logger to use if for some reason the logger is not initialized
+    or pyscalpel.logger cannot be imported.
+    """
 
     def all(self, msg: str):
         print(msg)
@@ -40,20 +43,14 @@ logger = DebugLogger()
 
 VENV = None
 
-# Try to use the logger a first time to ensure it is initialized
-try:
-    logger = __scalpel__["logger"]  # type: ignore
-    logger.all("Python: Loading _framework.py ...")
-except NameError:
-    logger.all(
-        "Python: Initializing logger ...\nWARNING: Logger not initialized, using DebugLogger"
-    )
-
 try:
     from pyscalpel.venv import activate
     from pyscalpel.java.scalpel_types import Context
 
     ctx: Context = cast(Context, __scalpel__)  # type: ignore pylint: disable=undefined-variable
+
+    logger = ctx["logger"]  # type: ignore
+    logger.all("Python: Loading _framework.py ...")
 
     VENV = ctx["venv"]
 
@@ -387,7 +384,7 @@ try:
 
 except Exception as global_ex:  # pylint: disable=broad-except
     # Global generic exception handler to ensure the error is logged and visible to the user.
+    logger.fatal("Couldn't load script:")
+    logger.fatal(str(global_ex))
+    logger.fatal(traceback.format_exc())
     logger.all("Python: Failed loading _framework.py")
-    logger.error("Couldn't load script:")
-    logger.error(str(global_ex))
-    logger.error(traceback.format_exc())
