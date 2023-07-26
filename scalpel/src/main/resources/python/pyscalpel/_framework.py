@@ -120,10 +120,10 @@ try:
         # Also return the annotations because they contain the editor mode (hex,raw)
         # Annotations are a dict so they will be converted to HashMap
         # https://github.com/ninia/jep/wiki/How-Jep-Works#objects:~:text=Dict%20%2D%3E%20java.util.HashMap
-        return list(
+        return [
             {"name": name, "annotations": hook.__annotations__}
             for name, hook in callable_objs.items()
-        )
+        ]
 
     def call_match_callback(*args) -> bool:
         """Calls the match callback with the correct parameters.
