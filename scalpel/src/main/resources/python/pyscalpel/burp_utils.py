@@ -53,8 +53,9 @@ def byte_array(_bytes: bytes | JavaBytes | list[int] | bytearray) -> IByteArray:
     """Create a new :class:`IByteArray` from the given bytes-like obbject"""
     # Handle buggy bytes casting
     # This is needed because Python will _sometimes_ try
-    #   to interpret bytes as a an integer when passing to ByteArray.byteArray() and crash like this:
-    #       TypeError: Error converting parameter 1: 'bytes' object cannot be interpreted as an integer
+    # to interpret bytes as a an integer when passing to ByteArray.byteArray() and crash like this:
+    #
+    # TypeError: Error converting parameter 1: 'bytes' object cannot be interpreted as an integer
     #
     # Restarting Burp fixes the issue when it happens, so to avoid unstable behaviour
     #   we explcitely convert the bytes to a PyJArray of Java byte
