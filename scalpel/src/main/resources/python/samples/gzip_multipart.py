@@ -2,7 +2,10 @@
     GZIP Decompression and Re-Encoding
 
     This script interacts with an API that gzip compresses its request and response contents.
-    It decompresses the gzip encoded content, decodes the utf-16le encoded text, and 
+    
+    The target this script was made for encodes utf-16le documents and compress them with GZIP before transmitting it through it's HTTP API.
+    
+    This script decompresses the gzip encoded content, decodes the utf-16le encoded text, and 
     re-encodes it in latin-1 to get rid of additional zero bytes that would be invisible 
     in plain text and would interfere with editing the plaintext.
 """
