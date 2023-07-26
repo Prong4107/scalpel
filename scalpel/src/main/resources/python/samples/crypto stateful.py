@@ -7,7 +7,7 @@
     The script acts on paths starting with "/encrypt-session" and where the request method is not POST, or where a session is already established.
 """
 
-from pyscalpel.http import Request, Response, Flow
+from pyscalpel import Request, Response, Flow
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto.Util.Padding import pad, unpad

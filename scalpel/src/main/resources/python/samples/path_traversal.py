@@ -7,7 +7,7 @@
     It can be used for the following Portswigger lab: https://portswigger.net/web-security/file-path-traversal/lab-sequences-stripped-non-recursively
 """
 
-from pyscalpel.http import Request
+from pyscalpel import Request
 from pyscalpel.utils import urldecode, urlencode_all
 
 # The query parameter to target for path traversal exploitation.

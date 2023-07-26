@@ -7,7 +7,7 @@
     Here, we create a match hook which will only intercept requests to *.localhost and 127.0.0.1
 """
 
-from pyscalpel.http import Request, Response, Flow
+from pyscalpel import Request, Response, Flow
 
 
 def match(flow: Flow) -> bool:

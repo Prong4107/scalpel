@@ -6,7 +6,7 @@
     This is useful in HTTP request manipulation in applications such as proxies, web scrapers, and web services.
 """
 
-from pyscalpel.http import Request
+from pyscalpel import Request
 from pyscalpel.utils import (
     urldecode,
     urlencode_all,

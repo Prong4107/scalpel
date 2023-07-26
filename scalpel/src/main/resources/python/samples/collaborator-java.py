@@ -11,8 +11,7 @@
     which allows Python scripts to interact with Java objects as if they were Python objects.
 """
 
-from pyscalpel.http import Request
-from pyscalpel.burp_utils import ctx
+from pyscalpel import Request, ctx
 
 # Directly access the Montoya API Java object to generate a payload
 PAYLOAD = str(ctx["API"].collaborator().defaultPayloadGenerator().generatePayload())

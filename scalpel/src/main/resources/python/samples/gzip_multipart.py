@@ -7,9 +7,8 @@
     in plain text and would interfere with editing the plaintext.
 """
 
-from pyscalpel.http import Request, Response
-from pyscalpel.burp_utils import logger
 import gzip
+from pyscalpel import Request, Response
 
 
 def req_edit_in_fs(req: Request) -> bytes | None:
