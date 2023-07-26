@@ -1,23 +1,33 @@
-from pyscalpel.http import Request
-from pyscalpel.burp_utils import ctx
-from threading import Thread
+"""
+    Script for Automated Sending to Burp Repeater
 
-# Send every request that contains the "cmd" param to repeater
+    This script sends HTTP requests containing a specific parameter to the Repeater tool in Burp Suite. 
+    The parameter it checks for is 'cmd', but this can be modified as needed. 
+    The script also keeps track of previously seen 'cmd' values to avoid resending the same request.
+"""
 
-# Set to ensure added requests are unique
+from pyscalpel import Request
+from pyscalpel.burp import send_to_repeater
+
+# A set is used to store the values of the 'cmd' parameter that have already been encountered.
+# The use of a set ensures that each value is stored only once, avoiding duplicate requests being sent to Repeater.
 seen = set()
 
 
 def request(req: Request) -> None:
+    """
+    If the 'cmd' parameter is present in the request and its value hasn't been seen before, the request is sent to Repeater.
+
+    Args:
+        req: The incoming HTTP request.
+
+    Returns:
+        None
+    """
     cmd = req.query.get("cmd")
     if cmd is not None and cmd not in seen:
+        # If the 'cmd' parameter is present and its value is new, add the value to the 'seen' set.
         seen.add(cmd)
 
-        # Convert request to Burp format.
-        breq = req.to_burp()
-
-        # Directly access the Montoya API Java object to send the request to repeater
-        repeater = ctx["API"].repeater()
-
-        # waiting for sendToRepeater while intercepting a request causes a Burp deadlock
-        Thread(target=lambda: repeater.sendToRepeater(breq, f"cmd={cmd}")).start()
+        # Send the request to Repeater with a caption indicating the value of the 'cmd' parameter.
+        send_to_repeater(req, f"cmd={cmd}")

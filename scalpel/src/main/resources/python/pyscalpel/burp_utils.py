@@ -11,7 +11,6 @@ from pyscalpel.java.bytes import JavaBytes
 from pyscalpel.java.scalpel_types.utils import PythonUtils
 from pyscalpel.encoding import always_bytes, urldecode, urlencode_all
 
-
 logger = pyscalpel._globals.logger
 
 
