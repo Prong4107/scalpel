@@ -6,7 +6,7 @@
     The script acts on paths matching "/encrypt" and where the request form has a "secret" field.
 """
 
-from pyscalpel.http import Request, Response, Flow
+from pyscalpel import Request, Response, Flow
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto.Util.Padding import pad, unpad

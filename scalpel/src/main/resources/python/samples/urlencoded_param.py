@@ -6,7 +6,7 @@
     The script provides functions to decode and encode the 'filename' and 'directory' query parameters.
 """
 
-from pyscalpel.http import Request
+from pyscalpel import Request
 from pyscalpel.utils import urldecode, urlencode_all
 
 
