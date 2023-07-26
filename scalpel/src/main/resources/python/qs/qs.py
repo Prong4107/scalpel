@@ -22,9 +22,10 @@ def merge_dict_in_list(source: dict, destination: list) -> list | dict:
     return merge(source, list_to_dict(merged_array))
 
 
-def merge(source: Any, destination: Any):
-    source = deepcopy(source)
-    destination = deepcopy(destination)
+def merge(source: Any, destination: Any, shallow: bool = True):
+    if not shallow:
+        source = deepcopy(source)
+        destination = deepcopy(destination)
 
     match (source, destination):
         case (list(), list()):
@@ -66,7 +67,6 @@ def qs_parse(qs: str, keep_blank_values: bool = True, strict_parsing: bool = Fal
                     if i == 0:
                         new_value = [new_value]
                     else:
-                        # TODO: Ensure this does not break
                         new_value += new_value  # type: ignore
                 case _ if re.match(r"\[\w+\]", match):
                     name = re.sub(r"[\[\]]", "", match)
@@ -215,4 +215,3 @@ def qs_parse_pairs(
             get_name_value(nv[0], nv[1])
 
     return tokens
-
