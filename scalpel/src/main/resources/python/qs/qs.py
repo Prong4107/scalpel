@@ -1,5 +1,5 @@
 import re
-from urllib.parse import unquote, quote_plus
+from urllib.parse import quote_plus, unquote_plus
 from typing import Mapping, Any, cast
 from copy import deepcopy
 
@@ -10,7 +10,7 @@ def list_to_dict(lst: list):
     return {i: value for i, value in enumerate(lst)}
 
 
-def _is_valid_php_query(name: str) -> bool:
+def is_valid_php_query_name(name: str) -> bool:
     """
     Check if a given name follows PHP query string syntax.
     This implementation assumes that names will be structured like:
@@ -19,7 +19,7 @@ def _is_valid_php_query(name: str) -> bool:
     field[key1][key2]
     field[]
     """
-    pattern = r"^[a-zA-Z_]\w*(\[\w*\])*$"
+    pattern = r"^[^\[\]&]+(\[[^\[\]&]*\])*$"
     return bool(re.match(pattern, name))
 
 
@@ -29,11 +29,11 @@ def _get_name_value(tokens: dict, name: str, value: str, urlencoded: bool):
         value = unquote_plus(value)
 
     # If name doesn't follow PHP query string syntax, treat it as a single key
-    if not _is_valid_php_query(name):
+    if not is_valid_php_query_name(name):
         tokens[name] = value
         return
 
-    matches = re.findall(r"([\s\w]+|\[\]|\[\w+\])", name)
+    matches = re.findall(r"([^\[\]&]+|\[\]|\[[^\[\]&]*\])", name)
 
     new_value: str | list | dict = value
     for i, match in enumerate(matches[::-1]):
@@ -43,7 +43,7 @@ def _get_name_value(tokens: dict, name: str, value: str, urlencoded: bool):
                     new_value = [new_value]
                 else:
                     new_value += new_value  # type: ignore
-            case _ if re.match(r"\[\w+\]", match):
+            case _ if re.match(r"\[[^\[\]&]*\]", match):
                 name = re.sub(r"[\[\]]", "", match)
                 new_value = {name: new_value}
             case _:
