@@ -4,9 +4,20 @@ from typing import Mapping, Any, cast
 from copy import deepcopy
 
 
-# Map a list to an equivalent dictionary
-# e.g: ["a","b","c"] -> {0:"a",1:"b",2:"c"}
-def list_to_dict(lst: list):
+def list_to_dict(lst: list[Any]) -> dict[int, Any]:
+    """Maps a list to an equivalent dictionary
+
+    e.g: ["a","b","c"] -> {0:"a",1:"b",2:"c"}
+
+    Used to convert lists to PHP-style arrays
+
+    Args:
+        lst (list[Any]): The list to transform
+
+    Returns:
+        dict[int, Any]: The "PHP-style array" dict
+    """
+
     return {i: value for i, value in enumerate(lst)}
 
 
@@ -32,7 +43,17 @@ def is_valid_php_query_name(name: str) -> bool:
     return bool(re.match(pattern, name, re.VERBOSE))
 
 
-def _get_name_value(tokens: dict, name: str, value: str, urlencoded: bool):
+def _get_name_value(tokens: dict, name: str, value: str, urlencoded: bool) -> None:
+    """
+    Parses the query string, and store the key/value pairs in the `tokens` dict.
+    If the name doesn't follow PHP query string syntax, it treats it as a single key.
+
+    Args:
+        tokens (dict): The dictionary to store the parsed key/value pairs.
+        name (str): The key from the query string.
+        value (str): The value from the query string.
+        urlencoded (bool): If True, decode the name and value.
+    """
     if urlencoded:
         name = unquote_plus(name)
         value = unquote_plus(value)
@@ -66,7 +87,7 @@ def _get_name_value(tokens: dict, name: str, value: str, urlencoded: bool):
             # Regex pattern matches a string enclosed by square brackets. The string
             # may contain any character except square brackets and ampersand.
             case _ if re.match(r"\[[^\[\]&]*\]", match):
-                # Here we're using another regular expression to remove the square 
+                # Here we're using another regular expression to remove the square
                 # brackets from the match, thereby extracting the name.
                 name = re.sub(r"[\[\]]", "", match)
                 new_value = {name: new_value}
@@ -93,6 +114,21 @@ def _get_name_value(tokens: dict, name: str, value: str, urlencoded: bool):
 
 
 def merge_dict_in_list(source: dict, destination: list) -> list | dict:
+    """
+    Merge a dictionary into a list.
+
+    Only the values of integer keys from the dictionary are merged into the list.
+
+    If the dictionary contains only integer keys, returns a merged list.
+    If the dictionary contains other keys as well, returns a merged dict.
+
+    Args:
+        source (dict): The dictionary to merge.
+        destination (list): The list to merge.
+
+    Returns:
+        list | dict: Merged data.
+    """
     # Retain only integer keys:
     int_keys = sorted([key for key in source.keys() if isinstance(key, int)])
     array_values = [source[key] for key in int_keys]
@@ -105,6 +141,16 @@ def merge_dict_in_list(source: dict, destination: list) -> list | dict:
 
 
 def merge(source: Any, destination: Any, shallow: bool = True):
+    """
+    Merge the `source` and `destination`.
+    Performs a shallow or deep merge based on the `shallow` flag.
+    Args:
+        source (Any): The source data to merge.
+        destination (Any): The destination data to merge into.
+        shallow (bool): If True, perform a shallow merge. Defaults to True.
+    Returns:
+        Any: Merged data.
+    """
     if not shallow:
         source = deepcopy(source)
         destination = deepcopy(destination)
@@ -134,6 +180,18 @@ def merge(source: Any, destination: Any, shallow: bool = True):
 
 
 def qs_parse(qs: str, keep_blank_values: bool = True, strict_parsing: bool = False):
+    """
+    Parses a query string using PHP's nesting syntax, and returns a dict.
+
+    Args:
+        qs (str): The query string to parse.
+        keep_blank_values (bool): If True, includes keys with blank values. Defaults to True.
+        strict_parsing (bool): If True, raises ValueError on any errors. Defaults to False.
+
+    Returns:
+        dict: A dictionary representing the parsed query string.
+    """
+
     tokens = {}
     pairs = [s2 for s1 in qs.split("&") for s2 in s1.split(";")]
 
@@ -158,6 +216,15 @@ def qs_parse(qs: str, keep_blank_values: bool = True, strict_parsing: bool = Fal
 
 
 def build_qs(query: Mapping) -> str:
+    """
+    Build a query string from a dictionary or list of 2-tuples.
+    Coerces data types before serialization.
+    Args:
+        query (Mapping): The query data to build the string from.
+    Returns:
+        str: A query string.
+    """
+
     def dict_generator(indict, pre=None):
         pre = pre[:] if pre else []
         if isinstance(indict, dict):
@@ -205,6 +272,18 @@ def qs_parse_pairs(
     keep_blank_values: bool = True,
     strict_parsing: bool = False,
 ) -> dict:
+    """
+    Parses a list of key/value pairs and returns a dict.
+
+    Args:
+        pairs (list[tuple[str, str]]): The list of key/value pairs.
+        keep_blank_values (bool): If True, includes keys with blank values. Defaults to True.
+        strict_parsing (bool): If True, raises ValueError on any errors. Defaults to False.
+
+    Returns:
+        dict: A dictionary representing the parsed pairs.
+    """
+
     tokens = {}
 
     for name_val in pairs:
