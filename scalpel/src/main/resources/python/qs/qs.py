@@ -77,7 +77,7 @@ def _get_name_value(tokens: dict, name: str, value: str, urlencoded: bool) -> No
     matches = re.findall(pattern, name, re.VERBOSE)
 
     new_value: str | list | dict = value
-    for i, match in enumerate(matches[::-1]):
+    for i, match in enumerate(reversed(matches)):
         match match:
             case "[]":
                 if i == 0:
