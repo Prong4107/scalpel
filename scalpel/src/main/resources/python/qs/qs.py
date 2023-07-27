@@ -25,8 +25,8 @@ def _is_valid_php_query(name: str) -> bool:
 
 def _get_name_value(tokens: dict, name: str, value: str, urlencoded: bool):
     if urlencoded:
-        name = unquote(name.replace("+", " "))
-        value = unquote(value.replace("+", " "))
+        name = unquote_plus(name)
+        value = unquote_plus(value)
 
     # If name doesn't follow PHP query string syntax, treat it as a single key
     if not _is_valid_php_query(name):
