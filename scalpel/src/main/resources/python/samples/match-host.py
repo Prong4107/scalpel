@@ -24,7 +24,7 @@ def match(flow: Flow) -> bool:
     return flow.host_is("*localhost", "127.0.0.1")
 
 
-#### All of the below hooks will only be called if match() returns True ####
+#### All of the hooks below will only be called if match() returns True ####
 
 
 def request(req: Request) -> Request | None:
