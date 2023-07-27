@@ -2,7 +2,7 @@ import unittest
 from qs import *
 
 
-class TestURLParsing(unittest.TestCase):
+class TestQueryStringParsing(unittest.TestCase):
     def test_merge(self):
         source = {"a": 1, "b": {"c": 2}}
         destination = {"a": 3, "b": {"d": 4}}
