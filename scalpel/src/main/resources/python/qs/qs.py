@@ -19,8 +19,17 @@ def is_valid_php_query_name(name: str) -> bool:
     field[key1][key2]
     field[]
     """
-    pattern = r"^[^\[\]&]+(\[[^\[\]&]*\])*$"
-    return bool(re.match(pattern, name))
+    pattern = r"""
+    ^               # Asserts the start of the line, it means to start matching from the beginning of the string.
+    [^\[\]&]+       # Matches one or more characters that are not `[`, `]`, or `&`. It describes the base key.
+    (               # Opens a group. This group is used to match any subsequent keys within brackets.
+    \[              # Matches a literal `[`, which is the start of a key.
+    [^\[\]&]*       # Matches zero or more characters that are not `[`, `]`, or `&`, which is the content of a key.
+    \]              # Matches a literal `]`, which is the end of a key.
+    )*              # Closes the group and asserts that the group can appear zero or more times, for nested keys.
+    $               # Asserts the end of the line, meaning the string should end with the preceding group.
+    """
+    return bool(re.match(pattern, name, re.VERBOSE))
 
 
 def _get_name_value(tokens: dict, name: str, value: str, urlencoded: bool):
@@ -33,7 +42,18 @@ def _get_name_value(tokens: dict, name: str, value: str, urlencoded: bool):
         tokens[name] = value
         return
 
-    matches = re.findall(r"([^\[\]&]+|\[\]|\[[^\[\]&]*\])", name)
+    pattern = r"""
+    (              # Group start
+        [^\[\]&]+  # One or more of any character except square brackets and the ampersand
+        |          # Or
+        \[\]       # Match empty square brackets
+        |          # Or
+        \[         # Match an opening square bracket
+        [^\[\]&]*  # Zero or more of any character except square brackets and the ampersand
+        \]         # Match a closing square bracket
+    )              # Group end
+    """
+    matches = re.findall(pattern, name, re.VERBOSE)
 
     new_value: str | list | dict = value
     for i, match in enumerate(matches[::-1]):
@@ -43,7 +63,11 @@ def _get_name_value(tokens: dict, name: str, value: str, urlencoded: bool):
                     new_value = [new_value]
                 else:
                     new_value += new_value  # type: ignore
+            # Regex pattern matches a string enclosed by square brackets. The string
+            # may contain any character except square brackets and ampersand.
             case _ if re.match(r"\[[^\[\]&]*\]", match):
+                # Here we're using another regular expression to remove the square 
+                # brackets from the match, thereby extracting the name.
                 name = re.sub(r"[\[\]]", "", match)
                 new_value = {name: new_value}
             case _:
