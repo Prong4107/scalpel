@@ -193,7 +193,9 @@ def qs_parse(qs: str, keep_blank_values: bool = True, strict_parsing: bool = Fal
     """
 
     tokens = {}
-    pairs = [s2 for s1 in qs.split("&") for s2 in s1.split(";")]
+    pairs = [
+        pair for query_segment in qs.split("&") for pair in query_segment.split(";")
+    ]
 
     for name_val in pairs:
         if not name_val and not strict_parsing:
