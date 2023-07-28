@@ -562,7 +562,6 @@ public class ConfigTab extends JFrame {
 	}
 
 	private void handleVenvListSelectionEvent(ListSelectionEvent e) {
-		ScalpelLogger.all("Clicked");
 		// Ignore intermediate events.
 		if (e.getValueIsAdjusting()) return;
 
