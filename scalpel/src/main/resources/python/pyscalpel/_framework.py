@@ -92,7 +92,7 @@ try:
     from pyscalpel.burp_utils import IHttpRequest, IHttpResponse
     from pyscalpel.java.burp.http_service import IHttpService
     from pyscalpel.http import Request, Response, Flow
-    from pyscalpel.events import Events
+    from pyscalpel.events import MatchEvent
 
     # Declare convenient types for the callbacks
     CallbackReturn = TypeVar("CallbackReturn", Request, Response, bytes) | None
@@ -104,7 +104,7 @@ try:
         name: obj for name, obj in inspect.getmembers(user_module) if callable(obj)
     }
 
-    match_callback: Callable[[Flow, Events], bool] = callable_objs.get("match") or (
+    match_callback: Callable[[Flow, MatchEvent], bool] = callable_objs.get("match") or (
         lambda _, __: True
     )
 

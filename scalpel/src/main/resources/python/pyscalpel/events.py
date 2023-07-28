@@ -2,7 +2,7 @@
 
 from typing import Literal, get_args
 
-Events = Literal[
+MatchEvent = Literal[
     "request",
     "response",
     "req_edit_in",
@@ -12,4 +12,4 @@ Events = Literal[
 ]
 
 
-EVENTS: set[Events] = set(get_args(Events))
+MATCH_EVENTS: set[MatchEvent] = set(get_args(MatchEvent))
