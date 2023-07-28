@@ -1,5 +1,4 @@
-from pyscalpel.http import Request, Response, Flow
-from pyscalpel.events import MatchEvent
+from pyscalpel import Request, Response, Flow, MatchEvent
 
 
 def match(flow: Flow, events: MatchEvent) -> bool:
