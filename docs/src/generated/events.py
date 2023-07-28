@@ -1,8 +1,8 @@
 from pyscalpel.http import Request, Response, Flow
-from pyscalpel.events import Events
+from pyscalpel.events import MatchEvent
 
 
-def match(flow: Flow, events: Events) -> bool:
+def match(flow: Flow, events: MatchEvent) -> bool:
     """- Determines if an event will be handled by a hook.
 
     - Args:
