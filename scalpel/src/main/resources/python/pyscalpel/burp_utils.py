@@ -79,23 +79,3 @@ def to_bytes(obj: ByteArraySerialisable | JavaBytes) -> bytes:
         return bytes([b & 0xFF for b in cast(JavaBytes, obj)])
 
     return get_bytes(cast(ByteArraySerialisable, obj).toByteArray())
-
-
-def update_header(
-    msg: HttpRequestOrResponse, name: str, value: str
-) -> HttpRequestOrResponse:
-    return PythonUtils.updateHeader(msg, name, value)
-
-
-def get_param(msg: IHttpRequest, name: str) -> IHttpParameter | None:
-    params = msg.parameters()
-    param = next((p for p in params if p.name() == name), None)
-    return param
-
-
-def new_param(name: str, value: str) -> IHttpParameter:
-    return HttpParameter.urlParameter(name, value)
-
-
-def update_param(req: IHttpRequest, name: str, value: str) -> IHttpRequest:
-    return req.withUpdatedParameters([new_param(name, value)])
