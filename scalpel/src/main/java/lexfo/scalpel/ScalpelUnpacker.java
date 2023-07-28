@@ -1,10 +1,9 @@
 package lexfo.scalpel;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -13,10 +12,16 @@ import java.util.zip.ZipFile;
 */
 public class ScalpelUnpacker {
 
+	private static ScalpelUnpacker unpackerSingleton;
+
 	/**
 	    The path to the Scalpel resources directory.
 	*/
-	private Path ressourcesDirectory;
+	private static final Path ressourcesDirectory = Path.of(
+		System.getProperty("user.home"),
+		".scalpel",
+		"extracted"
+	);
 
 	/**
 	    Returns the path to the Scalpel resources directory.
@@ -52,6 +57,10 @@ public class ScalpelUnpacker {
 		return getPythonPath() + "/samples/default.py";
 	}
 
+	public String getBashInitFile() {
+		return getResourcesPath() + "/shell/init-venv.sh";
+	}
+
 	// https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file#:~:text=return%20new%20File(MyClass.class.getProtectionDomain().getCodeSource().getLocation()%0A%20%20%20%20.toURI()).getPath()%3B
 	/**
 	    Returns the path to the Scalpel JAR file.
@@ -76,7 +85,11 @@ public class ScalpelUnpacker {
 	    @param zipFile The path to the Scalpel JAR file.
 	    @param extractFolder The path to the Scalpel resources directory.
 	*/
-	private void extractRessources(String zipFile, String extractFolder) {
+	private void extractRessources(
+		String zipFile,
+		String extractFolder,
+		Set<String> entriesWhitelist
+	) {
 		ZipFile zip = null;
 		try {
 			final int BUFFER = 2048;
@@ -97,8 +110,9 @@ public class ScalpelUnpacker {
 				final long size = entry.getSize();
 
 				if (
-					!currentEntry.startsWith("python") &&
-					!currentEntry.startsWith("templates")
+					!entriesWhitelist
+						.stream()
+						.anyMatch(currentEntry::startsWith)
 				) {
 					continue;
 				}
@@ -150,22 +164,31 @@ public class ScalpelUnpacker {
 	public void initializeResourcesDirectory() {
 		try {
 			// Create a $HOME/.scalpel/extracted directory.
-			ressourcesDirectory =
-				Path.of(
-					System.getProperty("user.home"),
-					".scalpel",
-					"extracted"
-				);
-
 			ScalpelLogger.all("Extracting to " + ressourcesDirectory);
-			extractRessources(getRunningJarPath(), getResourcesPath());
+
+			final Set<String> whitelist = Set.of(
+				"python",
+				"templates",
+				"shell"
+			);
+
+			extractRessources(
+				getRunningJarPath(),
+				getResourcesPath(),
+				whitelist
+			);
 
 			ScalpelLogger.all(
 				"Successfully extracted running .jar to " + ressourcesDirectory
 			);
+			unpackerSingleton = this;
 		} catch (Exception e) {
 			ScalpelLogger.error("initializeResourcesDirectory() failed.");
 			ScalpelLogger.logStackTrace(e);
 		}
+	}
+
+	public static ScalpelUnpacker getInitializedUnpacker() {
+		return unpackerSingleton;
 	}
 }

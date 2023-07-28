@@ -106,31 +106,16 @@ public class Terminal {
 			// Override the default bash load order to ensure that the virtualenv activate script is correctly loaded
 			// and we don't lose any interactive functionality.
 			// Also reset the terminal to clear any previous state.
-			final String tmpInitFileContent =
-				"""
-			reset
-			 2>/dev/null . /etc/bashrc.bashrc
-			 2>/dev/null . ~/.bashrc
-			 2>/dev/null . /etc/profile
-			 2>/dev/null . ~/.bash_profile
-			 2>/dev/null . ~/.profile
-			 2>/dev/null . \t """ +
-				escapeshellarg(activatePath);
 
-			// Create a temporary file to store the init script.
-			final File initFile = IO.ioWrap(() ->
-				File.createTempFile("scalpel-term", ".sh")
-			);
-
-			final String initFilePath = initFile.getAbsolutePath();
-
-			IO.writeFile(initFilePath, tmpInitFileContent);
+			final String initFilePath = ScalpelUnpacker
+				.getInitializedUnpacker()
+				.getBashInitFile();
 
 			final String shell = Optional
 				.ofNullable(System.getenv("SHELL"))
 				.orElse("/bin/bash");
 
-			cmd = cmd.map(c -> c + ";" + shell);
+			cmd = cmd.map(c -> c + ";" + escapeshellarg(shell));
 
 			if (cmd.isPresent()) {
 				commandToRun =
@@ -138,23 +123,18 @@ public class Terminal {
 						"/bin/bash",
 						"--init-file",
 						initFilePath,
-						"-i",
 						"-c",
 						cmd.get(),
 					};
 			} else {
 				commandToRun =
-					new String[] {
-						"/bin/bash",
-						"--init-file",
-						initFilePath,
-						"-i",
-					};
+					new String[] { "/bin/bash", "--init-file", initFilePath };
 			}
 
 			// Tell the shell the terminal is xterm like.
 			env = new HashMap<>(env);
 			env.put("TERM", "xterm-256color");
+			env.put("SCALPEL_VENV_ACTIVATE", activatePath);
 		}
 
 		try {

@@ -293,7 +293,7 @@
                   </component>
                 </children>
               </grid>
-              <grid id="84e0" binding="scriptConfigPanel" layout-manager="GridLayoutManager" row-count="2" column-count="3" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+              <grid id="84e0" binding="scriptConfigPanel" layout-manager="GridLayoutManager" row-count="2" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
                 <margin top="0" left="0" bottom="10" right="10"/>
                 <constraints>
                   <grid row="2" column="0" row-span="1" col-span="3" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -309,29 +309,14 @@
                       <text value="Browse"/>
                     </properties>
                   </component>
-                  <hspacer id="fd6fd">
-                    <constraints>
-                      <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                    </constraints>
-                  </hspacer>
                   <component id="ce8da" class="javax.swing.JTextArea" binding="scriptPathTextArea">
                     <constraints>
-                      <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="2" fill="0" indent="0" use-parent-layout="false">
-                        <preferred-size width="150" height="10"/>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="2" fill="0" indent="0" use-parent-layout="false">
+                        <preferred-size width="-1" height="10"/>
                       </grid>
                     </constraints>
                     <properties>
                       <text value="Load script file"/>
-                    </properties>
-                  </component>
-                  <component id="b21e7" class="javax.swing.JTextField" binding="scriptPathField">
-                    <constraints>
-                      <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                        <preferred-size width="50" height="-1"/>
-                      </grid>
-                    </constraints>
-                    <properties>
-                      <text value=""/>
                     </properties>
                   </component>
                 </children>
