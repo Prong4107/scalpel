@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
-
 import jep.MainInterpreter;
 
 // Burp will auto-detect and load any class that extends BurpExtension.
@@ -116,6 +115,7 @@ public class Scalpel implements BurpExtension {
 				.registerSuiteTab(
 					"Scalpel",
 					UIBuilder.constructConfigTab(
+						API,
 						executor,
 						config,
 						API.userInterface().currentTheme()
