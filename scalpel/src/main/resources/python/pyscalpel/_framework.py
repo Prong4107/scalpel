@@ -46,10 +46,10 @@ VENV = None
 try:
     from pyscalpel.venv import activate
     from pyscalpel.java.scalpel_types import Context
+    from pyscalpel.logger import logger
 
     ctx: Context = cast(Context, __scalpel__)  # type: ignore pylint: disable=undefined-variable
 
-    logger = ctx["logger"]  # type: ignore
     logger.all("Python: Loading _framework.py ...")
 
     VENV = ctx["venv"]
@@ -64,7 +64,6 @@ try:
     import pyscalpel._globals
 
     # Set the logger in the globals module
-    pyscalpel._globals.logger = logger  # pylint: disable=protected-access
     pyscalpel._globals.ctx = ctx  # pylint: disable=protected-access
 
     # Get the user script path from the JEP initialized variable
@@ -118,7 +117,7 @@ try:
         # Annotations are a dict so they will be converted to HashMap
         # https://github.com/ninia/jep/wiki/How-Jep-Works#objects:~:text=Dict%20%2D%3E%20java.util.HashMap
         return [
-            {"name": name, "annotations": hook.__annotations__}
+            {"name": name, "annotations": getattr(hook, "__annotations__", {})}
             for name, hook in callable_objs.items()
         ]
 

@@ -4,19 +4,18 @@ from __future__ import annotations
 import urllib.parse
 import re
 
-from typing import (
-    Iterable,
-    Literal,
-    cast,
-    Sequence,
-    Any,
-    MutableMapping,
-)
+from typing import Iterable, Literal, cast, Sequence, Any, MutableMapping, TYPE_CHECKING
 from copy import deepcopy
-from pyscalpel.java.burp.http_request import IHttpRequest, HttpRequest
-from pyscalpel.java.burp.http_service import IHttpService, HttpService
+from pyscalpel.java.burp import (
+    IHttpRequest,
+    HttpRequest,
+    IHttpResponse,
+    IHttpService,
+    HttpService,
+    IByteArray,
+    IHttpRequestResponse,
+)
 from pyscalpel.burp_utils import get_bytes
-from pyscalpel.java.burp.byte_array import IByteArray
 from pyscalpel.java.scalpel_types.utils import PythonUtils
 from pyscalpel.encoding import always_bytes, always_str
 from pyscalpel.http.headers import Headers
@@ -41,6 +40,7 @@ from pyscalpel.http.body import (
     json_unescape,
     json_unescape_bytes,
 )
+from pyscalpel.java.burp import IHttp
 
 from mitmproxy.coretypes import multidict
 from mitmproxy.net.http.url import (
@@ -50,6 +50,10 @@ from mitmproxy.net.http.url import (
     decode as url_decode,
 )
 from mitmproxy.net.http import cookies
+import pyscalpel._globals
+
+if TYPE_CHECKING:
+    from pyscalpel.http.response import Response
 
 
 class FormNotParsedException(Exception):
@@ -925,3 +929,21 @@ class Request:
 
     def path_is(self, *patterns: str) -> bool:
         return match_patterns(self.path, *patterns)
+
+    def send(self) -> Response:
+        # Solve circular dependency
+        from pyscalpel import Response
+
+        # ctx cannot be imported in this function like Response because jep doesn't allow accessing java objects
+        # from new threads, but if it is already imported in the module, it will work.
+        # Note: This problem is only relevant if this is called in a new thread (which Scalpel doesn't do by itself.)
+        ctx = pyscalpel._globals.ctx
+
+        burp_request: IHttpRequest = self.to_burp()
+        burp_http: IHttp = ctx["API"].http()
+        request_response: IHttpRequestResponse = burp_http.sendRequest(burp_request)
+
+        # .response() should not be null in this case
+        burp_response: IHttpResponse = cast(IHttpResponse, request_response.response())
+
+        return Response.from_burp(burp_response)

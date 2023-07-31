@@ -1,5 +1,4 @@
 from typing import TypedDict
-from pyscalpel.logger import Logger
 from typing import Any
 
 
@@ -18,9 +17,6 @@ class Context(TypedDict):
 
     directory: str
     """The framework directory"""
-
-    logger: Logger
-    """The logging object to use to display logs in Burp GUI"""
 
     user_script: str
     """The loaded script path"""
