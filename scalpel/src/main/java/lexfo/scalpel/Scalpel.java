@@ -18,7 +18,7 @@ public class Scalpel implements BurpExtension {
 	/**
 	 * The ScalpelUnpacker object used to extract the extension's resources to a temporary directory.
 	 */
-	private ScalpelUnpacker unpacker;
+	private RessourcesUnpacker unpacker;
 
 	/**
 	 * The ScalpelExecutor object used to execute Python scripts.
@@ -37,14 +37,15 @@ public class Scalpel implements BurpExtension {
 		ScalpelLogger.all("Framework: " + config.getFrameworkPath());
 		ScalpelLogger.all("Script: " + config.getUserScriptPath());
 		ScalpelLogger.all("Venvs: " + Arrays.stream(config.getVenvPaths()));
-		ScalpelLogger.all("Default venv: " + Config.getDefaultVenv());
+		ScalpelLogger.all("Default venv: " + Workspace.getDefaultWorkspace());
 		ScalpelLogger.all("Selected venv: " + config.getSelectedVenv());
 	}
 
 	private static void setupJepFromConfig(Config config) throws IOException {
-		final String venvPath = config.getOrCreateDefaultVenv(
-			config.getJdkPath()
-		);
+		final String venvPath =
+			Workspace.getOrCreateDefaultWorkspace(config.getJdkPath()) +
+			File.separator +
+			Workspace.VENV_DIR;
 
 		var dir = Venv.getSitePackagesPath(venvPath).toFile();
 
@@ -94,10 +95,10 @@ public class Scalpel implements BurpExtension {
 			ScalpelLogger.all("Initializing...");
 
 			// Extract embeded ressources.
-			unpacker = new ScalpelUnpacker();
+			unpacker = new RessourcesUnpacker();
 
 			ScalpelLogger.all("Extracting ressources...");
-			unpacker.initializeResourcesDirectory();
+			unpacker.extractRessourcesToHome();
 
 			ScalpelLogger.all("Reading config and initializing venvs...");
 			ScalpelLogger.all(

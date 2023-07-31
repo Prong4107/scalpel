@@ -10,67 +10,84 @@ import java.util.zip.ZipFile;
 /**
   Provides methods for unpacking the Scalpel resources.
 */
-public class ScalpelUnpacker {
+public class RessourcesUnpacker {
 
-	private static ScalpelUnpacker unpackerSingleton;
+	// Scalpel configuration directory basename
+	public static final String DATA_DIRNAME = ".scalpel";
 
-	/**
-	    The path to the Scalpel resources directory.
-	*/
-	private static final Path ressourcesDirectory = Path.of(
-		System.getProperty("user.home"),
-		".scalpel",
-		"extracted"
+	// Directory to copy ressources embed in .jar
+	public static final String RESSOURCES_DIRNAME = "extracted";
+
+	// Directory to copy the Python stuff
+	public static final String PYTHON_DIRNAME = "python";
+
+	// Directory to copy the base init script
+	public static final String SHELL_DIRNAME = "shell";
+
+	// Directory to copy the script template to open when creating a new script
+	public static final String TEMPLATES_DIRNAME = "templates";
+
+	// Directory where user venvs will be created
+	public static final String WORKSPACE_DIRNAME = "venv";
+
+	// Whitelist for the ressources to extract
+	private static final Set<String> RESSOURCES_TO_COPY = Set.of(
+		PYTHON_DIRNAME,
+		SHELL_DIRNAME,
+		TEMPLATES_DIRNAME,
+		WORKSPACE_DIRNAME
 	);
 
-	/**
-	    Returns the path to the Scalpel resources directory.
-	    @return The path to the Scalpel resources directory.
-	*/
-	public String getResourcesPath() {
-		return ressourcesDirectory.toString();
-	}
+	// Directory containing example scripts
+	public static final String SAMPLES_DIRNAME = "samples";
 
-	/**
-	Returns the path to the Scalpel Python directory.
+	public static final String DEFAULT_SCRIPT_FILENAME = "default.py";
 
-	<p>Contains the default framework and some samples scripts.</p>
+	public static final Path DATA_DIR_PATH = Path.of(
+		System.getProperty("user.home"),
+		DATA_DIRNAME
+	);
 
-	@return The path to the Scalpel Python directory.
-	*/
-	public String getPythonPath() {
-		return getResourcesPath() + "/python";
-	}
+	// The absolute path to the Scalpel resources directory.
+	public static final Path RESSOURCES_PATH = DATA_DIR_PATH.resolve(
+		RESSOURCES_DIRNAME
+	);
 
-	public String getVenvFilesPath() {
-		return getResourcesPath() + "/venv";
-	}
+	// Actual paths for directories defined aboves
 
-	/**
-	 * Returns the path to the Scalpel Python framework.
-	 *
-	 * <p> The framework is a Python script that should wrap the user's script and provide native types
-	 *
-	 * @return The path to the Scalpel Python framework.
-	 */
-	public String getPythonFrameworkPath() {
-		return getPythonPath() + "/pyscalpel/_framework.py";
-	}
+	public static final Path PYTHON_PATH = RESSOURCES_PATH.resolve(
+		PYTHON_DIRNAME
+	);
+	public static final Path WORKSPACE_PATH = RESSOURCES_PATH.resolve(
+		WORKSPACE_DIRNAME
+	);
 
-	public String getDefaultScriptPath() {
-		return getPythonPath() + "/samples/default.py";
-	}
+	// Path to the Pyscalpel module
+	public static final Path PYSCALPEL_PATH = PYTHON_PATH.resolve("pyscalpel");
 
-	public String getBashInitFile() {
-		return getResourcesPath() + "/shell/init-venv.sh";
-	}
+	// Path to the framework script
+	public static final Path FRAMEWORK_PATH = PYSCALPEL_PATH.resolve(
+		"_framework.py"
+	);
+
+	public static final Path SAMPLES_PATH = PYTHON_PATH.resolve(
+		SAMPLES_DIRNAME
+	);
+
+	public static final Path DEFAULT_SCRIPT_PATH = SAMPLES_PATH.resolve(
+		DEFAULT_SCRIPT_FILENAME
+	);
+
+	public static final Path BASH_INIT_FILE_PATH = RESSOURCES_PATH
+		.resolve(SHELL_DIRNAME)
+		.resolve("init-venv.sh");
 
 	// https://stackoverflow.com/questions/320542/how-to-get-the-path-of-a-running-jar-file#:~:text=return%20new%20File(MyClass.class.getProtectionDomain().getCodeSource().getLocation()%0A%20%20%20%20.toURI()).getPath()%3B
 	/**
 	    Returns the path to the Scalpel JAR file.
 	    @return The path to the Scalpel JAR file.
 	*/
-	private String getRunningJarPath() {
+	private static String getRunningJarPath() {
 		try {
 			return Scalpel.class.getProtectionDomain()
 				.getCodeSource()
@@ -89,7 +106,7 @@ public class ScalpelUnpacker {
 	    @param zipFile The path to the Scalpel JAR file.
 	    @param extractFolder The path to the Scalpel resources directory.
 	*/
-	private void extractRessources(
+	private static void extractRessources(
 		String zipFile,
 		String extractFolder,
 		Set<String> entriesWhitelist
@@ -165,35 +182,23 @@ public class ScalpelUnpacker {
 	/**
 	    Initializes the Scalpel resources directory.
 	*/
-	public void initializeResourcesDirectory() {
+	public static void extractRessourcesToHome() {
 		try {
 			// Create a $HOME/.scalpel/extracted directory.
-			ScalpelLogger.all("Extracting to " + ressourcesDirectory);
-
-			final Set<String> whitelist = Set.of(
-				"python",
-				"templates",
-				"shell",
-				"venv"
-			);
+			ScalpelLogger.all("Extracting to " + RESSOURCES_PATH);
 
 			extractRessources(
 				getRunningJarPath(),
-				getResourcesPath(),
-				whitelist
+				RESSOURCES_PATH.toString(),
+				RESSOURCES_TO_COPY
 			);
 
 			ScalpelLogger.all(
-				"Successfully extracted running .jar to " + ressourcesDirectory
+				"Successfully extracted running .jar to " + RESSOURCES_PATH
 			);
-			unpackerSingleton = this;
 		} catch (Exception e) {
-			ScalpelLogger.error("initializeResourcesDirectory() failed.");
+			ScalpelLogger.error("extractRessourcesToHome() failed.");
 			ScalpelLogger.logStackTrace(e);
 		}
-	}
-
-	public static ScalpelUnpacker getInitializedUnpacker() {
-		return unpackerSingleton;
 	}
 }

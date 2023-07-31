@@ -82,11 +82,11 @@ public class Terminal {
 	/**
 	 * Creates a TtyConnector that will run a shell in the virtualenv.
 	 *
-	 * @param venvPath The path to the virtualenv.
+	 * @param workspacePath The path to the virtualenv.
 	 * @return The TtyConnector.
 	 */
 	protected static TtyConnector createTtyConnector(
-		String venvPath,
+		String workspacePath,
 		Optional<String> cwd,
 		Optional<String> cmd
 	) {
@@ -96,7 +96,13 @@ public class Terminal {
 		final String sep = File.separator;
 		final String binDir = UIUtil.isWindows ? "Scripts" : "bin";
 		final String activatePath =
-			venvPath + sep + Config.VENV_DIR + sep + binDir + sep + "activate";
+			workspacePath +
+			sep +
+			Workspace.VENV_DIR +
+			sep +
+			binDir +
+			sep +
+			"activate";
 
 		ScalpelLogger.debug("Activating terminal with " + activatePath);
 
@@ -107,9 +113,7 @@ public class Terminal {
 			// and we don't lose any interactive functionality.
 			// Also reset the terminal to clear any previous state.
 
-			final String initFilePath = ScalpelUnpacker
-				.getInitializedUnpacker()
-				.getBashInitFile();
+			final String initFilePath = RessourcesUnpacker.BASH_INIT_FILE_PATH.toString();
 
 			final String shell = Optional
 				.ofNullable(System.getenv("SHELL"))
@@ -142,7 +146,7 @@ public class Terminal {
 			final PtyProcess process = new PtyProcessBuilder()
 				.setCommand(commandToRun)
 				.setEnvironment(env)
-				.setDirectory(cwd.orElse(venvPath))
+				.setDirectory(cwd.orElse(workspacePath))
 				.start();
 			return new PtyProcessTtyConnector(process, StandardCharsets.UTF_8);
 		} catch (Exception e) {

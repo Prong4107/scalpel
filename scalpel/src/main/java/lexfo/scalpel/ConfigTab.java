@@ -23,9 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.swing.*;
@@ -89,18 +87,19 @@ public class ConfigTab extends JFrame {
 		// Open file browser to select the script to execute.
 		scriptBrowseButton.addActionListener(e ->
 			handleBrowseButtonClick(
-				config.unpacker::getDefaultScriptPath,
+				() -> RessourcesUnpacker.DEFAULT_SCRIPT_PATH,
 				this::setAndStoreScript
 			)
 		);
 
-		// Same as above for framework path.
-		frameworkBrowseButton.addActionListener(e ->
-			handleBrowseButtonClick(
-				frameworkPathField::getText,
-				this::setAndStoreFrameworkPath
-			)
-		);
+		// TODO: Framework should not be changeable, remove all this useless surface
+		// // Same as above for framework path.
+		// frameworkBrowseButton.addActionListener(e ->
+		// 	handleBrowseButtonClick(
+		// 		frameworkPathField::getText,
+		// 		this::setAndStoreFrameworkPath
+		// 	)
+		// );
 
 		// Fill the venv list component.
 		venvListComponent.setListData(config.getVenvPaths());
@@ -466,7 +465,7 @@ public class ConfigTab extends JFrame {
 				path =
 					Paths
 						.get(
-							Config.getDefaultVenvsDir().getAbsolutePath(),
+							Workspace.getWorkspacesDir().getAbsolutePath(),
 							value
 						)
 						.toString();
@@ -486,7 +485,7 @@ public class ConfigTab extends JFrame {
 			label -> {
 				// Create the venv and installed required packages. (i.e. mitmproxy)
 				try {
-					config.createAndInitVenv(path, Optional.empty());
+					Workspace.createAndInitWorkspace(path, Optional.empty());
 
 					// Add the venv to the config.
 					config.addVenvPath(path);
@@ -575,8 +574,8 @@ public class ConfigTab extends JFrame {
 	}
 
 	private void handleBrowseButtonClick(
-		Supplier<String> getter,
-		Consumer<String> setter
+		Supplier<Path> getter,
+		Consumer<Path> setter
 	) {
 		runAsync(() -> {
 			final JFileChooser fileChooser = new JFileChooser();
@@ -585,13 +584,15 @@ public class ConfigTab extends JFrame {
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
 			// Set default path to the path in the text field.
-			fileChooser.setCurrentDirectory(new File(getter.get()));
+			fileChooser.setCurrentDirectory(getter.get().toFile());
 
 			final int result = fileChooser.showOpenDialog(this);
 
 			// When the user selects a file, set the text field to the selected file.
 			if (result == JFileChooser.APPROVE_OPTION) {
-				setter.accept(fileChooser.getSelectedFile().getAbsolutePath());
+				setter.accept(
+					fileChooser.getSelectedFile().toPath().toAbsolutePath()
+				);
 			}
 		});
 	}
@@ -658,10 +659,14 @@ public class ConfigTab extends JFrame {
 		config.setFrameworkPath(path);
 	}
 
-	private void setAndStoreScript(final String path) {
+	private void setAndStoreScript(final Path path) {
 		final String copied;
 		try {
-			copied = Config.copyScriptToVenv(config.getSelectedVenv(), path);
+			copied =
+				Workspace.copyScriptToWorkspace(
+					config.getSelectedVenv(),
+					path.toString()
+				);
 		} catch (RuntimeException e) {
 			// Error popup
 			JOptionPane.showMessageDialog(

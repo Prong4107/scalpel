@@ -23,8 +23,6 @@ import jep.ClassList;
 import jep.Interpreter;
 import jep.JepConfig;
 import jep.SubInterpreter;
-import jep.python.PyObject;
-import lexfo.scalpel.ScalpelLogger.Level;
 
 /**
  * Responds to requested Python tasks from multiple threads through a task queue handled in a single sepearate thread.
@@ -154,11 +152,8 @@ public class ScalpelExecutor {
 		 * @return the result of the task.
 		 */
 		public synchronized Optional<Object> awaitResult() {
-			// Log before awaiting to debug potential deadlocks.
-			ScalpelLogger.log(
-				ScalpelLogger.Level.DEBUG,
-				"Awaiting task: " + name
-			);
+			// Log this before awaiting to debug potential deadlocks.
+			ScalpelLogger.trace("Awaiting task: " + name);
 
 			// Acquire the lock on the Task object.
 			synchronized (this) {
@@ -172,14 +167,13 @@ public class ScalpelExecutor {
 
 						if (!isFinished()) {
 							// Warn the user that a task is taking a long time.
-							ScalpelLogger.log(
-								Level.WARN,
+							ScalpelLogger.warn(
 								"Task " + name + " is still waiting..."
 							);
 						}
 					} catch (InterruptedException e) {
 						// Log the error.
-						ScalpelLogger.error("Task " + name + "interrupted:");
+						ScalpelLogger.error("Task " + name + " interrupted:");
 
 						// Log the stack trace.
 						ScalpelLogger.logStackTrace(e);
@@ -187,10 +181,7 @@ public class ScalpelExecutor {
 				}
 			}
 
-			ScalpelLogger.log(
-				ScalpelLogger.Level.DEBUG,
-				"Finished awaiting task: " + name
-			);
+			ScalpelLogger.trace("Finished awaiting task: " + name);
 			// Return the awaited result.
 			return result;
 		}
@@ -247,7 +238,7 @@ public class ScalpelExecutor {
 	/**
 	 * The ScalpelUnpacker object to get the ressources paths.
 	 */
-	private final ScalpelUnpacker unpacker;
+	private final RessourcesUnpacker unpacker;
 
 	private final Config config;
 
@@ -262,7 +253,7 @@ public class ScalpelExecutor {
 	 */
 	public ScalpelExecutor(
 		MontoyaApi API,
-		ScalpelUnpacker unpacker,
+		RessourcesUnpacker unpacker,
 		Config config
 	) {
 		// Store Montoya API object
@@ -473,7 +464,7 @@ public class ScalpelExecutor {
 
 	// WARN: Declaring this method as synchronized cause deadlocks.
 	private void taskLoop() {
-		ScalpelLogger.log("Starting task loop.");
+		ScalpelLogger.info("Starting task loop.");
 
 		try {
 			// Instantiate the interpreter.
@@ -484,18 +475,14 @@ public class ScalpelExecutor {
 			while (true) {
 				// Relaunch interpreter when files have changed (hot reload).
 				if (mustReload()) {
-					ScalpelLogger.log(
-						Level.INFO,
+					ScalpelLogger.info(
 						"Config or Python files have changed, reloading interpreter..."
 					);
 					break;
 				}
 
 				synchronized (tasks) {
-					ScalpelLogger.log(
-						ScalpelLogger.Level.DEBUG,
-						"Runner waiting for notifications."
-					);
+					ScalpelLogger.trace("Runner waiting for notifications.");
 
 					// Extract the oldest pending task from the queue.
 					final Task task = tasks.poll();
@@ -507,7 +494,7 @@ public class ScalpelExecutor {
 						continue;
 					}
 
-					ScalpelLogger.log("Processing task: " + task.name);
+					ScalpelLogger.trace("Processing task: " + task.name);
 					try {
 						// Invoke Python function and get the returned value.
 						final Object pythonResult = interp.invoke(
@@ -516,7 +503,7 @@ public class ScalpelExecutor {
 							task.kwargs
 						);
 
-						ScalpelLogger.log("Executed task: " + task.name);
+						ScalpelLogger.trace("Executed task: " + task.name);
 
 						if (pythonResult != null) {
 							task.result = Optional.of(pythonResult);
@@ -529,14 +516,11 @@ public class ScalpelExecutor {
 							ScalpelLogger.logStackTrace(e);
 						}
 					}
-					ScalpelLogger.log(
-						ScalpelLogger.Level.DEBUG,
-						"Processed task"
-					);
+
+					ScalpelLogger.trace("Processed task");
 
 					// Log the result value.
-					ScalpelLogger.log(
-						ScalpelLogger.Level.TRACE,
+					ScalpelLogger.trace(
 						String.valueOf(task.result.orElse("null"))
 					);
 
@@ -546,7 +530,7 @@ public class ScalpelExecutor {
 						// Wake threads awaiting the task.
 						task.notifyAll();
 
-						ScalpelLogger.log("Notified " + task.name);
+						ScalpelLogger.trace("Notified " + task.name);
 					}
 
 					// Sleep the thread while there isn't any new tasks
@@ -598,7 +582,9 @@ public class ScalpelExecutor {
 
 	private String getDefaultIncludePath() {
 		final String defaultVenv =
-			Config.getDefaultVenv() + File.separator + Config.VENV_DIR;
+			Workspace.getDefaultWorkspace() +
+			File.separator +
+			Workspace.VENV_DIR;
 		try {
 			return Venv.getSitePackagesPath(defaultVenv).toString();
 		} catch (IOException e) {
@@ -633,7 +619,7 @@ public class ScalpelExecutor {
 							.setClassEnquirer(new CustomEnquirer())
 							.addIncludePaths(
 								defaultIncludePath,
-								unpacker.getPythonPath()
+								RessourcesUnpacker.PYTHON_PATH.toString()
 							)
 					);
 
@@ -659,7 +645,7 @@ public class ScalpelExecutor {
 						"venv",
 						config.getSelectedVenv() +
 						File.separator +
-						Config.VENV_DIR
+						Workspace.VENV_DIR
 					);
 
 					interp.set("__scalpel__", burpEnv);
@@ -1085,6 +1071,7 @@ public class ScalpelExecutor {
 
 	@SuppressWarnings({ "unchecked" })
 	public List<CallableData> getCallables() throws RuntimeException {
+		// TODO: Memoize this
 		// Jep doesn't offer any way to list functions, so we have to implement it Python side.
 		// Python returns ~ [{"name": <function name>, "annotations": <func.__annotations__>},...]
 		return this.safeJepInvoke(Constants.GET_CB_NAME, List.class)
