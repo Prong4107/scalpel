@@ -88,7 +88,7 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
 		// Get the network info form the initiating request.
 		final HttpService service = Optional
 			.ofNullable(httpResponseReceived.initiatingRequest())
-			.map(r -> r.httpService())
+			.map(HttpRequest::httpService)
 			.orElse(null);
 
 		// Call the request() Python callback
