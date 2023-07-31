@@ -112,7 +112,7 @@ try:
         annotations: dict[str, Any]
 
     def _get_callables() -> list[CallableData]:
-        logger.debug("Python: _get_callables() called")
+        logger.trace("Python: _get_callables() called")
         # Also return the annotations because they contain the editor mode (hex,raw)
         # Annotations are a dict so they will be converted to HashMap
         # https://github.com/ninia/jep/wiki/How-Jep-Works#objects:~:text=Dict%20%2D%3E%20java.util.HashMap
@@ -148,13 +148,13 @@ try:
         Returns:
             CallbackType: The wrapped callback
         """
-        logger.debug("Python: _try_wrap() called")
+        logger.trace("Python: _try_wrap() called")
 
         # Define the wrapper function
         @wraps(callback)
         def _wrapped_cb(*args, **kwargs):
             try:
-                logger.debug(f"Python: _wrapped_cb() for {callback.__name__} called")
+                logger.trace(f"Python: _wrapped_cb() for {callback.__name__} called")
                 return callback(*args, **kwargs)
             except Exception as ex:  # pylint: disable=broad-except
                 logger.error(f"Python: {callback.__name__}() error:\n\t{ex}")
@@ -174,7 +174,7 @@ try:
         Returns:
             Callable[..., CallbackReturn]: The wrapped callback
         """
-        logger.debug(f"Python: _try_if_present({callback.__name__}) called")
+        logger.trace(f"Python: _try_if_present({callback.__name__}) called")
 
         # Remove the leading underscore from the callback name
         name = callback.__name__.removeprefix("_")
@@ -184,7 +184,7 @@ try:
 
         # Ensure the user callback is present
         if user_cb is not None:
-            logger.debug(f"Python: {name}() is present")
+            logger.trace(f"Python: {name}() is present")
 
             # Wrap the user callback in a try catch block and return it
             @_try_wrap
@@ -195,7 +195,7 @@ try:
             # Return the wrapped callback
             return new_cb
 
-        logger.debug(f"Python: {name}() is not present")
+        logger.trace(f"Python: {name}() is not present")
 
         # Ignore the callback.
         return lambda *_, **__: None
@@ -262,7 +262,7 @@ try:
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
-        logger.debug(f"Python: _req_edit_in -> {callback_suffix}")
+        logger.trace(f"Python: _req_edit_in -> {callback_suffix}")
         callback = callable_objs.get("req_edit_in" + callback_suffix)
         if callback is None:
             return
@@ -273,7 +273,7 @@ try:
         if not call_match_callback(flow, "req_edit_in"):
             return None
 
-        logger.debug(f"Python: calling {callback.__name__}")
+        logger.trace(f"Python: calling {callback.__name__}")
         # Call the user callback and return the bytes to display in the editor
         return cast(bytes | None, callback(py_req))
 
@@ -295,7 +295,7 @@ try:
             bytes | None: The bytes to construct the new request from
                 or None for an unmodified request
         """
-        logger.debug(f"Python: _req_edit_out -> {callback_suffix}")
+        logger.trace(f"Python: _req_edit_out -> {callback_suffix}")
         callback = callable_objs.get("req_edit_out" + callback_suffix)
         if callback is None:
             return
@@ -306,7 +306,7 @@ try:
         if not call_match_callback(flow, "req_edit_out"):
             return None
 
-        logger.debug(f"Python: calling {callback.__name__}")
+        logger.trace(f"Python: calling {callback.__name__}")
         # Call the user callback and return the bytes to construct the new request from
         result = cast(Request | None, callback(py_req, bytes(text)))
         return result and result.to_burp()
@@ -327,7 +327,7 @@ try:
         Returns:
             bytes | None: The bytes to display in the editor or None for a disabled editor
         """
-        logger.debug(f"Python: _res_edit_in -> {callback_suffix}")
+        logger.trace(f"Python: _res_edit_in -> {callback_suffix}")
         callback = callable_objs.get("res_edit_in" + callback_suffix)
         if callback is None:
             return
@@ -338,7 +338,7 @@ try:
         if not call_match_callback(flow, "res_edit_in"):
             return None
 
-        logger.debug(f"Python: calling {callback.__name__}")
+        logger.trace(f"Python: calling {callback.__name__}")
         # Call the user callback and return the bytes to display in the editor
         return cast(bytes | None, callback(py_res))
 
@@ -361,7 +361,7 @@ try:
             bytes | None: The bytes to construct the new response from
                 or None for an unmodified response
         """
-        logger.debug(f"Python: _res_edit_out -> {callback_suffix}")
+        logger.trace(f"Python: _res_edit_out -> {callback_suffix}")
         callback = callable_objs.get("res_edit_out" + callback_suffix)
         if callback is None:
             return
@@ -374,7 +374,7 @@ try:
         if not call_match_callback(flow, "res_edit_out"):
             return None
 
-        logger.debug(f"Python: calling {callback.__name__}")
+        logger.trace(f"Python: calling {callback.__name__}")
         # Call the user callback and return the bytes to construct the new response from
         result = cast(Response | None, callback(py_res, bytes(text)))
         return result and result.to_burp()

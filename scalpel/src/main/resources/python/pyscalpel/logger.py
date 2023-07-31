@@ -65,8 +65,8 @@ class Logger:
 
 
 try:
-    logger = import_java("lexfo.scalpel.ScalpelLogger", "ScalpelLogger", Logger)
+    logger: Logger = import_java("lexfo.scalpel", "ScalpelLogger", Logger)
 except ImportError as ex:
-    logger = Logger()
+    logger: Logger = Logger()
     logger.error("Couldn't import logger")
     logger.error(str(ex))
