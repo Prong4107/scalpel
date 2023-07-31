@@ -1,20 +1,16 @@
 package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
-import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.HttpService;
 import burp.api.montoya.http.message.HttpMessage;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.ui.Selection;
-import burp.api.montoya.ui.editor.RawEditor;
 import burp.api.montoya.ui.editor.extension.EditorCreationContext;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpResponseEditor;
-import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +19,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import lexfo.scalpel.ScalpelExecutor.CallableData;
@@ -220,10 +215,10 @@ public class ScalpelEditorTabbedPane
 		try {
 			return executor.getCallables();
 		} catch (RuntimeException e) {
-			ScalpelLogger.debug(
-				"recreateEditors(): Could not call get_callables"
-			);
-			ScalpelLogger.debug(e.toString());
+			// ScalpelLogger.debug(
+			// 	"recreateEditors(): Could not call get_callables"
+			// );
+			// ScalpelLogger.debug(e.toString());
 			return null;
 		}
 	}
