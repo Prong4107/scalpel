@@ -486,18 +486,17 @@ public class ConfigTab extends JFrame {
 			label -> {
 				// Create the venv and installed required packages. (i.e. mitmproxy)
 				try {
-					Venv.create(path + File.separator + Config.VENV_DIR);
+					config.createAndInitVenv(path, Optional.empty());
+
 					// Add the venv to the config.
 					config.addVenvPath(path);
 
 					// Clear the text field.
 					addVentText.setText("");
 
-					installDefaultsAndLog(path);
-
 					// Display the venv in the list.
 					venvListComponent.setListData(config.getVenvPaths());
-				} catch (IOException | InterruptedException e) {
+				} catch (RuntimeException e) {
 					final String msg =
 						"Failed to create venv: \n" + e.getMessage();
 					ScalpelLogger.error(msg);

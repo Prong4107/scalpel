@@ -43,7 +43,7 @@ public class Scalpel implements BurpExtension {
 
 	private static void setupJepFromConfig(Config config) throws IOException {
 		final String venvPath = config.getOrCreateDefaultVenv(
-			config.getFrameworkPath()
+			config.getJdkPath()
 		);
 
 		var dir = Venv.getSitePackagesPath(venvPath).toFile();

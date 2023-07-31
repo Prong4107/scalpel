@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.text.html.Option;
+import org.apache.commons.io.FileUtils;
 
 /**
  * Scalpel configuration.
@@ -113,7 +113,7 @@ public class Config {
 
 	// Venv that will be created and used when none exists
 	public static final String DEFAULT_VENV_NAME = "default";
-	public static final String VENV_DIR = "venv";
+	public static final String VENV_DIR = ".venv";
 	public final ScalpelUnpacker unpacker;
 	private String _jdkPath = null;
 
@@ -400,57 +400,46 @@ public class Config {
 		return new RuntimeException(cmd + " failed:\n" + out + "\n" + msg);
 	}
 
-	/**
-	 * Get the default venv path.
-	 * This is the venv that will be used when the project is created.
-	 * If the default venv does not exist, it will be created.
-	 * If the default venv cannot be created, an exception will be thrown.
-	 *
-	 * @return The default venv path.
-	 */
-	public String getOrCreateDefaultVenv(String javaHome) {
-		final File defaultPath = Path
-			.of(getDefaultVenvsDir().getPath(), DEFAULT_VENV_NAME, VENV_DIR)
-			.toFile();
-
-		final String path = defaultPath.getAbsolutePath();
-
-		// Return if default venv dir already exists.
-		if (!defaultPath.exists()) {
-			defaultPath.mkdirs();
-		} else if (!defaultPath.isDirectory()) {
-			throw new RuntimeException("Default venv path is not a directory");
-		} else {
-			return path;
-		}
-
+	public void createAndInitVenv(String workspace, Optional<String> javaHome) {
 		// Run python -m venv <path>
 		try {
-			final var proc = Venv.create(path);
+			final var venvDir = workspace + File.separator + Config.VENV_DIR;
+			final var proc = Venv.create(venvDir);
 			if (proc.exitValue() != 0) {
 				throw createExceptionFromProcess(
 					proc,
 					"Ensure that pip3, python3.*-venv, python >= 3.10 and openjdk >= 17 are installed and in PATH.",
-					Constants.PYTHON_BIN + " -m venv " + path
+					Constants.PYTHON_BIN + " -m venv " + workspace
 				);
 			}
-
-			// Add default script.
-			copyScriptToVenv(
-				defaultPath.getParent(),
-				unpacker.getDefaultScriptPath()
-			);
+			copyVenvFiles(workspace);
 		} catch (IOException | InterruptedException e) {
 			throw new RuntimeException(e);
 		}
 
+		try {
+			// Add default script.
+			copyScriptToVenv(workspace, this.unpacker.getDefaultScriptPath());
+		} catch (RuntimeException e) {
+			ScalpelLogger.error(
+				"Default script could not be copied to " + workspace
+			);
+		}
+
 		// Run pip install <dependencies>
 		try {
-			final Process proc = Venv.installDefaults(
-				path,
-				Map.of("JAVA_HOME", javaHome),
-				true
-			);
+			final Process proc;
+
+			if (javaHome.isPresent()) {
+				proc =
+					Venv.installDefaults(
+						workspace,
+						Map.of("JAVA_HOME", javaHome.get()),
+						true
+					);
+			} else {
+				proc = Venv.installDefaults(workspace);
+			}
 
 			// Log pip output
 			final var stdout = proc.inputReader();
@@ -485,7 +474,35 @@ public class Config {
 			);
 			throw new RuntimeException(e);
 		}
-		return Path.of(path).getParent().toString();
+	}
+
+	/**
+	 * Get the default venv path.
+	 * This is the venv that will be used when the project is created.
+	 * If the default venv does not exist, it will be created.
+	 * If the default venv cannot be created, an exception will be thrown.
+	 *
+	 * @return The default venv path.
+	 */
+	public String getOrCreateDefaultVenv(String javaHome) {
+		final File defaultPath = Path
+			.of(getDefaultVenvsDir().getPath(), DEFAULT_VENV_NAME, VENV_DIR)
+			.toFile();
+
+		final String workspace = defaultPath.getParentFile().getAbsolutePath();
+
+		// Return if default venv dir already exists.
+		if (!defaultPath.exists()) {
+			defaultPath.mkdirs();
+		} else if (!defaultPath.isDirectory()) {
+			throw new RuntimeException("Default venv path is not a directory");
+		} else {
+			return defaultPath.toString();
+		}
+
+		createAndInitVenv(workspace, Optional.of(javaHome));
+
+		return defaultPath.toString();
 	}
 
 	/**
@@ -678,5 +695,12 @@ public class Config {
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private static void copyVenvFiles(String venv) throws IOException {
+		final var unpacker = ScalpelUnpacker.getInitializedUnpacker();
+		final File source = new File(unpacker.getVenvFilesPath());
+		final File dest = new File(venv);
+		FileUtils.copyDirectory(source, dest, true);
 	}
 }

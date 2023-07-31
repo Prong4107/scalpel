@@ -646,9 +646,6 @@ public class ScalpelExecutor {
 					// This isn't set by JEP, we have to do it ourselves.
 					interp.set("__file__", framework.getAbsolutePath());
 
-					// Add logger global to be able to log to Burp from Python.
-					burpEnv.put("logger", new ScalpelLogger());
-
 					// Set the path to the user script that will define the actual callbacks.
 					burpEnv.put(
 						"user_script",
