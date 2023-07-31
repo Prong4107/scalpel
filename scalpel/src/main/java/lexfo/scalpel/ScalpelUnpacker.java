@@ -42,6 +42,10 @@ public class ScalpelUnpacker {
 		return getResourcesPath() + "/python";
 	}
 
+	public String getVenvFilesPath() {
+		return getResourcesPath() + "/venv";
+	}
+
 	/**
 	 * Returns the path to the Scalpel Python framework.
 	 *
@@ -169,7 +173,8 @@ public class ScalpelUnpacker {
 			final Set<String> whitelist = Set.of(
 				"python",
 				"templates",
-				"shell"
+				"shell",
+				"venv"
 			);
 
 			extractRessources(
