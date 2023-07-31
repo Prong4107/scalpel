@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Stream;
+
 import javax.swing.SwingUtilities;
 import jep.ClassEnquirer;
 import jep.ClassList;
@@ -1076,7 +1078,7 @@ public class ScalpelExecutor {
 		// Python returns ~ [{"name": <function name>, "annotations": <func.__annotations__>},...]
 		return this.safeJepInvoke(Constants.GET_CB_NAME, List.class)
 			.map(l -> (List<HashMap<String, Object>>) l)
-			.map(l -> l.stream())
+			.map(List::stream)
 			.map(s ->
 				s.map(c ->
 					new CallableData(
@@ -1085,7 +1087,7 @@ public class ScalpelExecutor {
 					)
 				)
 			)
-			.map(s -> s.toList())
+			.map(Stream::toList)
 			.orElseThrow(() ->
 				new RuntimeException(Constants.GET_CB_NAME + " was not found.")
 			);

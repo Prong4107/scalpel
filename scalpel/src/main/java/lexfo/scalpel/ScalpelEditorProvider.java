@@ -108,8 +108,8 @@ public class ScalpelEditorProvider
 				.collect(Collectors.toCollection(LinkedList::new));
 
 		this.editorsRefs.stream()
-			.map(e -> e.get())
-			.forEach(e -> e.recreateEditors());
+			.map(WeakReference::get)
+			.forEach(ScalpelEditorTabbedPane::recreateEditors);
 
 		ScalpelLogger.log(ScalpelLogger.Level.DEBUG, "Editors reset.");
 	}

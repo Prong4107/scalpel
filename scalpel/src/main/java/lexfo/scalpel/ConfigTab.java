@@ -238,9 +238,9 @@ public class ConfigTab extends JFrame {
 		}
 
 		// Get the selected script name.
-		final Optional<String> selected = Optional
-			.ofNullable(venvScriptList.getSelectedValue())
-			.map(s -> s.toString());
+		final Optional<String> selected = Optional.ofNullable(
+			venvScriptList.getSelectedValue()
+		);
 
 		selected.ifPresent(s -> {
 			final Path path = Path

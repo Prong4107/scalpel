@@ -255,9 +255,9 @@ public class Config {
 			return Files
 				.walk(winJdkPath)
 				.filter(f -> f.toFile().getName().contains("jdk"))
-				.map(jdk -> jdk.toAbsolutePath())
+				.map(Path::toAbsolutePath)
 				.filter(Config::hasIncludeDir)
-				.map(jdk -> jdk.toString())
+				.map(Path::toString)
 				.findFirst();
 		}
 
@@ -284,7 +284,7 @@ public class Config {
 		);
 
 		final var javaHome = validJavaHomes
-			.map(path -> path.toString())
+			.map(Path::toString)
 			.findFirst();
 
 		return javaHome;
