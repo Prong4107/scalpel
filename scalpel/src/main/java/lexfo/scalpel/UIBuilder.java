@@ -77,7 +77,7 @@ public class UIBuilder {
 			ScalpelLogger.info("Handled action.");
 		});
 
-		final File file = new File(config.getFrameworkPath());
+		final File file = config.getFrameworkPath().toFile();
 		editorPane.setText(
 			IO.ioWrap(() -> FileUtils.readFileToString(file, "UTF-8"), () -> "")
 		);
