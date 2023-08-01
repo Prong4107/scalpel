@@ -78,12 +78,6 @@ public class ConfigTab extends JFrame {
 
 		$$$setupUI$$$();
 
-		// Make the text fields automatically scroll to the right when selected so that the file basename is visible.
-		autoScroll(frameworkPathField);
-
-		// Scroll to the right on focus
-		setFrameworkPath(config.getFrameworkPath());
-
 		// Open file browser to select the script to execute.
 		scriptBrowseButton.addActionListener(e ->
 			handleBrowseButtonClick(
@@ -91,15 +85,6 @@ public class ConfigTab extends JFrame {
 				this::setAndStoreScript
 			)
 		);
-
-		// TODO: Framework should not be changeable, remove all this useless surface
-		// // Same as above for framework path.
-		// frameworkBrowseButton.addActionListener(e ->
-		// 	handleBrowseButtonClick(
-		// 		frameworkPathField::getText,
-		// 		this::setAndStoreFrameworkPath
-		// 	)
-		// );
 
 		// Fill the venv list component.
 		venvListComponent.setListData(config.getVenvPaths());
@@ -652,13 +637,6 @@ public class ConfigTab extends JFrame {
 		textField.setCaretPosition(textField.getText().length());
 	}
 
-	private void setAndStoreFrameworkPath(String path) {
-		setFrameworkPath(path);
-
-		// Store the path in the config. (writes to disk)
-		config.setFrameworkPath(path);
-	}
-
 	private void setAndStoreScript(final Path path) {
 		final String copied;
 		try {
@@ -683,19 +661,6 @@ public class ConfigTab extends JFrame {
 
 		runAsync(this::updateScriptList);
 		runAsync(() -> selectScript(copied));
-	}
-
-	/**
-	 * Sets the path to the "framework" script to execute and updates the text field.
-	 *
-	 * @param path the path to the framework
-	 */
-	private void setFrameworkPath(String path) {
-		// Update the path selection text field.
-		frameworkPathField.setText(path);
-
-		// Scroll to the right
-		scrollToRight(frameworkPathField);
 	}
 
 	/**

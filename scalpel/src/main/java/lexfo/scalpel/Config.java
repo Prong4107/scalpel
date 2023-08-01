@@ -78,11 +78,6 @@ public class Config {
 		 * The script to run.
 		 */
 		public String userScriptPath = "";
-
-		/*
-		 * The framework to use.
-		 */
-		public String frameworkPath = "";
 	}
 
 	private final _GlobalData globalConfig;
@@ -370,7 +365,6 @@ public class Config {
 		final _ProjectData data = new _ProjectData();
 
 		data.userScriptPath = globalConfig.defaultScriptPath;
-		data.frameworkPath = globalConfig.defaultFrameworkPath;
 		data.workspacePath = globalConfig.defaultWorkspacePath;
 		return data;
 	}
@@ -401,7 +395,7 @@ public class Config {
 	 * @return The selected framework path.
 	 */
 	public String getFrameworkPath() {
-		return projectConfig.frameworkPath;
+		return RessourcesUnpacker.FRAMEWORK_PATH.toString();
 	}
 
 	public String getJdkPath() {
@@ -444,18 +438,6 @@ public class Config {
 	public void setUserScriptPath(String scriptPath) {
 		this.projectConfig.userScriptPath = scriptPath;
 		this.globalConfig.defaultScriptPath = scriptPath;
-		this.saveAllConfig();
-	}
-
-	/*
-	 * Set the selected framework path.
-	 * Saves the new path to the global and project configuration files.
-	 *
-	 * @param frameworkPath The new framework path.
-	 */
-	public void setFrameworkPath(String frameworkPath) {
-		this.projectConfig.frameworkPath = frameworkPath;
-		this.globalConfig.defaultFrameworkPath = frameworkPath;
 		this.saveAllConfig();
 	}
 
