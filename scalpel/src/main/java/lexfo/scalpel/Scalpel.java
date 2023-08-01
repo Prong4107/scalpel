@@ -4,6 +4,7 @@ import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import jep.MainInterpreter;
@@ -38,14 +39,15 @@ public class Scalpel implements BurpExtension {
 		ScalpelLogger.all("Script: " + config.getUserScriptPath());
 		ScalpelLogger.all("Venvs: " + Arrays.stream(config.getVenvPaths()));
 		ScalpelLogger.all("Default venv: " + Workspace.getDefaultWorkspace());
-		ScalpelLogger.all("Selected venv: " + config.getSelectedVenv());
+		ScalpelLogger.all(
+			"Selected venv: " + config.getSelectedWorkspacePath()
+		);
 	}
 
 	private static void setupJepFromConfig(Config config) throws IOException {
-		final String venvPath =
-			Workspace.getOrCreateDefaultWorkspace(config.getJdkPath()) +
-			File.separator +
-			Workspace.VENV_DIR;
+		final Path venvPath = Workspace
+			.getOrCreateDefaultWorkspace(config.getJdkPath())
+			.resolve(Workspace.VENV_DIR);
 
 		var dir = Venv.getSitePackagesPath(venvPath).toFile();
 

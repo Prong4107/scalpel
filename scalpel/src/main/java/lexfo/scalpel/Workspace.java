@@ -55,11 +55,11 @@ public class Workspace {
 	 * @param scriptPath The script to copy
 	 * @return The new file path
 	 */
-	public static String copyScriptToWorkspace(
-		final String workspace,
-		final String scriptPath
+	public static Path copyScriptToWorkspace(
+		final Path workspace,
+		final Path scriptPath
 	) {
-		final File original = new File(scriptPath);
+		final File original = scriptPath.toFile();
 		final String baseErrMsg =
 			"Could not copy " + scriptPath + " to " + workspace + "\n";
 
@@ -67,7 +67,7 @@ public class Workspace {
 			.ofNullable(original)
 			.filter(File::exists)
 			.map(File::getName)
-			.map(n -> Path.of(workspace).resolve(n))
+			.map(workspace::resolve)
 			.orElseThrow(() ->
 				new RuntimeException(baseErrMsg + "File not found")
 			);
@@ -83,26 +83,25 @@ public class Workspace {
 					destination,
 					StandardCopyOption.REPLACE_EXISTING
 				)
-				.toAbsolutePath()
-				.toString();
+				.toAbsolutePath();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	public static void copyWorkspaceFiles(String workspace) throws IOException {
+	public static void copyWorkspaceFiles(Path workspace) throws IOException {
 		final File source = RessourcesUnpacker.WORKSPACE_PATH.toFile();
-		final File dest = new File(workspace);
+		final File dest = workspace.toFile();
 		FileUtils.copyDirectory(source, dest, true);
 	}
 
 	public static void createAndInitWorkspace(
-		String workspace,
-		Optional<String> javaHome
+		Path workspace,
+		Optional<Path> javaHome
 	) {
 		// Run python -m venv <path>
 		try {
-			final var venvDir = workspace + File.separator + VENV_DIR;
+			final var venvDir = getVenvDir(workspace);
 			final var proc = Venv.create(venvDir);
 			if (proc.exitValue() != 0) {
 				throw createExceptionFromProcess(
@@ -120,7 +119,7 @@ public class Workspace {
 			// Add default script.
 			copyScriptToWorkspace(
 				workspace,
-				RessourcesUnpacker.DEFAULT_SCRIPT_PATH.toString()
+				RessourcesUnpacker.DEFAULT_SCRIPT_PATH
 			);
 		} catch (RuntimeException e) {
 			ScalpelLogger.error(
@@ -136,7 +135,7 @@ public class Workspace {
 				proc =
 					Venv.installDefaults(
 						workspace,
-						Map.of("JAVA_HOME", javaHome.get()),
+						Map.of("JAVA_HOME", javaHome.map(Path::toString).get()),
 						true
 					);
 			} else {
@@ -186,7 +185,7 @@ public class Workspace {
 	 *
 	 * @return The default workspace path.
 	 */
-	public static String getOrCreateDefaultWorkspace(String javaHome) {
+	public static Path getOrCreateDefaultWorkspace(Path javaHome) {
 		final Path workspace = Path.of(
 			Workspace.getWorkspacesDir().getPath(),
 			DEFAULT_VENV_NAME
@@ -200,26 +199,25 @@ public class Workspace {
 		} else if (!venvDir.isDirectory()) {
 			throw new RuntimeException("Default venv path is not a directory");
 		} else {
-			return workspace.toString();
+			return workspace;
 		}
 
 		createAndInitWorkspace(
-			workspace.toAbsolutePath().toString(),
+			workspace.toAbsolutePath(),
 			Optional.of(javaHome)
 		);
 
-		return workspace.toString();
+		return workspace;
 	}
 
-	public static String getVenvDir(String workspace) {
-		return Path.of(workspace).resolve(VENV_DIR).toString();
+	public static Path getVenvDir(Path workspace) {
+		return workspace.resolve(VENV_DIR);
 	}
 
-	public static String getDefaultWorkspace() {
+	public static Path getDefaultWorkspace() {
 		return Paths
 			.get(getWorkspacesDir().getAbsolutePath())
-			.resolve(DEFAULT_VENV_NAME)
-			.toString();
+			.resolve(DEFAULT_VENV_NAME);
 	}
 
 	/**

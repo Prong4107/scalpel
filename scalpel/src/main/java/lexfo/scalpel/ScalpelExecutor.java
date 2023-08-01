@@ -10,6 +10,7 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -18,7 +19,6 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Stream;
-
 import javax.swing.SwingUtilities;
 import jep.ClassEnquirer;
 import jep.ClassList;
@@ -268,10 +268,17 @@ public class ScalpelExecutor {
 		this.config = config;
 
 		// Create a File wrapper from the script path.
-		this.script = Optional.ofNullable(new File(config.getUserScriptPath()));
+		this.script =
+			Optional
+				.ofNullable(config.getUserScriptPath())
+				.map(Path::toFile)
+				.filter(File::exists);
 
 		this.framework =
-			Optional.ofNullable(new File(config.getFrameworkPath()));
+			Optional
+				.ofNullable(config.getFrameworkPath())
+				.map(Path::toFile)
+				.filter(File::exists);
 
 		this.lastConfigModificationTimestamp = config.getLastModified();
 		this.framework.ifPresent(f ->
@@ -399,7 +406,10 @@ public class ScalpelExecutor {
 				lastScriptModificationTimestamp = script.lastModified();
 
 				this.script =
-					Optional.ofNullable(new File(config.getUserScriptPath()));
+					Optional
+						.ofNullable(config.getUserScriptPath())
+						.map(Path::toFile)
+						.filter(File::exists);
 
 				// Return the check result.²
 				return hasChanged;
@@ -451,7 +461,10 @@ public class ScalpelExecutor {
 				lastFrameworkModificationTimestamp = framework.lastModified();
 
 				this.framework =
-					Optional.ofNullable(new File(config.getFrameworkPath()));
+					Optional
+						.ofNullable(config.getFrameworkPath())
+						.map(Path::toFile)
+						.filter(File::exists);
 
 				// Return the check result.²
 				return hasChanged;
@@ -582,13 +595,13 @@ public class ScalpelExecutor {
 		return thread;
 	}
 
-	private String getDefaultIncludePath() {
-		final String defaultVenv =
-			Workspace.getDefaultWorkspace() +
-			File.separator +
-			Workspace.VENV_DIR;
+	private Optional<Path> getDefaultIncludePath() {
+		final Path defaultVenv = Workspace
+			.getDefaultWorkspace()
+			.resolve(Workspace.VENV_DIR);
+
 		try {
-			return Venv.getSitePackagesPath(defaultVenv).toString();
+			return Optional.of(Venv.getSitePackagesPath(defaultVenv));
 		} catch (IOException e) {
 			ScalpelLogger.warn(
 				"Could not find a default include path for JEP (with venv " +
@@ -600,7 +613,7 @@ public class ScalpelExecutor {
 			);
 			ScalpelLogger.logStackTrace(e);
 		}
-		return "";
+		return Optional.empty();
 	}
 
 	/**
@@ -613,14 +626,15 @@ public class ScalpelExecutor {
 			return framework
 				.map(framework -> {
 					// Add a default include path so JEP can be loaded
-					String defaultIncludePath = getDefaultIncludePath();
+					Optional<String> defaultIncludePath = getDefaultIncludePath()
+						.map(Path::toString);
 
 					// Instantiate a Python interpreter.
 					final SubInterpreter interp = new SubInterpreter(
 						new JepConfig()
 							.setClassEnquirer(new CustomEnquirer())
 							.addIncludePaths(
-								defaultIncludePath,
+								defaultIncludePath.orElse(""),
 								RessourcesUnpacker.PYTHON_PATH.toString()
 							)
 					);
@@ -645,7 +659,7 @@ public class ScalpelExecutor {
 					// Pass the selected venv path so it can be activated by the framework.
 					burpEnv.put(
 						"venv",
-						config.getSelectedVenv() +
+						config.getSelectedWorkspacePath() +
 						File.separator +
 						Workspace.VENV_DIR
 					);

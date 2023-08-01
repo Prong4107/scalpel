@@ -102,7 +102,7 @@ public class Config {
 
 	// Venv that will be created and used when none exists
 	public final RessourcesUnpacker unpacker;
-	private String _jdkPath = null;
+	private Path _jdkPath = null;
 
 	public Config(final MontoyaApi API, final RessourcesUnpacker unpacker) {
 		this.unpacker = unpacker;
@@ -128,7 +128,7 @@ public class Config {
 
 		this.globalConfig = initGlobalConfig(unpacker);
 
-		this._jdkPath = this.globalConfig.jdkPath;
+		this._jdkPath = Path.of(this.globalConfig.jdkPath);
 
 		// Load project config or create a new one on failure. (e.g. file doesn't exist)
 		this.projectConfig = this.initProjectConfig();
@@ -150,13 +150,15 @@ public class Config {
 				// Remove venvs that were deleted by an external process.
 				d.workspacePaths.removeIf(path -> !new File(path).exists());
 				if (d.jdkPath == null) {
-					d.jdkPath = IO.ioWrap(this::findJdkPath);
+					d.jdkPath = IO.ioWrap(this::findJdkPath).toString();
 				}
 
 				// Ensure that there is at least one venv.
 				if (d.workspacePaths.size() == 0) {
 					d.workspacePaths.add(
-						Workspace.getOrCreateDefaultWorkspace(d.jdkPath)
+						Workspace
+							.getOrCreateDefaultWorkspace(Path.of(d.jdkPath))
+							.toString()
 					);
 				}
 
@@ -239,7 +241,7 @@ public class Config {
 		return inc.exists() && inc.isDirectory();
 	}
 
-	private static Optional<String> guessJdkPath() throws IOException {
+	private static Optional<Path> guessJdkPath() throws IOException {
 		if (UIUtil.isWindows) {
 			// Official JDK usually gets installed in 'C:\\Program Files\\Java\\jdk-<version>'
 			final var winJdkPath = Path.of("C:\\Program Files\\Java\\");
@@ -248,7 +250,6 @@ public class Config {
 				.filter(f -> f.toFile().getName().contains("jdk"))
 				.map(Path::toAbsolutePath)
 				.filter(Config::hasIncludeDir)
-				.map(Path::toString)
 				.findFirst();
 		}
 
@@ -258,9 +259,7 @@ public class Config {
 		final var potentialJdkPaths = matchingBinaries
 			.map(binaryPath -> {
 				try {
-					final Path absolutePath = Paths
-						.get(binaryPath)
-						.toRealPath();
+					final Path absolutePath = binaryPath.toRealPath();
 					return absolutePath.getParent().getParent();
 				} catch (IOException e) {
 					return null;
@@ -274,9 +273,7 @@ public class Config {
 			Config::hasIncludeDir
 		);
 
-		final var javaHome = validJavaHomes.map(Path::toString).findFirst();
-
-		return javaHome;
+		return validJavaHomes.findFirst();
 	}
 
 	/**
@@ -284,13 +281,13 @@ public class Config {
 	 * @return The JDK path.
 	 * @throws IOException
 	 */
-	public String findJdkPath() throws IOException {
+	public Path findJdkPath() throws IOException {
 		if (_jdkPath != null) {
 			// Return memoized path
 			return _jdkPath;
 		}
 
-		final String javaHome = guessJdkPath()
+		final Path javaHome = guessJdkPath()
 			.orElseGet(() -> {
 				// Display popup telling the user that JDK was not found and needs to select it manually
 				JOptionPane.showMessageDialog(
@@ -307,7 +304,7 @@ public class Config {
 				final int option = fileChooser.showOpenDialog(null);
 				if (option == JFileChooser.APPROVE_OPTION) {
 					final File file = fileChooser.getSelectedFile();
-					return file.getPath();
+					return file.toPath();
 				} else {
 					return null;
 				}
@@ -321,7 +318,7 @@ public class Config {
 		return javaHome;
 	}
 
-	private static Stream<String> findBinaryInPath(String binaryName) {
+	private static Stream<Path> findBinaryInPath(String binaryName) {
 		final String systemPath = System.getenv("PATH");
 		final String[] pathDirs = systemPath.split(
 			System.getProperty("path.separator")
@@ -330,8 +327,7 @@ public class Config {
 		return Arrays
 			.stream(pathDirs)
 			.map(pathDir -> Paths.get(pathDir, binaryName))
-			.filter(Files::exists)
-			.map(Path::toString);
+			.filter(Files::exists);
 	}
 
 	/**
@@ -343,15 +339,22 @@ public class Config {
 	private _GlobalData getDefaultGlobalData(RessourcesUnpacker unpacker) {
 		final _GlobalData data = new _GlobalData();
 
-		data.jdkPath = IO.ioWrap(this::findJdkPath, () -> null);
+		data.jdkPath = IO.ioWrap(this::findJdkPath, () -> null).toString();
+
 		data.defaultScriptPath =
 			RessourcesUnpacker.DEFAULT_SCRIPT_PATH.toString();
+
 		data.defaultFrameworkPath =
 			RessourcesUnpacker.FRAMEWORK_PATH.toString();
+
 		data.workspacePaths = new ArrayList<String>();
+
 		data.workspacePaths.add(
-			Workspace.getOrCreateDefaultWorkspace(data.jdkPath)
+			Workspace
+				.getOrCreateDefaultWorkspace(Path.of(data.jdkPath))
+				.toString()
 		);
+
 		data.defaultWorkspacePath = data.workspacePaths.get(0);
 		return data;
 	}
@@ -385,8 +388,8 @@ public class Config {
 	 *
 	 * @return The selected user script path.
 	 */
-	public String getUserScriptPath() {
-		return projectConfig.userScriptPath;
+	public Path getUserScriptPath() {
+		return Path.of(projectConfig.userScriptPath);
 	}
 
 	/*
@@ -394,12 +397,12 @@ public class Config {
 	 *
 	 * @return The selected framework path.
 	 */
-	public String getFrameworkPath() {
-		return RessourcesUnpacker.FRAMEWORK_PATH.toString();
+	public Path getFrameworkPath() {
+		return RessourcesUnpacker.FRAMEWORK_PATH;
 	}
 
-	public String getJdkPath() {
-		return globalConfig.jdkPath;
+	public Path getJdkPath() {
+		return Path.of(globalConfig.jdkPath);
 	}
 
 	/*
@@ -407,14 +410,14 @@ public class Config {
 	 *
 	 * @return The selected venv path.
 	 */
-	public String getSelectedVenv() {
-		return projectConfig.workspacePath;
+	public Path getSelectedWorkspacePath() {
+		return Path.of(projectConfig.workspacePath);
 	}
 
 	// Setters
 
-	public void setJdkPath(String path) {
-		this.globalConfig.jdkPath = path;
+	public void setJdkPath(Path path) {
+		this.globalConfig.jdkPath = path.toString();
 		this.saveGlobalConfig();
 	}
 
@@ -435,9 +438,9 @@ public class Config {
 	 *
 	 * @param scriptPath The new user script path.
 	 */
-	public void setUserScriptPath(String scriptPath) {
-		this.projectConfig.userScriptPath = scriptPath;
-		this.globalConfig.defaultScriptPath = scriptPath;
+	public void setUserScriptPath(Path scriptPath) {
+		this.projectConfig.userScriptPath = scriptPath.toString();
+		this.globalConfig.defaultScriptPath = scriptPath.toString();
 		this.saveAllConfig();
 	}
 
@@ -447,9 +450,9 @@ public class Config {
 	 *
 	 * @param venvPath The new venv path.
 	 */
-	public void setSelectedVenvPath(String venvPath) {
-		this.projectConfig.workspacePath = venvPath;
-		this.globalConfig.defaultWorkspacePath = venvPath;
+	public void setSelectedVenvPath(Path venvPath) {
+		this.projectConfig.workspacePath = venvPath.toString();
+		this.globalConfig.defaultWorkspacePath = venvPath.toString();
 		this.saveAllConfig();
 	}
 
@@ -461,8 +464,8 @@ public class Config {
 	 *
 	 * @param venvPath The venv path to add.
 	 */
-	public void addVenvPath(String venvPath) {
-		globalConfig.workspacePaths.add(venvPath);
+	public void addVenvPath(Path venvPath) {
+		globalConfig.workspacePaths.add(venvPath.toString());
 		this.saveGlobalConfig();
 	}
 
@@ -472,8 +475,8 @@ public class Config {
 	 *
 	 * @param venvPath The venv path to remove.
 	 */
-	public void removeVenvPath(String venvPath) {
-		globalConfig.workspacePaths.remove(venvPath);
+	public void removeVenvPath(Path venvPath) {
+		globalConfig.workspacePaths.remove(venvPath.toString());
 		this.saveGlobalConfig();
 	}
 }
