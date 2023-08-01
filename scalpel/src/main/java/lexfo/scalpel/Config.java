@@ -2,6 +2,7 @@ package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.persistence.PersistedObject;
+import com.jediterm.terminal.ui.UIUtil;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -194,11 +195,6 @@ public class Config {
 			.orElseGet(this::getDefaultProjectData);
 	}
 
-	public static boolean isWindows() {
-		String os = System.getProperty("os.name").toLowerCase();
-		return (os.contains("win"));
-	}
-
 	/**
 	 * Write the global configuration to the global configuration file.
 	 */
@@ -249,7 +245,7 @@ public class Config {
 	}
 
 	private static Optional<String> guessJdkPath() throws IOException {
-		if (isWindows()) {
+		if (UIUtil.isWindows) {
 			// Official JDK usually gets installed in 'C:\\Program Files\\Java\\jdk-<version>'
 			final var winJdkPath = Path.of("C:\\Program Files\\Java\\");
 			return Files
@@ -283,9 +279,7 @@ public class Config {
 			Config::hasIncludeDir
 		);
 
-		final var javaHome = validJavaHomes
-			.map(Path::toString)
-			.findFirst();
+		final var javaHome = validJavaHomes.map(Path::toString).findFirst();
 
 		return javaHome;
 	}
