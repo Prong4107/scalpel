@@ -1,5 +1,6 @@
 package lexfo.scalpel;
 
+import com.jediterm.terminal.ui.UIUtil;
 import java.io.BufferedReader;
 import java.io.File;
 /**
@@ -199,7 +200,7 @@ public class Venv {
 	}
 
 	public static Path getSitePackagesPath(String venvPath) throws IOException {
-		if (Config.isWindows()) {
+		if (UIUtil.isWindows) {
 			// Find the sites-package directory path as in: <path>/Lib/site-packages
 			return Files
 				.walk(Paths.get(venvPath))
