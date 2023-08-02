@@ -17,9 +17,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
-import javax.swing.SwingUtilities;
 import jep.ClassEnquirer;
 import jep.ClassList;
 import jep.Interpreter;
@@ -153,7 +154,7 @@ public class ScalpelExecutor {
 		 *
 		 * @return the result of the task.
 		 */
-		public synchronized Optional<Object> awaitResult() {
+		public synchronized Optional<Object> await() {
 			// Log this before awaiting to debug potential deadlocks.
 			ScalpelLogger.trace("Awaiting task: " + name);
 
@@ -190,6 +191,12 @@ public class ScalpelExecutor {
 
 		public Boolean isFinished() {
 			return finished;
+		}
+
+		public synchronized void then(Consumer<Object> callback) {
+			CompletableFuture.runAsync(() ->
+				this.await().ifPresent(callback::accept)
+			);
 		}
 	}
 
@@ -362,8 +369,7 @@ public class ScalpelExecutor {
 		Class<T> expectedClass
 	) {
 		// Queue a new task and await it's result.
-		final Optional<Object> result = addTask(name, args, kwargs)
-			.awaitResult();
+		final Optional<Object> result = addTask(name, args, kwargs).await();
 
 		if (result.isPresent()) {
 			try {
@@ -397,39 +403,39 @@ public class ScalpelExecutor {
 	 */
 	private Boolean hasScriptChanged() {
 		return script
-			.map(script -> {
-				// Check if the last modification date has changed since last record.
-				final Boolean hasChanged =
-					lastScriptModificationTimestamp != script.lastModified();
-
-				// Update the last modification date record.
-				lastScriptModificationTimestamp = script.lastModified();
-
-				this.script =
-					Optional
-						.ofNullable(config.getUserScriptPath())
-						.map(Path::toFile)
-						.filter(File::exists);
-
-				// Return the check result.²
-				return hasChanged;
-			})
+			.map(File::lastModified)
+			.map(m -> lastScriptModificationTimestamp != m)
 			.orElse(false);
 	}
 
-	private final Boolean hasConfigChanged() {
-		final long currentConfigModificationTimestamp = config.getLastModified();
+	private Boolean hasConfigChanged() {
+		return config.getLastModified() != lastConfigModificationTimestamp;
+	}
 
-		// Check if the last modification date has changed since last record.
-		final Boolean hasChanged =
-			lastConfigModificationTimestamp !=
-			currentConfigModificationTimestamp;
+	private void resetChangeIndicators() {
+		this.framework =
+			Optional
+				.ofNullable(config.getFrameworkPath())
+				.map(Path::toFile)
+				.filter(File::exists);
+
+		framework.ifPresent(f ->
+			lastFrameworkModificationTimestamp = f.lastModified()
+		);
+
+		this.script =
+			Optional
+				.ofNullable(config.getUserScriptPath())
+				.map(Path::toFile)
+				.filter(File::exists);
 
 		// Update the last modification date record.
-		lastConfigModificationTimestamp = currentConfigModificationTimestamp;
+		script
+			.map(File::lastModified)
+			.ifPresent(f -> lastScriptModificationTimestamp = f);
 
-		// Return the check result.
-		return hasChanged;
+		// Update the last modification date record.
+		lastConfigModificationTimestamp = config.getLastModified();
 	}
 
 	/**
@@ -438,9 +444,8 @@ public class ScalpelExecutor {
 	 * @return true if either the framework or user script file has been modified since the last check, false otherwise.
 	 */
 	private Boolean mustReload() {
-		// Use | instead of || to avoid lazy evaluation preventing all modification timestamp from being updated.
 		return (
-			hasFrameworkChanged() | hasScriptChanged() | hasConfigChanged()
+			hasFrameworkChanged() || hasScriptChanged() || hasConfigChanged()
 		);
 	}
 
@@ -451,36 +456,27 @@ public class ScalpelExecutor {
 	 */
 	private final Boolean hasFrameworkChanged() {
 		return framework
-			.map(framework -> {
-				// Check if the last modification date has changed since last record.
-				final Boolean hasChanged =
-					lastFrameworkModificationTimestamp !=
-					framework.lastModified();
-
-				// Update the last modification date record.
-				lastFrameworkModificationTimestamp = framework.lastModified();
-
-				this.framework =
-					Optional
-						.ofNullable(config.getFrameworkPath())
-						.map(Path::toFile)
-						.filter(File::exists);
-
-				// Return the check result.²
-				return hasChanged;
-			})
+			.map(File::lastModified)
+			.map(m -> m != lastFrameworkModificationTimestamp)
 			.orElse(false);
 	}
 
 	public void setEditorsProvider(ScalpelEditorProvider provider) {
 		this.editorProvider = Optional.of(provider);
-		provider.resetEditors();
+		provider.resetEditorsAsync();
+	}
+
+	public synchronized void notifyEventLoop() {
+		synchronized (tasks) {
+			tasks.notifyAll();
+		}
 	}
 
 	// WARN: Declaring this method as synchronized cause deadlocks.
 	private void taskLoop() {
 		ScalpelLogger.info("Starting task loop.");
 
+		isRunnerStarting = true;
 		try {
 			// Instantiate the interpreter.
 			final SubInterpreter interp = initInterpreter();
@@ -562,6 +558,8 @@ public class ScalpelExecutor {
 		isRunnerAlive = false;
 		isRunnerStarting = false;
 
+		this.resetChangeIndicators();
+
 		// Relaunch the task thread
 		this.runner = launchTaskRunner();
 	}
@@ -580,16 +578,7 @@ public class ScalpelExecutor {
 
 		// Force editor tabs recreation
 		// WARN: .resetEditors() depends on the runner loop, do not call it inside of it
-		this.editorProvider.ifPresent(e ->
-				SwingUtilities.invokeLater(() -> {
-					while (!isRunnerAlive) {
-						try {
-							Thread.sleep(200);
-						} catch (InterruptedException exc) {}
-					}
-					e.resetEditors();
-				})
-			);
+		this.editorProvider.ifPresent(ScalpelEditorProvider::resetEditorsAsync);
 
 		// Return the running thread.
 		return thread;
