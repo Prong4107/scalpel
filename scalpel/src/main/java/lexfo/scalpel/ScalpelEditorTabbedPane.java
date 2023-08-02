@@ -332,26 +332,26 @@ public class ScalpelEditorTabbedPane
 				final AbstractEditor editor;
 				try {
 					// There should be a better way to do this..
+					final var construcor = dispatchedEditor.getConstructor(
+						String.class,
+						Boolean.class,
+						MontoyaApi.class,
+						EditorCreationContext.class,
+						EditorType.class,
+						ScalpelEditorTabbedPane.class,
+						ScalpelExecutor.class
+					);
+
 					editor =
-						dispatchedEditor
-							.getConstructor(
-								String.class,
-								Boolean.class,
-								MontoyaApi.class,
-								EditorCreationContext.class,
-								EditorType.class,
-								ScalpelEditorTabbedPane.class,
-								ScalpelExecutor.class
-							)
-							.newInstance(
-								tabInfo.name(),
-								tabInfo.directions.contains(this.hookOutPrefix), // Read-only tab if no out method.
-								API,
-								ctx,
-								type,
-								this,
-								executor
-							);
+						construcor.newInstance(
+							tabInfo.name(),
+							tabInfo.directions.contains(this.hookOutPrefix), // Read-only tab if no out method.
+							API,
+							ctx,
+							type,
+							this,
+							executor
+						);
 				} catch (Exception ex) {
 					// Should never happen as long as the constructor has not been overriden by an abstract declaration.
 					throw new RuntimeException(ex);
