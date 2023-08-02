@@ -215,10 +215,10 @@ public class ScalpelEditorTabbedPane
 		try {
 			return executor.getCallables();
 		} catch (RuntimeException e) {
-			// ScalpelLogger.debug(
-			// 	"recreateEditors(): Could not call get_callables"
-			// );
-			// ScalpelLogger.debug(e.toString());
+			ScalpelLogger.debug(
+				"recreateEditors(): Could not call get_callables"
+			);
+			ScalpelLogger.debug(e.toString());
 			return null;
 		}
 	}
