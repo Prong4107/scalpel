@@ -416,7 +416,7 @@ public class ScalpelEditorTabbedPane
 		// TODO: Mimic burp update behaviour.
 		final var modifiedEditors = editors
 			.stream()
-			.filter(e -> e.isModified());
+			.filter(IMessageEditor::isModified);
 
 		return modifiedEditors.findFirst().orElse(selectedEditor);
 	}
