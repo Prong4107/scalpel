@@ -33,7 +33,6 @@ import javax.swing.JOptionPane;
  *			"/path/to/workspace2"
  *		],
  *		"scriptPath": "/path/to/script.py",
- *		"frameworkPath": "/path/to/framework"
  *	}
  *
  *	The file is not really designed to be directly edited by the user, but rather by the extension itself.
