@@ -504,7 +504,7 @@ public class ConfigTab extends JFrame {
 		);
 	}
 
-	private void updateTerminal(
+	private CompletableFuture<?> updateTerminal(
 		String selectedVenvPath,
 		String cwd,
 		String cmd
@@ -519,31 +519,33 @@ public class ConfigTab extends JFrame {
 			oldConnector.close();
 		});
 
-		// Start the process while the terminal is closing
-		final var connector = Terminal.createTtyConnector(
-			selectedVenvPath,
-			Optional.ofNullable(cwd),
-			Optional.ofNullable(cmd)
-		);
+		return runAsync(() -> {
+			// Start the process while the terminal is closing
+			final var connector = Terminal.createTtyConnector(
+				selectedVenvPath,
+				Optional.ofNullable(cwd),
+				Optional.ofNullable(cmd)
+			);
 
-		future.thenRun(() -> {
-			// Connect the terminal to the new process in the new venv.
-			termWidget.setTtyConnector(connector);
+			future.thenRun(() -> {
+				// Connect the terminal to the new process in the new venv.
+				termWidget.setTtyConnector(connector);
 
-			final var term = termWidget.getTerminal();
+				final var term = termWidget.getTerminal();
 
-			term.clearScreen();
-			term.cursorPosition(0, 0);
+				final int width = term.getTerminalWidth();
+				final int height = term.getTerminalHeight();
 
-			// Start the terminal.
-			termWidget.start();
+				// Tty needs to be resized.
+				final Dimension dimension = new Dimension(width, height);
+				connector.resize(dimension);
 
-			final int width = term.getTerminalWidth();
-			final int height = term.getTerminalHeight();
+				term.reset();
+				term.cursorPosition(0, 0);
 
-			// Tty needs to be resized.
-			final Dimension dimension = new Dimension(width, height);
-			connector.resize(dimension);
+				// Start the terminal.
+				termWidget.start();
+			});
 		});
 	}
 
