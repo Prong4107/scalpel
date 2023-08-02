@@ -90,7 +90,7 @@ public class ScalpelRawEditor extends AbstractEditor {
 	*/
 	@Override
 	public Selection selectedData() {
-		return editor.selection().isPresent() ? editor.selection().get() : null;
+		return editor.selection().orElse(null);
 	}
 
 	/**
