@@ -112,6 +112,10 @@ public class Scalpel implements BurpExtension {
 
 			setupJepFromConfig(config);
 
+
+			// Initialize Python task queue.
+			executor = new ScalpelExecutor(API, unpacker, config);
+
 			// Add the configuration tab to Burp UI.
 			API
 				.userInterface()
@@ -125,8 +129,6 @@ public class Scalpel implements BurpExtension {
 					)
 				);
 
-			// Initialize Python task queue.
-			executor = new ScalpelExecutor(API, unpacker, config);
 
 			// Add the scripting editor tab to Burp UI.
 			API
