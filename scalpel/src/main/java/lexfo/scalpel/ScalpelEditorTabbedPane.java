@@ -17,10 +17,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.JTabbedPane;
-import javax.swing.SwingUtilities;
 import lexfo.scalpel.ScalpelExecutor.CallableData;
 import lexfo.scalpel.editors.AbstractEditor;
 import lexfo.scalpel.editors.IMessageEditor;
@@ -302,8 +302,8 @@ public class ScalpelEditorTabbedPane
 		
 		Calls Python to get the tabs name.
 	*/
-	public void recreateEditors() {
-		SwingUtilities.invokeLater(() -> {
+	public synchronized CompletableFuture<?> recreateEditors() {
+		return CompletableFuture.runAsync(() -> {
 			// Destroy existing editors
 			this.pane.removeAll();
 			this.editors.clear();
