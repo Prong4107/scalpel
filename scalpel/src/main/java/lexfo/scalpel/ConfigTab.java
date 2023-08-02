@@ -262,6 +262,9 @@ public class ConfigTab extends JFrame {
 		// Select the script
 		config.setUserScriptPath(path);
 
+		// Reload the executor
+		runAsync(scalpelExecutor::notifyEventLoop);
+
 		// Display the script in the terminal.
 		openEditorInTerminal(path);
 	}
@@ -556,6 +559,8 @@ public class ConfigTab extends JFrame {
 		final String selectedVenvPath = venvListComponent.getSelectedValue();
 		config.setSelectedVenvPath(Path.of(selectedVenvPath));
 
+		runAsync(scalpelExecutor::notifyEventLoop);
+
 		// Update the package table.
 		runAsync(this::updatePackagesTable);
 		runAsync(() -> updateTerminal(selectedVenvPath));
@@ -659,6 +664,7 @@ public class ConfigTab extends JFrame {
 
 		// Store the path in the config. (writes to disk)
 		config.setUserScriptPath(copied);
+		runAsync(scalpelExecutor::notifyEventLoop);
 
 		runAsync(this::updateScriptList);
 		runAsync(() -> selectScript(copied));
