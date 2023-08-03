@@ -144,7 +144,7 @@ public class ScalpelEditorTabbedPane
 		this.hookOutPrefix = this.hookPrefix + Constants.OUT_SUFFIX;
 
 		try {
-			this.recreateEditors();
+			this.recreateEditors().get();
 			ScalpelLogger.log(
 				"Successfully initialized ScalpelProvidedEditor for " +
 				type.name()
@@ -155,7 +155,7 @@ public class ScalpelEditorTabbedPane
 			ScalpelLogger.logStackTrace(e);
 
 			// Throw the error again.
-			throw e;
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -303,7 +303,7 @@ public class ScalpelEditorTabbedPane
 		Calls Python to get the tabs name.
 	*/
 	public synchronized CompletableFuture<?> recreateEditors() {
-		return CompletableFuture.runAsync(() -> {
+		return Async.runAsync(() -> {
 			// Destroy existing editors
 			this.pane.removeAll();
 			this.editors.clear();

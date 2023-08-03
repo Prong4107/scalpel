@@ -13,6 +13,7 @@ import com.jediterm.terminal.ui.settings.DefaultSettingsProvider;
 import com.jediterm.terminal.ui.settings.SettingsProvider;
 import com.pty4j.PtyProcess;
 import com.pty4j.PtyProcessBuilder;
+import java.awt.Dimension;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -51,7 +52,9 @@ public class Terminal {
 		JediTermWidget widget = new JediTermWidget(
 			createSettingsProvider(theme)
 		);
-		widget.setTtyConnector(createTtyConnector(venvPath, cwd, cmd));
+		widget.setTtyConnector(
+			createTtyConnector(venvPath, Optional.empty(), cwd, cmd)
+		);
 		widget.start();
 		return widget;
 	}
@@ -76,7 +79,12 @@ public class Terminal {
 	 * @return The TtyConnector.
 	 */
 	public static TtyConnector createTtyConnector(String venvPath) {
-		return createTtyConnector(venvPath, Optional.empty(), Optional.empty());
+		return createTtyConnector(
+			venvPath,
+			Optional.empty(),
+			Optional.empty(),
+			Optional.empty()
+		);
 	}
 
 	/**
@@ -87,6 +95,7 @@ public class Terminal {
 	 */
 	protected static TtyConnector createTtyConnector(
 		String workspacePath,
+		Optional<Dimension> ttyDimension,
 		Optional<String> cwd,
 		Optional<String> cmd
 	) {
@@ -143,12 +152,20 @@ public class Terminal {
 
 		try {
 			// Start the process in the virtualenv directory.
-			final PtyProcess process = new PtyProcessBuilder()
+			final var builder = new PtyProcessBuilder()
 				.setCommand(commandToRun)
 				.setEnvironment(env)
-				.setDirectory(cwd.orElse(workspacePath))
-				.start();
-			return new PtyProcessTtyConnector(process, StandardCharsets.UTF_8);
+				.setDirectory(cwd.orElse(workspacePath));
+
+			ttyDimension.ifPresent(d ->
+				builder
+					.setInitialRows((int) d.getHeight())
+					.setInitialColumns((int) d.getWidth())
+			);
+
+			final var processs = builder.start();
+
+			return new PtyProcessTtyConnector(processs, StandardCharsets.UTF_8);
 		} catch (Exception e) {
 			throw new IllegalStateException(e);
 		}
