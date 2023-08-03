@@ -37,13 +37,13 @@ public class Venv {
 		Files.createDirectories(path);
 
 		// Create the virtual environment using the "python3 -m venv" command
-		ProcessBuilder processBuilder = new ProcessBuilder(
+		final ProcessBuilder processBuilder = new ProcessBuilder(
 			Constants.PYTHON_BIN,
 			"-m",
 			"venv",
 			path.toString()
 		);
-		Process process = processBuilder.start();
+		final Process process = processBuilder.start();
 
 		// Wait for the virtual environment creation to complete
 		process.waitFor();
@@ -151,14 +151,16 @@ public class Venv {
 	) throws IOException, InterruptedException {
 		// Install the package using the "pip install" command
 
-		LinkedList<String> command = new LinkedList<>(
+		final LinkedList<String> command = new LinkedList<>(
 			List.of(getPipPath(path).toString(), "install")
 		);
 		command.addAll(Arrays.asList(pkgs));
-		ProcessBuilder processBuilder = new ProcessBuilder(command);
+
+		final ProcessBuilder processBuilder = new ProcessBuilder(command);
 		processBuilder.directory(path.toFile());
 		processBuilder.environment().putAll(env);
-		Process process = processBuilder.start();
+
+		final Process process = processBuilder.start();
 
 		System.out.println(
 			"Launched " + command.stream().collect(Collectors.joining(" "))
@@ -203,30 +205,30 @@ public class Venv {
 				.walk(venvPath)
 				.filter(Files::isDirectory)
 				.filter(p -> p.getFileName().toString().equalsIgnoreCase("lib"))
-				.filter(p -> Files.exists(p.resolve("site-packages")))
+				.map(p -> p.resolve("site-packages"))
+				.filter(Files::exists)
 				.findFirst()
 				.orElseThrow(() ->
 					new RuntimeException(
 						"Failed to find venv site-packages.\n" +
 						"Make sure dependencies are correctly installed. (python3,pip,venv,jdk)"
 					)
-				)
-				.resolve("site-packages");
+				);
 		}
 		// Find the sites-package directory path as in: <path>/lib/python*/site-packages
 		return Files
 			.walk(venvPath.resolve("lib"))
 			.filter(Files::isDirectory)
 			.filter(p -> p.getFileName().toString().startsWith("python"))
-			.filter(p -> Files.exists(p.resolve("site-packages")))
+			.map(p -> p.resolve("site-packages"))
+			.filter(Files::exists)
 			.findFirst()
 			.orElseThrow(() ->
 				new RuntimeException(
 					"Failed to find venv site-packages.\n" +
 					"Make sure dependencies are correctly installed. (python3,pip,venv,jdk)"
 				)
-			)
-			.resolve("site-packages");
+			);
 	}
 
 	public static Path getExecutablePath(Path venvPath, String filename)
@@ -265,7 +267,7 @@ public class Venv {
 	 */
 	public static PackageInfo[] getInstalledPackages(Path path)
 		throws IOException {
-		ProcessBuilder processBuilder = new ProcessBuilder(
+		final ProcessBuilder processBuilder = new ProcessBuilder(
 			getPipPath(path).toString(),
 			"list",
 			"--format",
@@ -280,7 +282,9 @@ public class Venv {
 		final Process process = processBuilder.start();
 
 		// Read the JSON output
-		String jsonData = new String(process.getInputStream().readAllBytes());
+		final String jsonData = new String(
+			process.getInputStream().readAllBytes()
+		);
 
 		// Parse the JSON output
 		return IO.readJSON(jsonData, PackageInfo[].class);
