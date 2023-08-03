@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
@@ -47,7 +48,7 @@ public class ConfigTab extends JFrame {
 	private JTextArea frameworkPathTextArea;
 	private JPanel scriptConfigPanel;
 	private JButton scriptBrowseButton;
-	private JTextArea scriptPathTextArea;
+	private JLabel scriptPathTextArea;
 	private JediTermWidget terminalForVenvConfig;
 	private JList<String> venvListComponent;
 	private JTable packagesTable;
@@ -62,7 +63,6 @@ public class ConfigTab extends JFrame {
 	private final ScalpelExecutor scalpelExecutor;
 	private final Config config;
 	private final Theme theme;
-	private final Executor executor = Executors.newFixedThreadPool(6);
 	private final MontoyaApi API;
 
 	public ConfigTab(
@@ -130,10 +130,6 @@ public class ConfigTab extends JFrame {
 		createButton.addActionListener(e -> handleNewScriptButton());
 
 		openFolderButton.addActionListener(e -> handleOpenScriptFolderButton());
-	}
-
-	private CompletableFuture<?> runAsync(Runnable runnable) {
-		return CompletableFuture.runAsync(runnable, executor);
 	}
 
 	/**
@@ -236,7 +232,7 @@ public class ConfigTab extends JFrame {
 	}
 
 	private void updateScriptList() {
-		runAsync(() -> {
+		Async.runAsync(() -> {
 			final JList<String> list = this.venvScriptList;
 			final File selectedVenv = config
 				.getSelectedWorkspacePath()
@@ -263,7 +259,7 @@ public class ConfigTab extends JFrame {
 		config.setUserScriptPath(path);
 
 		// Reload the executor
-		runAsync(scalpelExecutor::notifyEventLoop);
+		Async.runAsync(scalpelExecutor::notifyEventLoop);
 
 		// Display the script in the terminal.
 		openEditorInTerminal(path);
@@ -504,7 +500,7 @@ public class ConfigTab extends JFrame {
 		);
 	}
 
-	private CompletableFuture<?> updateTerminal(
+	private synchronized void updateTerminal(
 		String selectedVenvPath,
 		String cwd,
 		String cmd
@@ -513,40 +509,31 @@ public class ConfigTab extends JFrame {
 		final var oldConnector = termWidget.getTtyConnector();
 
 		// Close asynchronously to avoid losing time.
-		var future = runAsync(() -> {
-			termWidget.stop();
-			// Kill the old process.
-			oldConnector.close();
-		});
+		termWidget.stop();
+		// Kill the old process.
+		oldConnector.close();
 
-		return runAsync(() -> {
-			// Start the process while the terminal is closing
-			final var connector = Terminal.createTtyConnector(
-				selectedVenvPath,
-				Optional.ofNullable(cwd),
-				Optional.ofNullable(cmd)
-			);
+		final var term = termWidget.getTerminal();
+		final int width = term.getTerminalWidth();
+		final int height = term.getTerminalHeight();
+		final Dimension dimension = new Dimension(width, height);
 
-			future.thenRun(() -> {
-				// Connect the terminal to the new process in the new venv.
-				termWidget.setTtyConnector(connector);
+		// Start the process while the terminal is closing
+		final var connector = Terminal.createTtyConnector(
+			selectedVenvPath,
+			Optional.of(dimension),
+			Optional.ofNullable(cwd),
+			Optional.ofNullable(cmd)
+		);
 
-				final var term = termWidget.getTerminal();
+		// Connect the terminal to the new process in the new venv.
+		termWidget.setTtyConnector(connector);
 
-				final int width = term.getTerminalWidth();
-				final int height = term.getTerminalHeight();
+		term.reset();
+		term.cursorPosition(0, 0);
 
-				// Tty needs to be resized.
-				final Dimension dimension = new Dimension(width, height);
-				connector.resize(dimension);
-
-				term.reset();
-				term.cursorPosition(0, 0);
-
-				// Start the terminal.
-				termWidget.start();
-			});
-		});
+		// Start the terminal.
+		termWidget.start();
 	}
 
 	private void updateTerminal(String selectedVenvPath) {
@@ -561,19 +548,19 @@ public class ConfigTab extends JFrame {
 		final String selectedVenvPath = venvListComponent.getSelectedValue();
 		config.setSelectedVenvPath(Path.of(selectedVenvPath));
 
-		runAsync(scalpelExecutor::notifyEventLoop);
+		Async.runAsync(scalpelExecutor::notifyEventLoop);
 
 		// Update the package table.
-		runAsync(this::updatePackagesTable);
-		runAsync(() -> updateTerminal(selectedVenvPath));
-		runAsync(this::updateScriptList);
+		Async.runAsync(this::updatePackagesTable);
+		Async.runAsync(() -> updateTerminal(selectedVenvPath));
+		Async.runAsync(this::updateScriptList);
 	}
 
 	private void handleBrowseButtonClick(
 		Supplier<Path> getter,
 		Consumer<Path> setter
 	) {
-		runAsync(() -> {
+		Async.runAsync(() -> {
 			final JFileChooser fileChooser = new JFileChooser();
 
 			// Allow the user to only select files.
@@ -597,7 +584,7 @@ public class ConfigTab extends JFrame {
 		Consumer<JTable> onSuccess,
 		Runnable onFail
 	) {
-		runAsync(() -> {
+		Async.runAsync(() -> {
 			final PackageInfo[] installedPackages;
 			try {
 				installedPackages =
@@ -666,10 +653,10 @@ public class ConfigTab extends JFrame {
 
 		// Store the path in the config. (writes to disk)
 		config.setUserScriptPath(copied);
-		runAsync(scalpelExecutor::notifyEventLoop);
+		Async.runAsync(scalpelExecutor::notifyEventLoop);
 
-		runAsync(this::updateScriptList);
-		runAsync(() -> selectScript(copied));
+		Async.runAsync(this::updateScriptList);
+		Async.runAsync(() -> selectScript(copied));
 	}
 
 	/**
@@ -1041,9 +1028,8 @@ public class ConfigTab extends JFrame {
 		);
 		browsePanel = new JPanel();
 		browsePanel.setLayout(
-			new GridLayoutManager(7, 3, new Insets(10, 10, 10, 10), 0, -1)
+			new GridLayoutManager(7, 3, new Insets(3, 3, 3, 3), 0, -1)
 		);
-		browsePanel.setBackground(new Color(-5198676));
 		panel3.add(
 			browsePanel,
 			new GridConstraints(
@@ -1218,7 +1204,7 @@ public class ConfigTab extends JFrame {
 				false
 			)
 		);
-		scriptPathTextArea = new JTextArea();
+		scriptPathTextArea = new JLabel();
 		scriptPathTextArea.setText("Load script file");
 		scriptConfigPanel.add(
 			scriptPathTextArea,
@@ -1422,7 +1408,7 @@ public class ConfigTab extends JFrame {
 		final JLabel label1 = new JLabel();
 		label1.setHorizontalAlignment(0);
 		label1.setHorizontalTextPosition(0);
-		label1.setText("Scripts available for this venv:");
+		label1.setText("  Scripts available for this venv:  ");
 		listPannel.add(
 			label1,
 			new GridConstraints(

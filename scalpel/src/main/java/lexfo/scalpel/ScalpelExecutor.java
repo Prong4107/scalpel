@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -194,9 +193,7 @@ public class ScalpelExecutor {
 		}
 
 		public synchronized void then(Consumer<Object> callback) {
-			CompletableFuture.runAsync(() ->
-				this.await().ifPresent(callback::accept)
-			);
+			Async.runAsync(() -> this.await().ifPresent(callback));
 		}
 	}
 
