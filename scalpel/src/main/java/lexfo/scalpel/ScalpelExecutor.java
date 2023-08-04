@@ -241,11 +241,6 @@ public class ScalpelExecutor {
 
 	private Boolean isRunnerStarting = true;
 
-	/**
-	 * The ScalpelUnpacker object to get the ressources paths.
-	 */
-	private final RessourcesUnpacker unpacker;
-
 	private final Config config;
 
 	private Optional<ScalpelEditorProvider> editorProvider = Optional.empty();
@@ -254,19 +249,11 @@ public class ScalpelExecutor {
 	 * Constructs a new ScalpelExecutor object.
 	 *
 	 * @param API the MontoyaApi object to use for sending and receiving HTTP messages.
-	 * @param unpacker the ScalpelUnpacker object to use for getting the ressources paths.
 	 * @param config the Config object to use for getting the configuration values.
 	 */
-	public ScalpelExecutor(
-		MontoyaApi API,
-		RessourcesUnpacker unpacker,
-		Config config
-	) {
+	public ScalpelExecutor(MontoyaApi API, Config config) {
 		// Store Montoya API object
 		this.API = API;
-
-		// Store the unpacker
-		this.unpacker = unpacker;
 
 		// Keep a reference to the config
 		this.config = config;
