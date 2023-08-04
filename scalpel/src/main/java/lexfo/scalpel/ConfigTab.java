@@ -22,9 +22,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.swing.*;
@@ -556,11 +553,11 @@ public class ConfigTab extends JFrame {
 		Async.runAsync(this::updateScriptList);
 	}
 
-	private void handleBrowseButtonClick(
+	private CompletableFuture<Void> handleBrowseButtonClick(
 		Supplier<Path> getter,
 		Consumer<Path> setter
 	) {
-		Async.runAsync(() -> {
+		return Async.runAsync(() -> {
 			final JFileChooser fileChooser = new JFileChooser();
 
 			// Allow the user to only select files.
@@ -580,11 +577,11 @@ public class ConfigTab extends JFrame {
 		});
 	}
 
-	private void updatePackagesTable(
+	private CompletableFuture<Void> updatePackagesTable(
 		Consumer<JTable> onSuccess,
 		Runnable onFail
 	) {
-		Async.runAsync(() -> {
+		return Async.runAsync(() -> {
 			final PackageInfo[] installedPackages;
 			try {
 				installedPackages =
