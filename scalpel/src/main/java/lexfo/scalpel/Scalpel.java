@@ -17,11 +17,6 @@ import jep.MainInterpreter;
 public class Scalpel implements BurpExtension {
 
 	/**
-	 * The ScalpelUnpacker object used to extract the extension's resources to a temporary directory.
-	 */
-	private RessourcesUnpacker unpacker;
-
-	/**
 	 * The ScalpelExecutor object used to execute Python scripts.
 	 */
 	private ScalpelExecutor executor;
@@ -97,24 +92,22 @@ public class Scalpel implements BurpExtension {
 			ScalpelLogger.all("Initializing...");
 
 			// Extract embeded ressources.
-			unpacker = new RessourcesUnpacker();
 
 			ScalpelLogger.all("Extracting ressources...");
-			unpacker.extractRessourcesToHome();
+			RessourcesUnpacker.extractRessourcesToHome();
 
 			ScalpelLogger.all("Reading config and initializing venvs...");
 			ScalpelLogger.all(
 				"(This might take a minute, Scalpel is installing dependencies...)"
 			);
 
-			config = new Config(API, unpacker);
+			config = new Config(API);
 			logConfig(config);
 
 			setupJepFromConfig(config);
 
-
 			// Initialize Python task queue.
-			executor = new ScalpelExecutor(API, unpacker, config);
+			executor = new ScalpelExecutor(API, config);
 
 			// Add the configuration tab to Burp UI.
 			API
@@ -128,7 +121,6 @@ public class Scalpel implements BurpExtension {
 						API.userInterface().currentTheme()
 					)
 				);
-
 
 			// Add the scripting editor tab to Burp UI.
 			API

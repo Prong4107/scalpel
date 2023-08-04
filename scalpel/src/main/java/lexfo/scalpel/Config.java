@@ -99,13 +99,9 @@ public class Config {
 	// Key for the project ID
 	private static final String DATA_PROJECT_ID_KEY = DATA_PREFIX + "projectID";
 
-	// Venv that will be created and used when none exists
-	public final RessourcesUnpacker unpacker;
 	private Path _jdkPath = null;
 
-	public Config(final MontoyaApi API, final RessourcesUnpacker unpacker) {
-		this.unpacker = unpacker;
-
+	public Config(final MontoyaApi API) {
 		// Get the extension data to store and get the project ID back.
 		final PersistedObject extensionData = API.persistence().extensionData();
 
@@ -125,7 +121,7 @@ public class Config {
 				.resolve(projectID + CONFIG_EXT)
 				.toFile();
 
-		this.globalConfig = initGlobalConfig(unpacker);
+		this.globalConfig = initGlobalConfig();
 
 		this._jdkPath = Path.of(this.globalConfig.jdkPath);
 
@@ -136,7 +132,7 @@ public class Config {
 		saveAllConfig();
 	}
 
-	private _GlobalData initGlobalConfig(RessourcesUnpacker unpacker) {
+	private _GlobalData initGlobalConfig() {
 		// Load global config
 		File globalConfigFile = getGlobalConfigFile();
 
@@ -170,7 +166,7 @@ public class Config {
 
 				return d;
 			})
-			.orElseGet(() -> getDefaultGlobalData(unpacker));
+			.orElseGet(this::getDefaultGlobalData);
 
 		return _globalConfig;
 	}
@@ -332,10 +328,9 @@ public class Config {
 	/**
 	 * Get the global configuration.
 	 *
-	 * @param unpacker The unpacker to use to get the default script and framework paths.
 	 * @return The global configuration.
 	 */
-	private _GlobalData getDefaultGlobalData(RessourcesUnpacker unpacker) {
+	private _GlobalData getDefaultGlobalData() {
 		final _GlobalData data = new _GlobalData();
 
 		data.jdkPath = IO.ioWrap(this::findJdkPath, () -> null).toString();
