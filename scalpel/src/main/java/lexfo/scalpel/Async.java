@@ -8,7 +8,7 @@ public class Async {
 
 	private static final Executor executor = Executors.newFixedThreadPool(10);
 
-	public static CompletableFuture<Void> runAsync(Runnable runnable) {
+	public static CompletableFuture<Void> run(Runnable runnable) {
 		return CompletableFuture.runAsync(runnable, executor);
 	}
 }

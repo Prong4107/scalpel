@@ -303,7 +303,7 @@ public class ScalpelEditorTabbedPane
 		Calls Python to get the tabs name.
 	*/
 	public synchronized CompletableFuture<?> recreateEditors() {
-		return Async.runAsync(() -> {
+		return Async.run(() -> {
 			// Destroy existing editors
 			this.pane.removeAll();
 			this.editors.clear();
