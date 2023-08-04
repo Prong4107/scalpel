@@ -95,7 +95,7 @@ public class ScalpelEditorProvider
 	}
 
 	public CompletableFuture<Void> resetEditorsAsync() {
-		return Async.runAsync(() -> {
+		return Async.run(() -> {
 			ScalpelLogger.debug("Resetting editors...");
 			// Destroy all unused editors to avoid useless expensive callbacks.
 			// TODO: Improve this by using ReferenceQueue

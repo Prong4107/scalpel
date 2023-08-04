@@ -229,7 +229,7 @@ public class ConfigTab extends JFrame {
 	}
 
 	private void updateScriptList() {
-		Async.runAsync(() -> {
+		Async.run(() -> {
 			final JList<String> list = this.venvScriptList;
 			final File selectedVenv = config
 				.getSelectedWorkspacePath()
@@ -256,7 +256,7 @@ public class ConfigTab extends JFrame {
 		config.setUserScriptPath(path);
 
 		// Reload the executor
-		Async.runAsync(scalpelExecutor::notifyEventLoop);
+		Async.run(scalpelExecutor::notifyEventLoop);
 
 		// Display the script in the terminal.
 		openEditorInTerminal(path);
@@ -545,19 +545,19 @@ public class ConfigTab extends JFrame {
 		final String selectedVenvPath = venvListComponent.getSelectedValue();
 		config.setSelectedVenvPath(Path.of(selectedVenvPath));
 
-		Async.runAsync(scalpelExecutor::notifyEventLoop);
+		Async.run(scalpelExecutor::notifyEventLoop);
 
 		// Update the package table.
-		Async.runAsync(this::updatePackagesTable);
-		Async.runAsync(() -> updateTerminal(selectedVenvPath));
-		Async.runAsync(this::updateScriptList);
+		Async.run(this::updatePackagesTable);
+		Async.run(() -> updateTerminal(selectedVenvPath));
+		Async.run(this::updateScriptList);
 	}
 
 	private CompletableFuture<Void> handleBrowseButtonClick(
 		Supplier<Path> getter,
 		Consumer<Path> setter
 	) {
-		return Async.runAsync(() -> {
+		return Async.run(() -> {
 			final JFileChooser fileChooser = new JFileChooser();
 
 			// Allow the user to only select files.
@@ -581,7 +581,7 @@ public class ConfigTab extends JFrame {
 		Consumer<JTable> onSuccess,
 		Runnable onFail
 	) {
-		return Async.runAsync(() -> {
+		return Async.run(() -> {
 			final PackageInfo[] installedPackages;
 			try {
 				installedPackages =
@@ -650,10 +650,10 @@ public class ConfigTab extends JFrame {
 
 		// Store the path in the config. (writes to disk)
 		config.setUserScriptPath(copied);
-		Async.runAsync(scalpelExecutor::notifyEventLoop);
+		Async.run(scalpelExecutor::notifyEventLoop);
 
-		Async.runAsync(this::updateScriptList);
-		Async.runAsync(() -> selectScript(copied));
+		Async.run(this::updateScriptList);
+		Async.run(() -> selectScript(copied));
 	}
 
 	/**

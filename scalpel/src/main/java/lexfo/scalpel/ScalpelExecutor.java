@@ -193,7 +193,7 @@ public class ScalpelExecutor {
 		}
 
 		public synchronized void then(Consumer<Object> callback) {
-			Async.runAsync(() -> this.await().ifPresent(callback));
+			Async.run(() -> this.await().ifPresent(callback));
 		}
 	}
 
@@ -516,7 +516,7 @@ public class ScalpelExecutor {
 
 					// Log the result value.
 					ScalpelLogger.trace(
-						String.valueOf(task.result.orElse("null"))
+						String.valueOf(task.result.orElse("<empty>"))
 					);
 
 					task.finished = true;
