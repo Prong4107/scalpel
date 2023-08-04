@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 import jep.MainInterpreter;
 
 // Burp will auto-detect and load any class that extends BurpExtension.
@@ -32,7 +33,12 @@ public class Scalpel implements BurpExtension {
 		ScalpelLogger.all("Config:");
 		ScalpelLogger.all("Framework: " + config.getFrameworkPath());
 		ScalpelLogger.all("Script: " + config.getUserScriptPath());
-		ScalpelLogger.all("Venvs: " + Arrays.stream(config.getVenvPaths()));
+		ScalpelLogger.all(
+			"Venvs: " +
+			Arrays
+				.stream(config.getVenvPaths())
+				.collect(Collectors.joining("\",\"", "[\"", "\"]"))
+		);
 		ScalpelLogger.all("Default venv: " + Workspace.getDefaultWorkspace());
 		ScalpelLogger.all(
 			"Selected venv: " + config.getSelectedWorkspacePath()
@@ -66,10 +72,10 @@ public class Scalpel implements BurpExtension {
 		System.setProperty("java.library.path", newLibPath);
 
 		final String libjepFile = Constants.NATIVE_LIBJEP_FILE;
-		final String jepLib = Paths.get(jepDir).resolve(libjepFile).toString();
+		final String jepLib = Paths.get(jepDir, libjepFile).toString();
 
-		ScalpelLogger.all("Loading Jep native library from " + jepLib);
 		// Load the library ourselves to catch errors right away.
+		ScalpelLogger.all("Loading Jep native library from " + jepLib);
 		System.load(jepLib);
 		MainInterpreter.setJepLibraryPath(jepLib);
 	}
