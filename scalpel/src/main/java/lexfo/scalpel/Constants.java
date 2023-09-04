@@ -79,9 +79,9 @@ public class Constants {
 	 * Required python packages
 	 */
 	public static final String[] PYTHON_DEPENDENCIES = new String[] {
-		"requests",
-		"requests-toolbelt",
-		"mitmproxy",
+		"requests==2.31.0",
+		"requests-toolbelt==1.0.0",
+		"mitmproxy==9.0.0",
 	};
 
 	/**
