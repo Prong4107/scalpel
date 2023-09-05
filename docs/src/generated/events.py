@@ -2,10 +2,10 @@ from pyscalpel import Request, Response, Flow, MatchEvent
 
 
 def match(flow: Flow, events: MatchEvent) -> bool:
-    """- Determines if an event will be handled by a hook.
+    """- Determine whether an event will be handled by a hook.
 
     - Args:
-        - flow (Flow): The event context (contains request and potential response)
+        - flow (Flow): The event context (contains request and optional response)
         - events (Events): The hook type (request, response, req_edit_in, ...)
 
     - Returns:
@@ -14,7 +14,7 @@ def match(flow: Flow, events: MatchEvent) -> bool:
 
 
 def request(req: Request) -> Request | None:
-    """- Intercepts a request and returns one to replace with.
+    """- Intercept a request and return a replacement one.
 
     - Args:
         - req (Request): The intercepted request
@@ -25,7 +25,7 @@ def request(req: Request) -> Request | None:
 
 
 def response(res: Response) -> Response | None:
-    """- Intercepts a response and returns one to replace with.
+    """- Intercept a response and return a replacement one.
 
     - Args:
         - res (Response): The intercepted response
@@ -48,8 +48,8 @@ def req_edit_in(req: Request) -> bytes | None:
 
 
 def req_edit_out(req: Request, modified_content: bytes) -> Request | None:
-    """- Updates a request from an editor's content
-       - May be used to encode a request from plaintext (modified_content)
+    """- Update a request from an editor's content
+       - May be used to encode a request from plaintext (modified_content).
 
     - Args:
         - req (Request): The original request
@@ -73,8 +73,8 @@ def res_edit_in(res: Response) -> bytes | None:
 
 
 def res_edit_out(res: Response, modified_content: bytes) -> Response | None:
-    """- Updates a request from an editor's content
-       - May be used to encode a response from plaintext (modified_content)
+    """- Update a request from an editor's content
+       - May be used to encode a response from plaintext (modified_content).
 
     - Args:
         - res (Response): The original response

@@ -6,24 +6,29 @@ menu:
         weight: 3
 ---
 
-# FAQ:
+# FAQ
 
--   Why does Scalpel depends on JDK when Burp comes with it' own JRE ?
-    -   Scalpel uses a project called [jep](https://github.com/ninia/jep/wiki/) to call Python from Java. jep needs a JDK to function.
-    -   If you are curious or need more technichal information on Scalpel's implementation, look at [How scalpel works]({{< relref "concepts-howscalpelworks" >}}).
--   After loading the .jar, nothing appears in the request editor!
-    -   On the first install, Scalpel may take a while to install it's dependencies Look at the "Output" logs in the Burp "Extension" tab and ensure that the extension has finished installing.
-    -   Please look at the "Errors" logs in the Burp "Extension" tab, there should be an explicit error message and some tips to solve the problem.
-    -   Make sure you followed the [install](install.md) page, if not, remove the `~/.scalpel` directory and retry the install.
-    -   If the error message doesn't help you solve the issue, please file an issue with "Output" and "Errors" logs and your system information (OS / Distribution version, CPU architecture, jdk and python version and installation path, environnement variables which Burp runs with, etc...)
--   Why using Java with Jep to execute Python when Burp already supports Python extensions with [Jython](https://www.jython.org/) ?
-    -   Jython supports up to Python 2.7, and no support at all for Python 3. Python 2.7 is basically a dead language and nobody should still be using it.
-    -   Burp's developers have released a [new API](https://portswigger.net/burp/documentation/desktop/extensions/creating) for extensions and deprecated the old one. The new one only supports Java, so we had no choice but reimplementing a partial Python scripting support for Burp ourself.
--   Scalpel requires python >=3.10 but my distribution is outdated and doesn't allow installing such recent Python versions using the package manager.
-    -   You can try updating your distribution.
-    -   If you cannot update your distribution, you must setup a separate Python >=3.10 installation and run Burp with the appropriate environnement so that your separate installation will be used.
-        -   Tip: You can use [pyenv](https://github.com/pyenv/pyenv) to easily install and switch Python versions.
--   Why does scalpel installs mitmproxy ?
-    -   Scalpel uses utilities from the mitmproxy package, we may eventually stop using or re-implement this utilities to drop the need to install such a heavy package.
--   I have installed Python using the Microsoft Store and Scalpel doesn't work.
-    -   The Microsoft Store Python is a sandboxed version designed for education purposes, it has multiple different behaviours that are incompatible with Scalpel. To use Scalpel on Windows, it is required to install Python from the [official source](https://www.python.org/downloads/windows/).
+### Why does Scalpel depend on JDK whereas Burp comes with its own JRE?
+-   Scalpel uses a project called [jep](https://github.com/ninia/jep/wiki/) to call Python from Java. jep needs a JDK to function.
+-   If you are curious or need more technichal information on Scalpel's implementation, look at [How scalpel works]({{< relref "concepts-howscalpelworks" >}}).
+
+### Once the .jar is loaded, no additional request shows up in the editor!
+-   On the first install, Scalpel's dependencies installation may take a while. Look at the "Output" logs in the Burp "Extension" tab to ensure that the extension has completed.
+-   Examine the "Errors" logs in the Burp "Extension" tab. There should be an explicit error message with some tips to solve the problem.
+-   Make sure you followed the [installation guidelines](install.md). In case you didn't, remove the `~/.scalpel` directory and retry the install.
+-   If the error message doesn't help you solve the issue, please open a GitHub issue including the "Output" and "Errors" logs and your system information (OS / Distribution version, CPU architecture, JDK and Python version and installation path, environment variables which Burp runs with, and so forth).
+
+### Why using Java with Jep to execute Python whereas Burp already supports Python extensions with [Jython](https://www.jython.org/)?
+-   Jython supports up to Python 2.7, and no support at all for Python 3. Python 2.7 is basically a dead language and nobody should still be using it.
+-   Burp's developers released a [new API](https://portswigger.net/burp/documentation/desktop/extensions/creating) for extensions and deprecated the former one. The new version only supports Java. That's why the only choice was to reimplement a partial Python scripting support for Burp.
+
+### Scalpel requires python >=3.10 but my distribution is outdated and I can't install such recent Python versions using the package manager.
+-   Try updating your distribution.
+-   If that is not possible, you must setup a separate Python >=3.10 installation and run Burp with the appropriate environment so this separate installation is used.
+    -   Tip: Use [pyenv](https://github.com/pyenv/pyenv) to easily install Python versions and switch between them.
+
+### Why does Scalpel installs mitmproxy?
+-   Scalpel relies on utilities from the mitmproxy package. Thus, in the future, these utilities may be dropped or re-written to avoid using such a heavy package.
+
+### I installed Python using the Microsoft Store and Scalpel doesn't work.
+-   The Microsoft Store Python is a sandboxed version designed for educational purposes. It has multiple different behaviours that are incompatible with Scalpel. To use Scalpel on Windows, it is required to install Python from the [official source](https://www.python.org/downloads/windows/).
