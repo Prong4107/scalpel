@@ -4,8 +4,10 @@ import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 import jep.MainInterpreter;
 
 // Burp will auto-detect and load any class that extends BurpExtension.
@@ -14,11 +16,6 @@ import jep.MainInterpreter;
   This class is instantiated by Burp Suite and is used to initialize the extension.
 */
 public class Scalpel implements BurpExtension {
-
-	/**
-	 * The ScalpelUnpacker object used to extract the extension's resources to a temporary directory.
-	 */
-	private ScalpelUnpacker unpacker;
 
 	/**
 	 * The ScalpelExecutor object used to execute Python scripts.
@@ -36,21 +33,26 @@ public class Scalpel implements BurpExtension {
 		ScalpelLogger.all("Config:");
 		ScalpelLogger.all("Framework: " + config.getFrameworkPath());
 		ScalpelLogger.all("Script: " + config.getUserScriptPath());
-		ScalpelLogger.all("Venvs: " + Arrays.stream(config.getVenvPaths()));
-		ScalpelLogger.all("Default venv: " + Config.getDefaultVenv());
-		ScalpelLogger.all("Selected venv: " + config.getSelectedVenv());
+		ScalpelLogger.all(
+			"Venvs: " +
+			Arrays
+				.stream(config.getVenvPaths())
+				.collect(Collectors.joining("\",\"", "[\"", "\"]"))
+		);
+		ScalpelLogger.all("Default venv: " + Workspace.getDefaultWorkspace());
+		ScalpelLogger.all(
+			"Selected venv: " + config.getSelectedWorkspacePath()
+		);
 	}
 
 	private static void setupJepFromConfig(Config config) throws IOException {
-		final String venvPath = config.getOrCreateDefaultVenv(
-			config.getFrameworkPath()
-		);
+		final Path venvPath = Workspace
+			.getOrCreateDefaultWorkspace(config.getJdkPath())
+			.resolve(Workspace.VENV_DIR);
 
 		var dir = Venv.getSitePackagesPath(venvPath).toFile();
 
-		final File[] jepDirs = dir.listFiles((current, name) ->
-			name.matches("jep")
-		);
+		final File[] jepDirs = dir.listFiles((__, name) -> name.matches("jep"));
 
 		if (jepDirs.length == 0) {
 			throw new IOException(
@@ -68,10 +70,10 @@ public class Scalpel implements BurpExtension {
 		System.setProperty("java.library.path", newLibPath);
 
 		final String libjepFile = Constants.NATIVE_LIBJEP_FILE;
-		final String jepLib = Paths.get(jepDir).resolve(libjepFile).toString();
+		final String jepLib = Paths.get(jepDir, libjepFile).toString();
 
-		ScalpelLogger.all("Loading Jep native library from " + jepLib);
 		// Load the library ourselves to catch errors right away.
+		ScalpelLogger.all("Loading Jep native library from " + jepLib);
 		System.load(jepLib);
 		MainInterpreter.setJepLibraryPath(jepLib);
 	}
@@ -94,20 +96,22 @@ public class Scalpel implements BurpExtension {
 			ScalpelLogger.all("Initializing...");
 
 			// Extract embeded ressources.
-			unpacker = new ScalpelUnpacker();
 
 			ScalpelLogger.all("Extracting ressources...");
-			unpacker.initializeResourcesDirectory();
+			RessourcesUnpacker.extractRessourcesToHome();
 
 			ScalpelLogger.all("Reading config and initializing venvs...");
 			ScalpelLogger.all(
 				"(This might take a minute, Scalpel is installing dependencies...)"
 			);
 
-			config = new Config(API, unpacker);
+			config = new Config(API);
 			logConfig(config);
 
 			setupJepFromConfig(config);
+
+			// Initialize Python task queue.
+			executor = new ScalpelExecutor(API, config);
 
 			// Add the configuration tab to Burp UI.
 			API
@@ -121,9 +125,6 @@ public class Scalpel implements BurpExtension {
 						API.userInterface().currentTheme()
 					)
 				);
-
-			// Initialize Python task queue.
-			executor = new ScalpelExecutor(API, unpacker, config);
 
 			// Add the scripting editor tab to Burp UI.
 			API

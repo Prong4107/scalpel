@@ -1,31 +1,26 @@
 package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
-import burp.api.montoya.core.ByteArray;
 import burp.api.montoya.http.HttpService;
 import burp.api.montoya.http.message.HttpMessage;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.ui.Selection;
-import burp.api.montoya.ui.editor.RawEditor;
 import burp.api.montoya.ui.editor.extension.EditorCreationContext;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor;
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpResponseEditor;
-import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.SwingUtilities;
 import lexfo.scalpel.ScalpelExecutor.CallableData;
 import lexfo.scalpel.editors.AbstractEditor;
 import lexfo.scalpel.editors.IMessageEditor;
@@ -154,14 +149,15 @@ public class ScalpelEditorTabbedPane
 				"Successfully initialized ScalpelProvidedEditor for " +
 				type.name()
 			);
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			// Log the stack trace.
 			ScalpelLogger.error("Couldn't instantiate new editor:");
 			ScalpelLogger.logStackTrace(e);
 
 			// Throw the error again.
-			throw e;
+			throw new RuntimeException(e);
 		}
+		ScalpelLogger.log("???");
 	}
 
 	private int getTabNameOffsetInHookName(String hookName) {
@@ -307,71 +303,82 @@ public class ScalpelEditorTabbedPane
 		
 		Calls Python to get the tabs name.
 	*/
-	public void recreateEditors() {
-		SwingUtilities.invokeLater(() -> {
-			// Destroy existing editors
-			this.pane.removeAll();
-			this.editors.clear();
+	public synchronized void recreateEditors() {
+		// Destroy existing editors
+		this.pane.removeAll();
+		this.editors.clear();
 
-			final var callables = getCallables();
-			if (callables == null) {
-				return;
-			}
+		final var callables = getCallables();
+		if (callables == null) {
+			return;
+		}
 
-			// Retain only correct prefixes and parse hook name
-			Stream<PartialHookTabInfo> hooks = filterEditorHooks(callables);
+		// Retain only correct prefixes and parse hook name
+		final Stream<PartialHookTabInfo> hooks = filterEditorHooks(callables);
 
-			// Merge the individual hooks infos
-			final Stream<HookTabInfo> mergedTabInfo = mergeHookTabInfo(hooks);
+		// Merge the individual hooks infos
+		final Stream<HookTabInfo> mergedTabInfo = mergeHookTabInfo(hooks);
 
-			// Create the editors
-			mergedTabInfo.forEach(tabInfo -> {
-				ScalpelLogger.debug("Creating tab for " + tabInfo);
+		// Create the editors
+		mergedTabInfo.forEach(tabInfo -> {
+			ScalpelLogger.debug("Creating tab for " + tabInfo);
 
-				// Get editor implementation corresponding to mode.
-				final Class<? extends AbstractEditor> dispatchedEditor = modeToEditorMap.getOrDefault(
-					tabInfo.mode(),
-					ScalpelRawEditor.class
+			// Get editor implementation corresponding to mode.
+			final Class<? extends AbstractEditor> dispatchedEditor = modeToEditorMap.getOrDefault(
+				tabInfo.mode(),
+				ScalpelRawEditor.class
+			);
+
+			final AbstractEditor editor;
+			try {
+				// There should be a better way to do this..
+				final var construcor = dispatchedEditor.getConstructor(
+					String.class,
+					Boolean.class,
+					MontoyaApi.class,
+					EditorCreationContext.class,
+					EditorType.class,
+					ScalpelEditorTabbedPane.class,
+					ScalpelExecutor.class
 				);
 
-				final AbstractEditor editor;
-				try {
-					// There should be a better way to do this..
-					editor =
-						dispatchedEditor
-							.getConstructor(
-								String.class,
-								Boolean.class,
-								MontoyaApi.class,
-								EditorCreationContext.class,
-								EditorType.class,
-								ScalpelEditorTabbedPane.class,
-								ScalpelExecutor.class
-							)
-							.newInstance(
-								tabInfo.name(),
-								tabInfo.directions.contains(this.hookOutPrefix), // Read-only tab if no out method.
-								API,
-								ctx,
-								type,
-								this,
-								executor
-							);
-				} catch (Exception ex) {
-					// Should never happen as long as the constructor has not been overriden by an abstract declaration.
-					throw new RuntimeException(ex);
-				}
+				editor =
+					construcor.newInstance(
+						tabInfo.name(),
+						tabInfo.directions.contains(this.hookOutPrefix), // Read-only tab if no "out" hook.
+						API,
+						ctx,
+						type,
+						this,
+						executor
+					);
+			} catch (Throwable ex) {
+				ScalpelLogger.fatal("FATAL: Invalid editor constructor");
+				// Should never happen as long as the constructor has not been overriden by an abstract declaration.
+				throw new RuntimeException(ex);
+			}
+			ScalpelLogger.debug("Successfully created tab for " + tabInfo);
 
-				this.editors.add(editor);
+			this.editors.add(editor);
 
-				if (
-					this._requestResponse != null &&
-					editor.setRequestResponseInternal(_requestResponse)
-				) {
-					this.addEditorToDisplayedTabs(editor);
-				}
-			});
+			if (
+				this._requestResponse != null &&
+				editor.setRequestResponseInternal(_requestResponse)
+			) {
+				this.addEditorToDisplayedTabs(editor);
+			}
 		});
+	}
+
+	/**
+		Recreates the editors tabs asynchronously.
+		
+		Calls Python to get the tabs name.
+
+		Might cause deadlocks or other weird issues if used in constructors directly called by Burp.
+	*/
+	public synchronized CompletableFuture<?> recreateEditorsAsync() {
+		return Async.run(this::recreateEditors);
 	}
 
 	/**
@@ -421,7 +428,7 @@ public class ScalpelEditorTabbedPane
 		// TODO: Mimic burp update behaviour.
 		final var modifiedEditors = editors
 			.stream()
-			.filter(e -> e.isModified());
+			.filter(IMessageEditor::isModified);
 
 		return modifiedEditors.findFirst().orElse(selectedEditor);
 	}
@@ -511,6 +518,8 @@ public class ScalpelEditorTabbedPane
 	public synchronized void setRequestResponse(
 		HttpRequestResponse requestResponse
 	) {
+		ScalpelLogger.trace("TabbedPane: setRequestResponse()");
+
 		this._requestResponse = requestResponse;
 
 		// Hide disabled tabs
@@ -557,6 +566,7 @@ public class ScalpelEditorTabbedPane
 	*/
 	@Override
 	public boolean isEnabledFor(HttpRequestResponse requestResponse) {
+		ScalpelLogger.trace("TabbedPane: isEnabledFor()");
 		try {
 			return editors
 				.parallelStream()

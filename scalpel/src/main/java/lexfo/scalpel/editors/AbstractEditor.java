@@ -210,7 +210,7 @@ public abstract class AbstractEditor implements IMessageEditor {
 							getEditorContent(),
 							caption()
 						)
-						.flatMap(r -> Optional.of(r));
+						.flatMap(Optional::of);
 			} else {
 				result =
 					executor
@@ -221,7 +221,7 @@ public abstract class AbstractEditor implements IMessageEditor {
 							getEditorContent(),
 							caption()
 						)
-						.flatMap(m -> Optional.of(m));
+						.flatMap(Optional::of);
 			}
 
 			// Nothing was returned, return the original msg untouched.

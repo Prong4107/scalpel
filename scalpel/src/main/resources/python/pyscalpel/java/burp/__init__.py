@@ -10,13 +10,17 @@ from .http_request import IHttpRequest, HttpRequest
 from .http_response import IHttpResponse, HttpResponse
 from .http_parameter import IHttpParameter, HttpParameter
 from .http_service import IHttpService, HttpService
+from .http_request_response import IHttpRequestResponse
+from .http import IHttp
 from .logging import Logging
 
 __all__ = [
+    "IHttp",
     "IHttpRequest",
     "HttpRequest",
     "IHttpResponse",
     "HttpResponse",
+    "IHttpRequestResponse",
     "IHttpHeader",
     "HttpHeader",
     "IHttpMessage",
