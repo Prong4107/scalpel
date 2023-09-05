@@ -52,9 +52,7 @@ public class Scalpel implements BurpExtension {
 
 		var dir = Venv.getSitePackagesPath(venvPath).toFile();
 
-		final File[] jepDirs = dir.listFiles((current, name) ->
-			name.matches("jep")
-		);
+		final File[] jepDirs = dir.listFiles((__, name) -> name.matches("jep"));
 
 		if (jepDirs.length == 0) {
 			throw new IOException(
