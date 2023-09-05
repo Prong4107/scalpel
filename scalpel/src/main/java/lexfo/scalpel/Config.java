@@ -61,7 +61,6 @@ public class Config {
 		public ArrayList<String> workspacePaths = new ArrayList<String>();
 		public String defaultWorkspacePath = "";
 		public String defaultScriptPath = "";
-		public String defaultFrameworkPath = "";
 		public String jdkPath = null;
 	}
 
@@ -338,8 +337,7 @@ public class Config {
 		data.defaultScriptPath =
 			RessourcesUnpacker.DEFAULT_SCRIPT_PATH.toString();
 
-		data.defaultFrameworkPath =
-			RessourcesUnpacker.FRAMEWORK_PATH.toString();
+		RessourcesUnpacker.FRAMEWORK_PATH.toString();
 
 		data.workspacePaths = new ArrayList<String>();
 
