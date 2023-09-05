@@ -1,4 +1,4 @@
-from pyscalpel.http import Request, Response
+from pyscalpel import Request, Response
 
 # Test script that adds debug headers
 

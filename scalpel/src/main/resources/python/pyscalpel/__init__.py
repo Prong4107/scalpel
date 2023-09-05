@@ -9,6 +9,7 @@ from pyscalpel.edit import editor
 from pyscalpel.burp_utils import ctx as _context, logger as _logger
 from pyscalpel.java.scalpel_types import Context
 from pyscalpel.logger import Logger
+from pyscalpel.events import MatchEvent
 from . import http
 from . import java
 from . import encoding
@@ -40,6 +41,7 @@ __all__ = [
     "Flow",
     "ctx",
     "Context",
+    "MatchEvent",
     "editor",
     "logger",
     "Logger",

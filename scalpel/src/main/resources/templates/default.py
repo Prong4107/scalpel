@@ -1,4 +1,4 @@
-from pyscalpel.http import Request, Response, Flow
+from pyscalpel import Request, Response, Flow
 
 
 # def match(flow: Flow) -> bool:

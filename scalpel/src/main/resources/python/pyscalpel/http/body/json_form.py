@@ -8,13 +8,13 @@ import string
 import json
 import qs
 
-from typing import Literal, cast, Any
+from typing import Any
 from pyscalpel.http.body.abstract import (
     FormSerializer,
     TupleExportedForm,
     ExportedForm,
 )
-from pyscalpel.encoding import always_bytes, always_str
+from pyscalpel.encoding import always_bytes
 from pyscalpel.http.body.urlencoded import URLEncodedFormSerializer
 
 JSON_KEY_TYPES = str | int | float

@@ -1,9 +1,10 @@
 """
-    AES Encryption and Decryption
+    AES Encryption and Decryption with Session
 
-    This script demonstrates the use of AES encryption and decryption in HTTP requests and responses.
+    This script demonstrates the use of AES encryption and decryption in HTTP requests and responses, with the preservation of session state.
+    The session state is maintained across calls and is not reset, demonstrating the capability of preserving global state.
     It uses the pycryptodome library to perform AES encryption and decryption, and SHA256 for key derivation.
-    The script acts on paths matching "/encrypt" and where the request form has a "secret" field.
+    The script acts on paths starting with "/encrypt-session" and where the request method is not POST, or where a session is already established.
 """
 
 from pyscalpel import Request, Response, Flow
@@ -13,17 +14,22 @@ from Crypto.Util.Padding import pad, unpad
 from base64 import b64encode, b64decode
 
 
+session: bytes = b""  # Global variable for session preservation
+
+
 def match(flow: Flow) -> bool:
     """
-    Matches if the request path is '/encrypt' and if 'secret' is in the form of the request.
+    Matches if the request path starts with '/encrypt-session' and the session is set or the request method is not 'POST'.
 
     Args:
         flow: The flow object representing the HTTP transaction.
 
     Returns:
-        True if the request path matches and 'secret' is present, otherwise False.
+        True if the request path and request method match the conditions, otherwise False.
     """
-    return flow.path_is("/encrypt") and flow.request.form.get(b"secret") is not None
+    return flow.path_is("/encrypt-session*") and bool(
+        session or flow.request.method != "POST"
+    )
 
 
 def get_cipher(secret: bytes, iv=bytes(16)):
@@ -78,9 +84,25 @@ def encrypt(secret: bytes, data: bytes) -> bytes:
     return b64encode(encrypted)
 
 
-def req_edit_in_encrypted(req: Request) -> bytes | None:
+def response(res: Response) -> Response | None:
     """
-    Decrypts the 'encrypted' field in the incoming HTTP request's form using the 'secret' field.
+    If the request method is 'GET', sets the global session variable to the response's content.
+
+    Args:
+        res: The incoming HTTP response.
+
+    Returns:
+        None.
+    """
+    if res.request.method == "GET":
+        global session
+        session = res.content or b""
+        return
+
+
+def req_edit_in_encrypted(req: Request) -> bytes:
+    """
+    Decrypts the 'encrypted' field in the incoming HTTP request's form using the session.
 
     Args:
         req: The incoming HTTP request.
@@ -88,7 +110,7 @@ def req_edit_in_encrypted(req: Request) -> bytes | None:
     Returns:
         The decrypted content of the 'encrypted' field.
     """
-    secret = req.form[b"secret"]
+    secret = session
     encrypted = req.form[b"encrypted"]
     if not encrypted:
         return b""
@@ -98,7 +120,7 @@ def req_edit_in_encrypted(req: Request) -> bytes | None:
 
 def req_edit_out_encrypted(req: Request, text: bytes) -> Request:
     """
-    Encrypts the provided text using the 'secret' field in the outgoing HTTP request's form, and sets it as the 'encrypted' field.
+    Encrypts the provided text using the session, and sets it as the 'encrypted' field in the outgoing HTTP request's form.
 
     Args:
         req: The outgoing HTTP request.
@@ -107,14 +129,14 @@ def req_edit_out_encrypted(req: Request, text: bytes) -> Request:
     Returns:
         The modified HTTP request with the encrypted text.
     """
-    secret = req.form[b"secret"]
+    secret = session
     req.form[b"encrypted"] = encrypt(secret, text)
     return req
 
 
-def res_edit_in_encrypted(res: Response) -> bytes | None:
+def res_edit_in_encrypted(res: Response) -> bytes:
     """
-    Decrypts the incoming HTTP response's content using the 'secret' field in the associated request's form.
+    Decrypts the incoming HTTP response's content using the session.
 
     Args:
         res: The incoming HTTP response.
@@ -122,7 +144,7 @@ def res_edit_in_encrypted(res: Response) -> bytes | None:
     Returns:
         The decrypted content.
     """
-    secret = res.request.form[b"secret"]
+    secret = session
     encrypted = res.content
 
     if not encrypted:
@@ -133,7 +155,7 @@ def res_edit_in_encrypted(res: Response) -> bytes | None:
 
 def res_edit_out_encrypted(res: Response, text: bytes) -> Response:
     """
-    Encrypts the provided text using the 'secret' field in the associated request's form, and sets it as the outgoing HTTP response's content.
+    Encrypts the provided text using the session, and sets it as the outgoing HTTP response's content.
 
     Args:
         res: The outgoing HTTP response.
@@ -142,6 +164,6 @@ def res_edit_out_encrypted(res: Response, text: bytes) -> Response:
     Returns:
         The modified HTTP response with the encrypted text.
     """
-    secret = res.request.form[b"secret"]
+    secret = session
     res.content = encrypt(secret, text)
     return res

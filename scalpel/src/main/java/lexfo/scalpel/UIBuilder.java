@@ -1,5 +1,6 @@
 package lexfo.scalpel;
 
+import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.ui.Theme;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -21,11 +22,12 @@ public class UIBuilder {
 		@return The constructed tab.
 	 */
 	public static final Component constructConfigTab(
+		MontoyaApi API,
 		ScalpelExecutor executor,
 		Config config,
 		Theme theme
 	) {
-		return new ConfigTab(executor, config, theme).uiComponent();
+		return new ConfigTab(API, executor, config, theme).uiComponent();
 	}
 
 	/**

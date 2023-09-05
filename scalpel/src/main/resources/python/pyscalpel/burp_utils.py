@@ -11,7 +11,6 @@ from pyscalpel.java.bytes import JavaBytes
 from pyscalpel.java.scalpel_types.utils import PythonUtils
 from pyscalpel.encoding import always_bytes, urldecode, urlencode_all
 
-
 logger = pyscalpel._globals.logger
 
 
@@ -54,8 +53,9 @@ def byte_array(_bytes: bytes | JavaBytes | list[int] | bytearray) -> IByteArray:
     """Create a new :class:`IByteArray` from the given bytes-like obbject"""
     # Handle buggy bytes casting
     # This is needed because Python will _sometimes_ try
-    #   to interpret bytes as a an integer when passing to ByteArray.byteArray() and crash like this:
-    #       TypeError: Error converting parameter 1: 'bytes' object cannot be interpreted as an integer
+    # to interpret bytes as a an integer when passing to ByteArray.byteArray() and crash like this:
+    #
+    # TypeError: Error converting parameter 1: 'bytes' object cannot be interpreted as an integer
     #
     # Restarting Burp fixes the issue when it happens, so to avoid unstable behaviour
     #   we explcitely convert the bytes to a PyJArray of Java byte
@@ -79,23 +79,3 @@ def to_bytes(obj: ByteArraySerialisable | JavaBytes) -> bytes:
         return bytes([b & 0xFF for b in cast(JavaBytes, obj)])
 
     return get_bytes(cast(ByteArraySerialisable, obj).toByteArray())
-
-
-def update_header(
-    msg: HttpRequestOrResponse, name: str, value: str
-) -> HttpRequestOrResponse:
-    return PythonUtils.updateHeader(msg, name, value)
-
-
-def get_param(msg: IHttpRequest, name: str) -> IHttpParameter | None:
-    params = msg.parameters()
-    param = next((p for p in params if p.name() == name), None)
-    return param
-
-
-def new_param(name: str, value: str) -> IHttpParameter:
-    return HttpParameter.urlParameter(name, value)
-
-
-def update_param(req: IHttpRequest, name: str, value: str) -> IHttpRequest:
-    return req.withUpdatedParameters([new_param(name, value)])

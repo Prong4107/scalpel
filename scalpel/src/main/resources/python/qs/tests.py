@@ -2,7 +2,7 @@ import unittest
 from qs import *
 
 
-class TestURLParsing(unittest.TestCase):
+class TestQueryStringParsing(unittest.TestCase):
     def test_merge(self):
         source = {"a": 1, "b": {"c": 2}}
         destination = {"a": 3, "b": {"d": 4}}
@@ -192,6 +192,105 @@ class TestQSParsePairs(unittest.TestCase):
             }
         }
         self.assertEqual(qs_parse_pairs(pairs), expected)
+
+    def test_complex_parsing_weird_keys(self):
+        pairs = [
+            ("key_with_underscore[key*with*stars][]", "ho"),
+            ("key-with-dash[key123][]", "hey"),
+            ("key[key-with-dash][]", "choco"),
+            ("2key[3key][4key][5key][]", "nest"),
+            ("2key[3key][4key][5key][6key]", "deep"),
+            ("key1[key2][key3][key4][key5][]", "along"),
+            ("key1[key2][key3][key4][key5][key5_1]", "hello"),
+        ]
+        expected = {
+            "key_with_underscore": {
+                "key*with*stars": ["ho"],
+            },
+            "key-with-dash": {
+                "key123": ["hey"],
+            },
+            "key": {
+                "key-with-dash": ["choco"],
+            },
+            "2key": {
+                "3key": {
+                    "4key": {
+                        "5key": {
+                            0: "nest",
+                            "6key": "deep",
+                        },
+                    },
+                },
+            },
+            "key1": {
+                "key2": {
+                    "key3": {
+                        "key4": {
+                            "key5": {
+                                0: "along",
+                                "key5_1": "hello",
+                            },
+                        },
+                    },
+                },
+            },
+        }
+        self.maxDiff = None
+        self.assertEqual(qs_parse_pairs(pairs), expected)
+
+    def test_is_valid_query(self):
+        # Valid query names
+        self.assertTrue(is_valid_php_query_name("field"))
+        self.assertTrue(is_valid_php_query_name("field[key]"))
+        self.assertTrue(is_valid_php_query_name("field[key1][key2]"))
+        self.assertTrue(is_valid_php_query_name("field[]"))
+        self.assertTrue(is_valid_php_query_name("_field"))  # Starts with underscore
+        self.assertTrue(
+            is_valid_php_query_name("field[key_with_underscore]")
+        )  # Key with underscore
+        self.assertTrue(
+            is_valid_php_query_name("field[key-with-dash]")
+        )  # Key with dash
+        self.assertTrue(
+            is_valid_php_query_name("field[key*with*stars]")
+        )  # Key with stars
+        self.assertTrue(
+            is_valid_php_query_name("field123[key456][key789]")
+        )  # Keys and field with digits
+        self.assertTrue(
+            is_valid_php_query_name("key1[key2][key3][key4][]")
+        )  # More complex and nested field
+        self.assertTrue(is_valid_php_query_name("key1[key2][key3][key4][key5][]"))
+        self.assertTrue(is_valid_php_query_name("key1[key2][key3][key4][key5][key6]"))
+        self.assertTrue(is_valid_php_query_name("key1[key2][key3][key4][key5][key5_1]"))
+        self.assertTrue(
+            is_valid_php_query_name("field[  ]")
+        )  # Brackets can contain spaces
+        self.assertTrue(
+            is_valid_php_query_name("2field[key]")
+        )  # Name can start with a number
+
+        # Invalid query names
+        self.assertFalse(
+            is_valid_php_query_name("a[x]b[y]c[z]")
+        )  # Can't have anything between brackets
+
+        self.assertFalse(
+            is_valid_php_query_name("[key]")
+        )  # Name must not start with a bracket
+
+        self.assertFalse(
+            is_valid_php_query_name("field[key][")
+        )  # Empty brackets at the end
+        self.assertFalse(is_valid_php_query_name("field["))  # Incomplete bracket
+        self.assertFalse(is_valid_php_query_name(""))  # Empty string
+        self.assertFalse(
+            is_valid_php_query_name("field[key&]")
+        )  # Special character & in the key
+        self.assertFalse(
+            is_valid_php_query_name("field[key&key]")
+        )  # Special character & in the key
 
 
 if __name__ == "__main__":

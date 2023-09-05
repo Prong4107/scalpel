@@ -1,6 +1,5 @@
 from typing import TypedDict
-from pyscalpel.java.object import JavaObject
-from pyscalpel.java.burp.logging import Logging
+from pyscalpel.logger import Logger
 from typing import Any
 
 
@@ -20,7 +19,7 @@ class Context(TypedDict):
     directory: str
     """The framework directory"""
 
-    logger: Logging
+    logger: Logger
     """The logging object to use to display logs in Burp GUI"""
 
     user_script: str

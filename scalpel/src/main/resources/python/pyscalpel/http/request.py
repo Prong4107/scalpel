@@ -36,7 +36,7 @@ from pyscalpel.http.body import (
     CONTENT_TYPE_TO_SERIALIZER,
     JSONForm,
     IMPLEMENTED_CONTENT_TYPES,
-    ImplementedContentTypesTp,
+    ImplementedContentType,
     json_escape_bytes,
     json_unescape,
     json_unescape_bytes,
@@ -519,7 +519,7 @@ class Request:
 
     def update_serializer_from_content_type(
         self,
-        content_type: ImplementedContentTypesTp | str | None = None,
+        content_type: ImplementedContentType | str | None = None,
         fail_silently: bool = False,
     ):
         """Update the form parsing based on the given Content-Type
@@ -564,7 +564,7 @@ class Request:
 
     def create_defaultform(
         self,
-        content_type: ImplementedContentTypesTp | str | None = None,
+        content_type: ImplementedContentType | str | None = None,
         update_header: bool = True,
     ) -> MutableMapping[Any, Any]:
         """Creates the form if it doesn't exist, else returns the existing one
