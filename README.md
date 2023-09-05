@@ -19,6 +19,19 @@ It provides an interactive way to edit encoded/encrypted data as plaintext and o
 -   Python >= 3.10
 -   JDK >= 17
 
+### Debian-based distributions
+
+The following packages are required:
+
+```
+    sudo apt install build-essential python3 python3-dev openjdk-17-jdk
+```
+
+### Windows
+
+Microsoft Visual C++ >=14.0 is required:
+https://visualstudio.microsoft.com/visual-cpp-build-tools/
+
 ## Installation
 
 To use Scalpel, you need to have Python >= 3.10 and any JDK >= 17 installed on your machine.
