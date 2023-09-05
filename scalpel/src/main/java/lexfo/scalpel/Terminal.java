@@ -11,7 +11,6 @@ import com.jediterm.terminal.ui.JediTermWidget;
 import com.jediterm.terminal.ui.UIUtil;
 import com.jediterm.terminal.ui.settings.DefaultSettingsProvider;
 import com.jediterm.terminal.ui.settings.SettingsProvider;
-import com.pty4j.PtyProcess;
 import com.pty4j.PtyProcessBuilder;
 import java.awt.Dimension;
 import java.io.File;

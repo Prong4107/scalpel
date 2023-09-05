@@ -1,23 +1,17 @@
 package lexfo.scalpel;
 
 import com.jediterm.terminal.ui.UIUtil;
-import java.io.BufferedReader;
-import java.io.File;
 /**
  * The Venv class is used to manage Python virtual environments.
  */
 import java.io.IOException;
-import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.apache.commons.lang3.ArrayUtils;
 
 /**
