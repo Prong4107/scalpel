@@ -2,22 +2,19 @@ package lexfo.scalpel;
 
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.persistence.PersistedObject;
+import com.jediterm.terminal.ui.UIUtil;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
-import javax.swing.text.html.Option;
 
 /**
  * Scalpel configuration.
@@ -31,19 +28,18 @@ import javax.swing.text.html.Option;
  *
  *	The configuration file looks something like this:
  *	{
- *		"venvPaths": [
- *			"/path/to/venv1",
- *			"/path/to/venv2"
+ *		"workspacePaths": [
+ *			"/path/to/workspace1",
+ *			"/path/to/workspace2"
  *		],
  *		"scriptPath": "/path/to/script.py",
- *		"frameworkPath": "/path/to/framework"
  *	}
  *
  *	The file is not really designed to be directly edited by the user, but rather by the extension itself.
  *
- *	A configuration file is needed because we need to store global persistent data arrays. (e.g. venvPaths)
+ *	A configuration file is needed because we need to store global persistent data arrays. (e.g. workspacePaths)
  *	Which can't be done with the Java Preferences API.
- *	Furthermore, it's simply more convenient to store as JSON and we already have a scalpel directory to store 'ad-hoc' python venvs.
+ *	Furthermore, it's simply more convenient to store as JSON and we already have a scalpel directory to store 'ad-hoc' python workspaces.
  */
 public class Config {
 
@@ -62,10 +58,9 @@ public class Config {
 		/**
 		 * List of registered venv paths.
 		 */
-		public ArrayList<String> venvPaths = new ArrayList<String>();
-		public String defaultVenvPath = "";
+		public ArrayList<String> workspacePaths = new ArrayList<String>();
+		public String defaultWorkspacePath = "";
 		public String defaultScriptPath = "";
-		public String defaultFrameworkPath = "";
 		public String jdkPath = null;
 	}
 
@@ -75,25 +70,17 @@ public class Config {
 		/*
 		 * The venv to run the script in.
 		 */
-		public String venvPath = "";
+		public String workspacePath = "";
 
 		/*
 		 * The script to run.
 		 */
 		public String userScriptPath = "";
-
-		/*
-		 * The framework to use.
-		 */
-		public String frameworkPath = "";
 	}
 
 	private final _GlobalData globalConfig;
 	private final _ProjectData projectConfig;
 	private long lastModified = System.currentTimeMillis();
-
-	// Scalpel configuration directory basename
-	private static final String CONFIG_DIR = ".scalpel";
 
 	// Scalpel configuration file extension
 	private static final String CONFIG_EXT = ".json";
@@ -111,15 +98,9 @@ public class Config {
 	// Key for the project ID
 	private static final String DATA_PROJECT_ID_KEY = DATA_PREFIX + "projectID";
 
-	// Venv that will be created and used when none exists
-	public static final String DEFAULT_VENV_NAME = "default";
-	public static final String VENV_DIR = "venv";
-	public final ScalpelUnpacker unpacker;
-	private String _jdkPath = null;
+	private Path _jdkPath = null;
 
-	public Config(final MontoyaApi API, final ScalpelUnpacker unpacker) {
-		this.unpacker = unpacker;
-
+	public Config(final MontoyaApi API) {
 		// Get the extension data to store and get the project ID back.
 		final PersistedObject extensionData = API.persistence().extensionData();
 
@@ -135,11 +116,13 @@ public class Config {
 
 		// Set the path to the project configuration file
 		this.projectScalpelConfig =
-			new File(getScalpelDir(), projectID + CONFIG_EXT);
+			RessourcesUnpacker.DATA_DIR_PATH
+				.resolve(projectID + CONFIG_EXT)
+				.toFile();
 
-		this.globalConfig = initGlobalConfig(unpacker);
+		this.globalConfig = initGlobalConfig();
 
-		this._jdkPath = this.globalConfig.jdkPath;
+		this._jdkPath = Path.of(this.globalConfig.jdkPath);
 
 		// Load project config or create a new one on failure. (e.g. file doesn't exist)
 		this.projectConfig = this.initProjectConfig();
@@ -148,7 +131,7 @@ public class Config {
 		saveAllConfig();
 	}
 
-	private _GlobalData initGlobalConfig(ScalpelUnpacker unpacker) {
+	private _GlobalData initGlobalConfig() {
 		// Load global config
 		File globalConfigFile = getGlobalConfigFile();
 
@@ -159,26 +142,30 @@ public class Config {
 			.map(file -> IO.readJSON(file, _GlobalData.class))
 			.map(d -> {
 				// Remove venvs that were deleted by an external process.
-				d.venvPaths.removeIf(path -> !new File(path).exists());
+				d.workspacePaths.removeIf(path -> !new File(path).exists());
 				if (d.jdkPath == null) {
-					d.jdkPath = IO.ioWrap(this::findJdkPath);
+					d.jdkPath = IO.ioWrap(this::findJdkPath).toString();
 				}
 
 				// Ensure that there is at least one venv.
-				if (d.venvPaths.size() == 0) {
-					d.venvPaths.add(getOrCreateDefaultVenv(d.jdkPath));
+				if (d.workspacePaths.size() == 0) {
+					d.workspacePaths.add(
+						Workspace
+							.getOrCreateDefaultWorkspace(Path.of(d.jdkPath))
+							.toString()
+					);
 				}
 
 				// Select the first venv if the default one doesn't exist anymore or if it's not set.
-				d.defaultVenvPath =
+				d.defaultWorkspacePath =
 					Optional
-						.ofNullable(d.defaultVenvPath)
+						.ofNullable(d.defaultWorkspacePath)
 						.filter(path -> new File(path).exists())
-						.orElseGet(() -> d.venvPaths.get(0));
+						.orElseGet(() -> d.workspacePaths.get(0));
 
 				return d;
 			})
-			.orElseGet(() -> getDefaultGlobalData(unpacker));
+			.orElseGet(this::getDefaultGlobalData);
 
 		return _globalConfig;
 	}
@@ -189,19 +176,14 @@ public class Config {
 			.filter(File::exists)
 			.map(file -> IO.readJSON(file, _ProjectData.class))
 			.map(d -> {
-				d.venvPath =
+				d.workspacePath =
 					Optional
-						.ofNullable(d.venvPath) // Ensure the venv path is set.
-						.filter(p -> globalConfig.venvPaths.contains(p)) // Ensure the selected venv is registered.
-						.orElse(globalConfig.defaultVenvPath); // Otherwise, use the default venv.
+						.ofNullable(d.workspacePath) // Ensure the venv path is set.
+						.filter(p -> globalConfig.workspacePaths.contains(p)) // Ensure the selected venv is registered.
+						.orElse(globalConfig.defaultWorkspacePath); // Otherwise, use the default venv.
 				return d;
 			})
 			.orElseGet(this::getDefaultProjectData);
-	}
-
-	public static boolean isWindows() {
-		String os = System.getProperty("os.name").toLowerCase();
-		return (os.contains("win"));
 	}
 
 	/**
@@ -237,50 +219,15 @@ public class Config {
 		return lastModified;
 	}
 
-	public static String getDefaultVenv() {
-		return Paths
-			.get(getDefaultVenvsDir().getAbsolutePath())
-			.resolve(DEFAULT_VENV_NAME)
-			.toString();
-	}
-
-	/**
-	 * Get the scalpel configuration directory.
-	 *
-	 * @return The scalpel configuration directory. (default: $HOME/.scalpel)
-	 */
-	public static File getScalpelDir() {
-		final Path home = new File(System.getProperty("user.home")).toPath();
-
-		final File dir = new File(home.toFile(), CONFIG_DIR);
-		if (!dir.exists()) {
-			dir.mkdir();
-		}
-
-		return dir;
-	}
-
-	/**
-	 * Get the default venvs directory.
-	 *
-	 * @return The default venvs directory. (default: $HOME/.scalpel/venvs)
-	 */
-	public static File getDefaultVenvsDir() {
-		final File dir = new File(getScalpelDir(), "venvs");
-		if (!dir.exists()) {
-			dir.mkdir();
-		}
-
-		return dir;
-	}
-
 	/**
 	 * Get the global configuration file.
 	 *
 	 * @return The global configuration file. (default: $HOME/.scalpel/global.json)
 	 */
 	public static File getGlobalConfigFile() {
-		return new File(getScalpelDir(), "global" + CONFIG_EXT);
+		return RessourcesUnpacker.DATA_DIR_PATH
+			.resolve("global" + CONFIG_EXT)
+			.toFile();
 	}
 
 	private static boolean hasIncludeDir(Path jdkPath) {
@@ -288,16 +235,15 @@ public class Config {
 		return inc.exists() && inc.isDirectory();
 	}
 
-	private static Optional<String> guessJdkPath() throws IOException {
-		if (isWindows()) {
+	private static Optional<Path> guessJdkPath() throws IOException {
+		if (UIUtil.isWindows) {
 			// Official JDK usually gets installed in 'C:\\Program Files\\Java\\jdk-<version>'
 			final var winJdkPath = Path.of("C:\\Program Files\\Java\\");
 			return Files
 				.walk(winJdkPath)
 				.filter(f -> f.toFile().getName().contains("jdk"))
-				.map(jdk -> jdk.toAbsolutePath())
+				.map(Path::toAbsolutePath)
 				.filter(Config::hasIncludeDir)
-				.map(jdk -> jdk.toString())
 				.findFirst();
 		}
 
@@ -307,9 +253,7 @@ public class Config {
 		final var potentialJdkPaths = matchingBinaries
 			.map(binaryPath -> {
 				try {
-					final Path absolutePath = Paths
-						.get(binaryPath)
-						.toRealPath();
+					final Path absolutePath = binaryPath.toRealPath();
 					return absolutePath.getParent().getParent();
 				} catch (IOException e) {
 					return null;
@@ -323,11 +267,7 @@ public class Config {
 			Config::hasIncludeDir
 		);
 
-		final var javaHome = validJavaHomes
-			.map(path -> path.toString())
-			.findFirst();
-
-		return javaHome;
+		return validJavaHomes.findFirst();
 	}
 
 	/**
@@ -335,13 +275,13 @@ public class Config {
 	 * @return The JDK path.
 	 * @throws IOException
 	 */
-	public String findJdkPath() throws IOException {
+	public Path findJdkPath() throws IOException {
 		if (_jdkPath != null) {
 			// Return memoized path
 			return _jdkPath;
 		}
 
-		final String javaHome = guessJdkPath()
+		final Path javaHome = guessJdkPath()
 			.orElseGet(() -> {
 				// Display popup telling the user that JDK was not found and needs to select it manually
 				JOptionPane.showMessageDialog(
@@ -358,7 +298,7 @@ public class Config {
 				final int option = fileChooser.showOpenDialog(null);
 				if (option == JFileChooser.APPROVE_OPTION) {
 					final File file = fileChooser.getSelectedFile();
-					return file.getPath();
+					return file.toPath();
 				} else {
 					return null;
 				}
@@ -372,7 +312,7 @@ public class Config {
 		return javaHome;
 	}
 
-	private static Stream<String> findBinaryInPath(String binaryName) {
+	private static Stream<Path> findBinaryInPath(String binaryName) {
 		final String systemPath = System.getenv("PATH");
 		final String[] pathDirs = systemPath.split(
 			System.getProperty("path.separator")
@@ -381,128 +321,33 @@ public class Config {
 		return Arrays
 			.stream(pathDirs)
 			.map(pathDir -> Paths.get(pathDir, binaryName))
-			.filter(Files::exists)
-			.map(Path::toString);
-	}
-
-	private static RuntimeException createExceptionFromProcess(
-		Process proc,
-		String msg,
-		String defaultCmdLine
-	) {
-		final Stream<String> outStream = Stream.concat(
-			proc.inputReader().lines(),
-			proc.errorReader().lines()
-		);
-		final String out = outStream.collect(Collectors.joining("\n"));
-		final String cmd = proc.info().commandLine().orElse(defaultCmdLine);
-
-		return new RuntimeException(cmd + " failed:\n" + out + "\n" + msg);
-	}
-
-	/**
-	 * Get the default venv path.
-	 * This is the venv that will be used when the project is created.
-	 * If the default venv does not exist, it will be created.
-	 * If the default venv cannot be created, an exception will be thrown.
-	 *
-	 * @return The default venv path.
-	 */
-	public String getOrCreateDefaultVenv(String javaHome) {
-		final File defaultPath = Path
-			.of(getDefaultVenvsDir().getPath(), DEFAULT_VENV_NAME, VENV_DIR)
-			.toFile();
-
-		final String path = defaultPath.getAbsolutePath();
-
-		// Return if default venv dir already exists.
-		if (!defaultPath.exists()) {
-			defaultPath.mkdirs();
-		} else if (!defaultPath.isDirectory()) {
-			throw new RuntimeException("Default venv path is not a directory");
-		} else {
-			return path;
-		}
-
-		// Run python -m venv <path>
-		try {
-			final var proc = Venv.create(path);
-			if (proc.exitValue() != 0) {
-				throw createExceptionFromProcess(
-					proc,
-					"Ensure that pip3, python3.*-venv, python >= 3.10 and openjdk >= 17 are installed and in PATH.",
-					Constants.PYTHON_BIN + " -m venv " + path
-				);
-			}
-
-			// Add default script.
-			copyScriptToVenv(
-				defaultPath.getParent(),
-				unpacker.getDefaultScriptPath()
-			);
-		} catch (IOException | InterruptedException e) {
-			throw new RuntimeException(e);
-		}
-
-		// Run pip install <dependencies>
-		try {
-			final Process proc = Venv.installDefaults(
-				path,
-				Map.of("JAVA_HOME", javaHome),
-				true
-			);
-
-			// Log pip output
-			final var stdout = proc.inputReader();
-			while (proc.isAlive()) {
-				Optional
-					.ofNullable(stdout.readLine())
-					.ifPresent(ScalpelLogger::all);
-			}
-
-			if (proc.exitValue() != 0) {
-				throw createExceptionFromProcess(
-					proc,
-					"Could  not install dependencies\n" +
-					"Make sure that openjdk 17 is properly installed and in PATH\n\n" +
-					"On Debian/Ubuntu systems:\n\t" +
-					"apt install openjdk-17-jdk\n\n" +
-					"On Windows:\n\t" +
-					"Make sure you have installed Microsoft Visual C++ >=14.0 :\n\t" +
-					"https://visualstudio.microsoft.com/visual-cpp-build-tools/",
-					"pip install jep ..."
-				);
-			}
-		} catch (Exception e) {
-			// Display a popup explaining why the packages could not be installed
-			JOptionPane.showMessageDialog(
-				null,
-				"Could not install depencency packages.\n" +
-				"Error: " +
-				e.getMessage(),
-				"Installation Error",
-				JOptionPane.ERROR_MESSAGE
-			);
-			throw new RuntimeException(e);
-		}
-		return Path.of(path).getParent().toString();
+			.filter(Files::exists);
 	}
 
 	/**
 	 * Get the global configuration.
 	 *
-	 * @param unpacker The unpacker to use to get the default script and framework paths.
 	 * @return The global configuration.
 	 */
-	private _GlobalData getDefaultGlobalData(ScalpelUnpacker unpacker) {
+	private _GlobalData getDefaultGlobalData() {
 		final _GlobalData data = new _GlobalData();
 
-		data.jdkPath = IO.ioWrap(this::findJdkPath, () -> null);
-		data.defaultScriptPath = unpacker.getDefaultScriptPath();
-		data.defaultFrameworkPath = unpacker.getPythonFrameworkPath();
-		data.venvPaths = new ArrayList<String>();
-		data.venvPaths.add(getOrCreateDefaultVenv(data.jdkPath));
-		data.defaultVenvPath = data.venvPaths.get(0);
+		data.jdkPath = IO.ioWrap(this::findJdkPath, () -> null).toString();
+
+		data.defaultScriptPath =
+			RessourcesUnpacker.DEFAULT_SCRIPT_PATH.toString();
+
+		RessourcesUnpacker.FRAMEWORK_PATH.toString();
+
+		data.workspacePaths = new ArrayList<String>();
+
+		data.workspacePaths.add(
+			Workspace
+				.getOrCreateDefaultWorkspace(Path.of(data.jdkPath))
+				.toString()
+		);
+
+		data.defaultWorkspacePath = data.workspacePaths.get(0);
 		return data;
 	}
 
@@ -515,8 +360,7 @@ public class Config {
 		final _ProjectData data = new _ProjectData();
 
 		data.userScriptPath = globalConfig.defaultScriptPath;
-		data.frameworkPath = globalConfig.defaultFrameworkPath;
-		data.venvPath = globalConfig.defaultVenvPath;
+		data.workspacePath = globalConfig.defaultWorkspacePath;
 		return data;
 	}
 
@@ -528,7 +372,7 @@ public class Config {
 	 * @return The venv paths list.
 	 */
 	public String[] getVenvPaths() {
-		return globalConfig.venvPaths.toArray(new String[0]);
+		return globalConfig.workspacePaths.toArray(new String[0]);
 	}
 
 	/*
@@ -536,8 +380,8 @@ public class Config {
 	 *
 	 * @return The selected user script path.
 	 */
-	public String getUserScriptPath() {
-		return projectConfig.userScriptPath;
+	public Path getUserScriptPath() {
+		return Path.of(projectConfig.userScriptPath);
 	}
 
 	/*
@@ -545,12 +389,12 @@ public class Config {
 	 *
 	 * @return The selected framework path.
 	 */
-	public String getFrameworkPath() {
-		return projectConfig.frameworkPath;
+	public Path getFrameworkPath() {
+		return RessourcesUnpacker.FRAMEWORK_PATH;
 	}
 
-	public String getJdkPath() {
-		return globalConfig.jdkPath;
+	public Path getJdkPath() {
+		return Path.of(globalConfig.jdkPath);
 	}
 
 	/*
@@ -558,14 +402,14 @@ public class Config {
 	 *
 	 * @return The selected venv path.
 	 */
-	public String getSelectedVenv() {
-		return projectConfig.venvPath;
+	public Path getSelectedWorkspacePath() {
+		return Path.of(projectConfig.workspacePath);
 	}
 
 	// Setters
 
-	public void setJdkPath(String path) {
-		this.globalConfig.jdkPath = path;
+	public void setJdkPath(Path path) {
+		this.globalConfig.jdkPath = path.toString();
 		this.saveGlobalConfig();
 	}
 
@@ -576,7 +420,7 @@ public class Config {
 	 * @param venvPaths The new venv paths list.
 	 */
 	public void setVenvPaths(ArrayList<String> venvPaths) {
-		this.globalConfig.venvPaths = venvPaths;
+		this.globalConfig.workspacePaths = venvPaths;
 		this.saveGlobalConfig();
 	}
 
@@ -586,21 +430,9 @@ public class Config {
 	 *
 	 * @param scriptPath The new user script path.
 	 */
-	public void setUserScriptPath(String scriptPath) {
-		this.projectConfig.userScriptPath = scriptPath;
-		this.globalConfig.defaultScriptPath = scriptPath;
-		this.saveAllConfig();
-	}
-
-	/*
-	 * Set the selected framework path.
-	 * Saves the new path to the global and project configuration files.
-	 *
-	 * @param frameworkPath The new framework path.
-	 */
-	public void setFrameworkPath(String frameworkPath) {
-		this.projectConfig.frameworkPath = frameworkPath;
-		this.globalConfig.defaultFrameworkPath = frameworkPath;
+	public void setUserScriptPath(Path scriptPath) {
+		this.projectConfig.userScriptPath = scriptPath.toString();
+		this.globalConfig.defaultScriptPath = scriptPath.toString();
 		this.saveAllConfig();
 	}
 
@@ -610,9 +442,9 @@ public class Config {
 	 *
 	 * @param venvPath The new venv path.
 	 */
-	public void setSelectedVenvPath(String venvPath) {
-		this.projectConfig.venvPath = venvPath;
-		this.globalConfig.defaultVenvPath = venvPath;
+	public void setSelectedVenvPath(Path venvPath) {
+		this.projectConfig.workspacePath = venvPath.toString();
+		this.globalConfig.defaultWorkspacePath = venvPath.toString();
 		this.saveAllConfig();
 	}
 
@@ -624,8 +456,8 @@ public class Config {
 	 *
 	 * @param venvPath The venv path to add.
 	 */
-	public void addVenvPath(String venvPath) {
-		globalConfig.venvPaths.add(venvPath);
+	public void addVenvPath(Path venvPath) {
+		globalConfig.workspacePaths.add(venvPath.toString());
 		this.saveGlobalConfig();
 	}
 
@@ -635,48 +467,8 @@ public class Config {
 	 *
 	 * @param venvPath The venv path to remove.
 	 */
-	public void removeVenvPath(String venvPath) {
-		globalConfig.venvPaths.remove(venvPath);
+	public void removeVenvPath(Path venvPath) {
+		globalConfig.workspacePaths.remove(venvPath.toString());
 		this.saveGlobalConfig();
-	}
-
-	/**
-	 * Copy the script to the selected venv
-	 * @param scriptPath The script to copy
-	 * @return The new file path
-	 */
-	public static String copyScriptToVenv(
-		final String venv,
-		final String scriptPath
-	) {
-		final File original = new File(scriptPath);
-		final String baseErrMsg =
-			"Could not copy " + scriptPath + " to " + venv + "\n";
-
-		final Path destination = Optional
-			.ofNullable(original)
-			.filter(File::exists)
-			.map(File::getName)
-			.map(n -> Path.of(venv).resolve(n))
-			.orElseThrow(() ->
-				new RuntimeException(baseErrMsg + "File not found")
-			);
-
-		if (Files.exists(destination)) {
-			throw new RuntimeException(baseErrMsg + "File already exists");
-		}
-
-		try {
-			return Files
-				.copy(
-					original.toPath(),
-					destination,
-					StandardCopyOption.REPLACE_EXISTING
-				)
-				.toAbsolutePath()
-				.toString();
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 	}
 }

@@ -10,6 +10,7 @@ import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -17,14 +18,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
-import javax.swing.SwingUtilities;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import jep.ClassEnquirer;
 import jep.ClassList;
 import jep.Interpreter;
 import jep.JepConfig;
 import jep.SubInterpreter;
-import jep.python.PyObject;
-import lexfo.scalpel.ScalpelLogger.Level;
 
 /**
  * Responds to requested Python tasks from multiple threads through a task queue handled in a single sepearate thread.
@@ -153,12 +153,9 @@ public class ScalpelExecutor {
 		 *
 		 * @return the result of the task.
 		 */
-		public synchronized Optional<Object> awaitResult() {
-			// Log before awaiting to debug potential deadlocks.
-			ScalpelLogger.log(
-				ScalpelLogger.Level.DEBUG,
-				"Awaiting task: " + name
-			);
+		public synchronized Optional<Object> await() {
+			// Log this before awaiting to debug potential deadlocks.
+			ScalpelLogger.trace("Awaiting task: " + name);
 
 			// Acquire the lock on the Task object.
 			synchronized (this) {
@@ -172,14 +169,13 @@ public class ScalpelExecutor {
 
 						if (!isFinished()) {
 							// Warn the user that a task is taking a long time.
-							ScalpelLogger.log(
-								Level.WARN,
+							ScalpelLogger.warn(
 								"Task " + name + " is still waiting..."
 							);
 						}
 					} catch (InterruptedException e) {
 						// Log the error.
-						ScalpelLogger.error("Task " + name + "interrupted:");
+						ScalpelLogger.error("Task " + name + " interrupted:");
 
 						// Log the stack trace.
 						ScalpelLogger.logStackTrace(e);
@@ -187,16 +183,17 @@ public class ScalpelExecutor {
 				}
 			}
 
-			ScalpelLogger.log(
-				ScalpelLogger.Level.DEBUG,
-				"Finished awaiting task: " + name
-			);
+			ScalpelLogger.trace("Finished awaiting task: " + name);
 			// Return the awaited result.
 			return result;
 		}
 
 		public Boolean isFinished() {
 			return finished;
+		}
+
+		public synchronized void then(Consumer<Object> callback) {
+			Async.run(() -> this.await().ifPresent(callback));
 		}
 	}
 
@@ -244,11 +241,6 @@ public class ScalpelExecutor {
 
 	private Boolean isRunnerStarting = true;
 
-	/**
-	 * The ScalpelUnpacker object to get the ressources paths.
-	 */
-	private final ScalpelUnpacker unpacker;
-
 	private final Config config;
 
 	private Optional<ScalpelEditorProvider> editorProvider = Optional.empty();
@@ -257,28 +249,27 @@ public class ScalpelExecutor {
 	 * Constructs a new ScalpelExecutor object.
 	 *
 	 * @param API the MontoyaApi object to use for sending and receiving HTTP messages.
-	 * @param unpacker the ScalpelUnpacker object to use for getting the ressources paths.
 	 * @param config the Config object to use for getting the configuration values.
 	 */
-	public ScalpelExecutor(
-		MontoyaApi API,
-		ScalpelUnpacker unpacker,
-		Config config
-	) {
+	public ScalpelExecutor(MontoyaApi API, Config config) {
 		// Store Montoya API object
 		this.API = API;
-
-		// Store the unpacker
-		this.unpacker = unpacker;
 
 		// Keep a reference to the config
 		this.config = config;
 
 		// Create a File wrapper from the script path.
-		this.script = Optional.ofNullable(new File(config.getUserScriptPath()));
+		this.script =
+			Optional
+				.ofNullable(config.getUserScriptPath())
+				.map(Path::toFile)
+				.filter(File::exists);
 
 		this.framework =
-			Optional.ofNullable(new File(config.getFrameworkPath()));
+			Optional
+				.ofNullable(config.getFrameworkPath())
+				.map(Path::toFile)
+				.filter(File::exists);
 
 		this.lastConfigModificationTimestamp = config.getLastModified();
 		this.framework.ifPresent(f ->
@@ -362,8 +353,7 @@ public class ScalpelExecutor {
 		Class<T> expectedClass
 	) {
 		// Queue a new task and await it's result.
-		final Optional<Object> result = addTask(name, args, kwargs)
-			.awaitResult();
+		final Optional<Object> result = addTask(name, args, kwargs).await();
 
 		if (result.isPresent()) {
 			try {
@@ -397,36 +387,39 @@ public class ScalpelExecutor {
 	 */
 	private Boolean hasScriptChanged() {
 		return script
-			.map(script -> {
-				// Check if the last modification date has changed since last record.
-				final Boolean hasChanged =
-					lastScriptModificationTimestamp != script.lastModified();
-
-				// Update the last modification date record.
-				lastScriptModificationTimestamp = script.lastModified();
-
-				this.script =
-					Optional.ofNullable(new File(config.getUserScriptPath()));
-
-				// Return the check result.²
-				return hasChanged;
-			})
+			.map(File::lastModified)
+			.map(m -> lastScriptModificationTimestamp != m)
 			.orElse(false);
 	}
 
-	private final Boolean hasConfigChanged() {
-		final long currentConfigModificationTimestamp = config.getLastModified();
+	private Boolean hasConfigChanged() {
+		return config.getLastModified() != lastConfigModificationTimestamp;
+	}
 
-		// Check if the last modification date has changed since last record.
-		final Boolean hasChanged =
-			lastConfigModificationTimestamp !=
-			currentConfigModificationTimestamp;
+	private void resetChangeIndicators() {
+		this.framework =
+			Optional
+				.ofNullable(config.getFrameworkPath())
+				.map(Path::toFile)
+				.filter(File::exists);
+
+		framework.ifPresent(f ->
+			lastFrameworkModificationTimestamp = f.lastModified()
+		);
+
+		this.script =
+			Optional
+				.ofNullable(config.getUserScriptPath())
+				.map(Path::toFile)
+				.filter(File::exists);
 
 		// Update the last modification date record.
-		lastConfigModificationTimestamp = currentConfigModificationTimestamp;
+		script
+			.map(File::lastModified)
+			.ifPresent(f -> lastScriptModificationTimestamp = f);
 
-		// Return the check result.
-		return hasChanged;
+		// Update the last modification date record.
+		lastConfigModificationTimestamp = config.getLastModified();
 	}
 
 	/**
@@ -435,9 +428,8 @@ public class ScalpelExecutor {
 	 * @return true if either the framework or user script file has been modified since the last check, false otherwise.
 	 */
 	private Boolean mustReload() {
-		// Use | instead of || to avoid lazy evaluation preventing all modification timestamp from being updated.
 		return (
-			hasFrameworkChanged() | hasScriptChanged() | hasConfigChanged()
+			hasFrameworkChanged() || hasScriptChanged() || hasConfigChanged()
 		);
 	}
 
@@ -448,33 +440,27 @@ public class ScalpelExecutor {
 	 */
 	private final Boolean hasFrameworkChanged() {
 		return framework
-			.map(framework -> {
-				// Check if the last modification date has changed since last record.
-				final Boolean hasChanged =
-					lastFrameworkModificationTimestamp !=
-					framework.lastModified();
-
-				// Update the last modification date record.
-				lastFrameworkModificationTimestamp = framework.lastModified();
-
-				this.framework =
-					Optional.ofNullable(new File(config.getFrameworkPath()));
-
-				// Return the check result.²
-				return hasChanged;
-			})
+			.map(File::lastModified)
+			.map(m -> m != lastFrameworkModificationTimestamp)
 			.orElse(false);
 	}
 
 	public void setEditorsProvider(ScalpelEditorProvider provider) {
 		this.editorProvider = Optional.of(provider);
-		provider.resetEditors();
+		provider.resetEditorsAsync();
+	}
+
+	public synchronized void notifyEventLoop() {
+		synchronized (tasks) {
+			tasks.notifyAll();
+		}
 	}
 
 	// WARN: Declaring this method as synchronized cause deadlocks.
 	private void taskLoop() {
-		ScalpelLogger.log("Starting task loop.");
+		ScalpelLogger.info("Starting task loop.");
 
+		isRunnerStarting = true;
 		try {
 			// Instantiate the interpreter.
 			final SubInterpreter interp = initInterpreter();
@@ -484,18 +470,14 @@ public class ScalpelExecutor {
 			while (true) {
 				// Relaunch interpreter when files have changed (hot reload).
 				if (mustReload()) {
-					ScalpelLogger.log(
-						Level.INFO,
+					ScalpelLogger.info(
 						"Config or Python files have changed, reloading interpreter..."
 					);
 					break;
 				}
 
 				synchronized (tasks) {
-					ScalpelLogger.log(
-						ScalpelLogger.Level.DEBUG,
-						"Runner waiting for notifications."
-					);
+					ScalpelLogger.trace("Runner waiting for notifications.");
 
 					// Extract the oldest pending task from the queue.
 					final Task task = tasks.poll();
@@ -507,7 +489,7 @@ public class ScalpelExecutor {
 						continue;
 					}
 
-					ScalpelLogger.log("Processing task: " + task.name);
+					ScalpelLogger.trace("Processing task: " + task.name);
 					try {
 						// Invoke Python function and get the returned value.
 						final Object pythonResult = interp.invoke(
@@ -516,7 +498,7 @@ public class ScalpelExecutor {
 							task.kwargs
 						);
 
-						ScalpelLogger.log("Executed task: " + task.name);
+						ScalpelLogger.trace("Executed task: " + task.name);
 
 						if (pythonResult != null) {
 							task.result = Optional.of(pythonResult);
@@ -529,15 +511,12 @@ public class ScalpelExecutor {
 							ScalpelLogger.logStackTrace(e);
 						}
 					}
-					ScalpelLogger.log(
-						ScalpelLogger.Level.DEBUG,
-						"Processed task"
-					);
+
+					ScalpelLogger.trace("Processed task");
 
 					// Log the result value.
-					ScalpelLogger.log(
-						ScalpelLogger.Level.TRACE,
-						String.valueOf(task.result.orElse("null"))
+					ScalpelLogger.trace(
+						String.valueOf(task.result.orElse("<empty>"))
 					);
 
 					task.finished = true;
@@ -546,7 +525,7 @@ public class ScalpelExecutor {
 						// Wake threads awaiting the task.
 						task.notifyAll();
 
-						ScalpelLogger.log("Notified " + task.name);
+						ScalpelLogger.trace("Notified " + task.name);
 					}
 
 					// Sleep the thread while there isn't any new tasks
@@ -562,6 +541,8 @@ public class ScalpelExecutor {
 
 		isRunnerAlive = false;
 		isRunnerStarting = false;
+
+		this.resetChangeIndicators();
 
 		// Relaunch the task thread
 		this.runner = launchTaskRunner();
@@ -581,26 +562,19 @@ public class ScalpelExecutor {
 
 		// Force editor tabs recreation
 		// WARN: .resetEditors() depends on the runner loop, do not call it inside of it
-		this.editorProvider.ifPresent(e ->
-				SwingUtilities.invokeLater(() -> {
-					while (!isRunnerAlive) {
-						try {
-							Thread.sleep(200);
-						} catch (InterruptedException exc) {}
-					}
-					e.resetEditors();
-				})
-			);
+		this.editorProvider.ifPresent(ScalpelEditorProvider::resetEditorsAsync);
 
 		// Return the running thread.
 		return thread;
 	}
 
-	private String getDefaultIncludePath() {
-		final String defaultVenv =
-			Config.getDefaultVenv() + File.separator + Config.VENV_DIR;
+	private Optional<Path> getDefaultIncludePath() {
+		final Path defaultVenv = Workspace
+			.getDefaultWorkspace()
+			.resolve(Workspace.VENV_DIR);
+
 		try {
-			return Venv.getSitePackagesPath(defaultVenv).toString();
+			return Optional.of(Venv.getSitePackagesPath(defaultVenv));
 		} catch (IOException e) {
 			ScalpelLogger.warn(
 				"Could not find a default include path for JEP (with venv " +
@@ -612,7 +586,7 @@ public class ScalpelExecutor {
 			);
 			ScalpelLogger.logStackTrace(e);
 		}
-		return "";
+		return Optional.empty();
 	}
 
 	/**
@@ -625,15 +599,16 @@ public class ScalpelExecutor {
 			return framework
 				.map(framework -> {
 					// Add a default include path so JEP can be loaded
-					String defaultIncludePath = getDefaultIncludePath();
+					Optional<String> defaultIncludePath = getDefaultIncludePath()
+						.map(Path::toString);
 
 					// Instantiate a Python interpreter.
 					final SubInterpreter interp = new SubInterpreter(
 						new JepConfig()
 							.setClassEnquirer(new CustomEnquirer())
 							.addIncludePaths(
-								defaultIncludePath,
-								unpacker.getPythonPath()
+								defaultIncludePath.orElse(""),
+								RessourcesUnpacker.PYTHON_PATH.toString()
 							)
 					);
 
@@ -646,9 +621,6 @@ public class ScalpelExecutor {
 					// This isn't set by JEP, we have to do it ourselves.
 					interp.set("__file__", framework.getAbsolutePath());
 
-					// Add logger global to be able to log to Burp from Python.
-					burpEnv.put("logger", new ScalpelLogger());
-
 					// Set the path to the user script that will define the actual callbacks.
 					burpEnv.put(
 						"user_script",
@@ -660,9 +632,9 @@ public class ScalpelExecutor {
 					// Pass the selected venv path so it can be activated by the framework.
 					burpEnv.put(
 						"venv",
-						config.getSelectedVenv() +
+						config.getSelectedWorkspacePath() +
 						File.separator +
-						Config.VENV_DIR
+						Workspace.VENV_DIR
 					);
 
 					interp.set("__scalpel__", burpEnv);
@@ -1088,11 +1060,12 @@ public class ScalpelExecutor {
 
 	@SuppressWarnings({ "unchecked" })
 	public List<CallableData> getCallables() throws RuntimeException {
+		// TODO: Memoize this
 		// Jep doesn't offer any way to list functions, so we have to implement it Python side.
 		// Python returns ~ [{"name": <function name>, "annotations": <func.__annotations__>},...]
 		return this.safeJepInvoke(Constants.GET_CB_NAME, List.class)
 			.map(l -> (List<HashMap<String, Object>>) l)
-			.map(l -> l.stream())
+			.map(List::stream)
 			.map(s ->
 				s.map(c ->
 					new CallableData(
@@ -1101,7 +1074,7 @@ public class ScalpelExecutor {
 					)
 				)
 			)
-			.map(s -> s.toList())
+			.map(Stream::toList)
 			.orElseThrow(() ->
 				new RuntimeException(Constants.GET_CB_NAME + " was not found.")
 			);
