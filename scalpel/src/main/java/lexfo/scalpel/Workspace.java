@@ -1,5 +1,6 @@
 package lexfo.scalpel;
 
+import com.jediterm.terminal.ui.UIUtil;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -151,15 +152,22 @@ public class Workspace {
 			}
 
 			if (proc.exitValue() != 0) {
+				final String linuxMsg =
+					"On Debian/Ubuntu systems:\n\t" +
+					"apt install build-essential python3-dev openjdk-17-jdk";
+
+				final String winMsg =
+					"On Windows:\n\t" +
+					"Make sure you have installed Microsoft Visual C++ >=14.0 :\n\t" +
+					"https://visualstudio.microsoft.com/visual-cpp-build-tools/";
+
+				final String msg = UIUtil.isWindows ? winMsg : linuxMsg;
+
 				throw createExceptionFromProcess(
 					proc,
 					"Could  not install dependencies\n" +
-					"Make sure that openjdk 17 is properly installed and in PATH\n\n" +
-					"On Debian/Ubuntu systems:\n\t" +
-					"apt install openjdk-17-jdk\n\n" +
-					"On Windows:\n\t" +
-					"Make sure you have installed Microsoft Visual C++ >=14.0 :\n\t" +
-					"https://visualstudio.microsoft.com/visual-cpp-build-tools/",
+					"Make sure that a compiler, python dev libraries and openjdk 17 are properly installed and in PATH\n\n" +
+					msg,
 					"pip install jep ..."
 				);
 			}
