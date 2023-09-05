@@ -11,8 +11,8 @@ import com.jediterm.terminal.ui.JediTermWidget;
 import com.jediterm.terminal.ui.UIUtil;
 import com.jediterm.terminal.ui.settings.DefaultSettingsProvider;
 import com.jediterm.terminal.ui.settings.SettingsProvider;
-import com.pty4j.PtyProcess;
 import com.pty4j.PtyProcessBuilder;
+import java.awt.Dimension;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -51,7 +51,9 @@ public class Terminal {
 		JediTermWidget widget = new JediTermWidget(
 			createSettingsProvider(theme)
 		);
-		widget.setTtyConnector(createTtyConnector(venvPath, cwd, cmd));
+		widget.setTtyConnector(
+			createTtyConnector(venvPath, Optional.empty(), cwd, cmd)
+		);
 		widget.start();
 		return widget;
 	}
@@ -76,17 +78,23 @@ public class Terminal {
 	 * @return The TtyConnector.
 	 */
 	public static TtyConnector createTtyConnector(String venvPath) {
-		return createTtyConnector(venvPath, Optional.empty(), Optional.empty());
+		return createTtyConnector(
+			venvPath,
+			Optional.empty(),
+			Optional.empty(),
+			Optional.empty()
+		);
 	}
 
 	/**
 	 * Creates a TtyConnector that will run a shell in the virtualenv.
 	 *
-	 * @param venvPath The path to the virtualenv.
+	 * @param workspacePath The path to the virtualenv.
 	 * @return The TtyConnector.
 	 */
 	protected static TtyConnector createTtyConnector(
-		String venvPath,
+		String workspacePath,
+		Optional<Dimension> ttyDimension,
 		Optional<String> cwd,
 		Optional<String> cmd
 	) {
@@ -96,7 +104,13 @@ public class Terminal {
 		final String sep = File.separator;
 		final String binDir = UIUtil.isWindows ? "Scripts" : "bin";
 		final String activatePath =
-			venvPath + sep + Config.VENV_DIR + sep + binDir + sep + "activate";
+			workspacePath +
+			sep +
+			Workspace.VENV_DIR +
+			sep +
+			binDir +
+			sep +
+			"activate";
 
 		ScalpelLogger.debug("Activating terminal with " + activatePath);
 
@@ -107,9 +121,7 @@ public class Terminal {
 			// and we don't lose any interactive functionality.
 			// Also reset the terminal to clear any previous state.
 
-			final String initFilePath = ScalpelUnpacker
-				.getInitializedUnpacker()
-				.getBashInitFile();
+			final String initFilePath = RessourcesUnpacker.BASH_INIT_FILE_PATH.toString();
 
 			final String shell = Optional
 				.ofNullable(System.getenv("SHELL"))
@@ -139,12 +151,20 @@ public class Terminal {
 
 		try {
 			// Start the process in the virtualenv directory.
-			final PtyProcess process = new PtyProcessBuilder()
+			final var builder = new PtyProcessBuilder()
 				.setCommand(commandToRun)
 				.setEnvironment(env)
-				.setDirectory(cwd.orElse(venvPath))
-				.start();
-			return new PtyProcessTtyConnector(process, StandardCharsets.UTF_8);
+				.setDirectory(cwd.orElse(workspacePath));
+
+			ttyDimension.ifPresent(d ->
+				builder
+					.setInitialRows((int) d.getHeight())
+					.setInitialColumns((int) d.getWidth())
+			);
+
+			final var processs = builder.start();
+
+			return new PtyProcessTtyConnector(processs, StandardCharsets.UTF_8);
 		} catch (Exception e) {
 			throw new IllegalStateException(e);
 		}

@@ -8,6 +8,7 @@ import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider;
 import burp.api.montoya.ui.editor.extension.HttpResponseEditorProvider;
 import java.lang.ref.WeakReference;
 import java.util.LinkedList;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -93,24 +94,26 @@ public class ScalpelEditorProvider
 		}
 	}
 
-	public void resetEditors() {
-		ScalpelLogger.log(ScalpelLogger.Level.DEBUG, "Resetting editors...");
-		// Destroy all unused editors to avoid useless expensive callbacks.
-		// TODO: Improve this by using ReferenceQueue
-		// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/ref/ReferenceQueue.html
-		// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/ref/Reference.html#isEnqueued()
-		forceGarbageCollection();
+	public CompletableFuture<Void> resetEditorsAsync() {
+		return Async.run(() -> {
+			ScalpelLogger.debug("Resetting editors...");
+			// Destroy all unused editors to avoid useless expensive callbacks.
+			// TODO: Improve this by using ReferenceQueue
+			// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/ref/ReferenceQueue.html
+			// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/ref/Reference.html#isEnqueued()
+			forceGarbageCollection();
 
-		// Clean the list
-		this.editorsRefs =
-			this.editorsRefs.stream()
-				.filter(weakRef -> weakRef.get() != null)
-				.collect(Collectors.toCollection(LinkedList::new));
+			// Clean the list
+			this.editorsRefs =
+				this.editorsRefs.parallelStream()
+					.filter(weakRef -> weakRef.get() != null)
+					.collect(Collectors.toCollection(LinkedList::new));
 
-		this.editorsRefs.stream()
-			.map(e -> e.get())
-			.forEach(e -> e.recreateEditors());
+			this.editorsRefs.parallelStream()
+				.map(WeakReference::get)
+				.forEach(ScalpelEditorTabbedPane::recreateEditorsAsync);
 
-		ScalpelLogger.log(ScalpelLogger.Level.DEBUG, "Editors reset.");
+			ScalpelLogger.debug("Editors reset.");
+		});
 	}
 }

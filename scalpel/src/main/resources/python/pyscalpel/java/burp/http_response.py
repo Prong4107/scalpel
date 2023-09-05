@@ -33,7 +33,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     #      * @return HTTP Reason phrase.
     #
     @abstractmethod
-    def reasonPhrase(self) -> str:
+    def reasonPhrase(self) -> str | None:
         """generated source for method reasonPhrase"""
 
     #
@@ -57,7 +57,7 @@ class IHttpResponse(IHttpMessage, Protocol):
     #      * {@inheritDoc}
     #
     @abstractmethod
-    def body(self) -> IByteArray:
+    def body(self) -> IByteArray | None:
         """generated source for method body"""
 
     #

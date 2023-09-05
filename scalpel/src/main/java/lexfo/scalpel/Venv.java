@@ -1,22 +1,17 @@
 package lexfo.scalpel;
 
-import java.io.BufferedReader;
-import java.io.File;
+import com.jediterm.terminal.ui.UIUtil;
 /**
  * The Venv class is used to manage Python virtual environments.
  */
 import java.io.IOException;
-import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.apache.commons.lang3.ArrayUtils;
 
 /**
@@ -30,20 +25,19 @@ public class Venv {
 	 * @param path The path to the virtual environment directory.
 	 * @return The finished process of the "python3 -m venv" command.
 	 */
-	public static Process create(String path)
+	public static Process create(Path path)
 		throws IOException, InterruptedException {
 		// Create the directory for the virtual environment
-		Path venvPath = Paths.get(path);
-		Files.createDirectories(venvPath);
+		Files.createDirectories(path);
 
 		// Create the virtual environment using the "python3 -m venv" command
-		ProcessBuilder processBuilder = new ProcessBuilder(
+		final ProcessBuilder processBuilder = new ProcessBuilder(
 			Constants.PYTHON_BIN,
 			"-m",
 			"venv",
-			venvPath.toString()
+			path.toString()
 		);
-		Process process = processBuilder.start();
+		final Process process = processBuilder.start();
 
 		// Wait for the virtual environment creation to complete
 		process.waitFor();
@@ -52,7 +46,7 @@ public class Venv {
 	}
 
 	public static Process installDefaults(
-		String path,
+		Path venv,
 		Map<String, String> env,
 		Boolean installJep
 	) throws IOException, InterruptedException {
@@ -71,10 +65,10 @@ public class Venv {
 			pkgsToInstall = scriptDeps;
 		}
 
-		return install(path, env, pkgsToInstall);
+		return install(venv, env, pkgsToInstall);
 	}
 
-	public static Process installDefaults(String path)
+	public static Process installDefaults(Path path)
 		throws IOException, InterruptedException {
 		// Install the default packages
 		return installDefaults(path, Map.of(), true);
@@ -83,30 +77,28 @@ public class Venv {
 	/**
 	 * Create a virtual environment and install the default packages.
 	 *
-	 * @param path The path to the virtual environment directory.
+	 * @param venv The path to the virtual environment directory.
 	 * @return The exit code of the "pip install ..." command.
 	 */
-	public static Process createAndInstallDefaults(String path)
+	public static Process createAndInstallDefaults(Path venv)
 		throws IOException, InterruptedException {
 		// Create the virtual environment
-		final Process proc = create(path);
+		final Process proc = create(venv);
 		if (proc.exitValue() != 0) {
 			return proc;
 		}
-		return installDefaults(path);
+		return installDefaults(venv);
 	}
 
 	/**
 	 * Delete a virtual environment.
 	 *
-	 * @param path The path to the virtual environment directory.
+	 * @param venv The path to the virtual environment directory.
 	 */
-	public static void delete(String path) {
-		Path venvPath = Paths.get(path);
-
+	public static void delete(Path venv) {
 		try {
 			// Delete the virtual environment directory
-			Files.delete(venvPath);
+			Files.delete(venv);
 			// Return 0 (success)
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -120,7 +112,7 @@ public class Venv {
 	 * @param pkgs The name of the package to install.
 	 * @return The exit code of the "pip install ..." command.
 	 */
-	public static Thread install_background(String path, String... pkgs) {
+	public static Thread install_background(Path path, String... pkgs) {
 		Thread thread = new Thread(() -> IO.ioWrap(() -> install(path, pkgs)));
 		thread.start();
 		return thread;
@@ -133,7 +125,7 @@ public class Venv {
 	 * @param pkgs The name of the package to install.
 	 * @return The exit code of the "pip install ..." command.
 	 */
-	public static Process install(String path, String... pkgs)
+	public static Process install(Path path, String... pkgs)
 		throws IOException, InterruptedException {
 		return install(path, Map.of(), pkgs);
 	}
@@ -147,20 +139,22 @@ public class Venv {
 	 * @return The exit code of the "pip install ..." command.
 	 */
 	public static Process install_background(
-		String path,
+		Path path,
 		Map<String, String> env,
 		String... pkgs
 	) throws IOException, InterruptedException {
 		// Install the package using the "pip install" command
 
-		LinkedList<String> command = new LinkedList<>(
+		final LinkedList<String> command = new LinkedList<>(
 			List.of(getPipPath(path).toString(), "install")
 		);
 		command.addAll(Arrays.asList(pkgs));
-		ProcessBuilder processBuilder = new ProcessBuilder(command);
-		processBuilder.directory(Paths.get(path).toFile());
+
+		final ProcessBuilder processBuilder = new ProcessBuilder(command);
+		processBuilder.directory(path.toFile());
 		processBuilder.environment().putAll(env);
-		Process process = processBuilder.start();
+
+		final Process process = processBuilder.start();
 
 		System.out.println(
 			"Launched " + command.stream().collect(Collectors.joining(" "))
@@ -178,7 +172,7 @@ public class Venv {
 	 * @return The exit code of the "pip install ..." command.
 	 */
 	public static Process install(
-		String path,
+		Path path,
 		Map<String, String> env,
 		String... pkgs
 	) throws IOException, InterruptedException {
@@ -198,51 +192,45 @@ public class Venv {
 		public String version;
 	}
 
-	public static Path getSitePackagesPath(String venvPath) throws IOException {
-		if (Config.isWindows()) {
+	public static Path getSitePackagesPath(Path venvPath) throws IOException {
+		if (UIUtil.isWindows) {
 			// Find the sites-package directory path as in: <path>/Lib/site-packages
 			return Files
-				.walk(Paths.get(venvPath))
+				.walk(venvPath)
 				.filter(Files::isDirectory)
 				.filter(p -> p.getFileName().toString().equalsIgnoreCase("lib"))
-				.filter(p -> Files.exists(p.resolve("site-packages")))
+				.map(p -> p.resolve("site-packages"))
+				.filter(Files::exists)
 				.findFirst()
 				.orElseThrow(() ->
 					new RuntimeException(
 						"Failed to find venv site-packages.\n" +
 						"Make sure dependencies are correctly installed. (python3,pip,venv,jdk)"
 					)
-				)
-				.resolve("site-packages");
+				);
 		}
 		// Find the sites-package directory path as in: <path>/lib/python*/site-packages
 		return Files
-			.walk(Paths.get(venvPath, "lib"))
+			.walk(venvPath.resolve("lib"))
 			.filter(Files::isDirectory)
 			.filter(p -> p.getFileName().toString().startsWith("python"))
-			.filter(p -> Files.exists(p.resolve("site-packages")))
+			.map(p -> p.resolve("site-packages"))
+			.filter(Files::exists)
 			.findFirst()
 			.orElseThrow(() ->
 				new RuntimeException(
 					"Failed to find venv site-packages.\n" +
 					"Make sure dependencies are correctly installed. (python3,pip,venv,jdk)"
 				)
-			)
-			.resolve("site-packages");
+			);
 	}
 
-	public static Path getExecutablePath(String venvPath, String filename)
+	public static Path getExecutablePath(Path venvPath, String filename)
 		throws IOException {
 		final String binDir = Constants.VENV_BIN_DIR;
-		final Path validatedVenvPath = Optional
-			.ofNullable(new File(venvPath))
-			.map(File::toPath)
-			.orElseThrow(() ->
-				new RuntimeException("Failed to resolve '" + venvPath + "'")
-			);
 
 		return Files
-			.walk(validatedVenvPath)
+			.walk(venvPath)
 			.filter(Files::isDirectory)
 			.filter(p -> p.getFileName().toString().equalsIgnoreCase(binDir))
 			.map(p -> p.resolve(filename))
@@ -261,7 +249,7 @@ public class Venv {
 			);
 	}
 
-	public static Path getPipPath(String venvPath) throws IOException {
+	public static Path getPipPath(Path venvPath) throws IOException {
 		return getExecutablePath(venvPath, Constants.PIP_BIN);
 	}
 
@@ -271,9 +259,9 @@ public class Venv {
 	 * @param path The path to the virtual environment directory.
 	 * @return The list of installed packages.
 	 */
-	public static PackageInfo[] getInstalledPackages(String path)
+	public static PackageInfo[] getInstalledPackages(Path path)
 		throws IOException {
-		ProcessBuilder processBuilder = new ProcessBuilder(
+		final ProcessBuilder processBuilder = new ProcessBuilder(
 			getPipPath(path).toString(),
 			"list",
 			"--format",
@@ -288,7 +276,9 @@ public class Venv {
 		final Process process = processBuilder.start();
 
 		// Read the JSON output
-		String jsonData = new String(process.getInputStream().readAllBytes());
+		final String jsonData = new String(
+			process.getInputStream().readAllBytes()
+		);
 
 		// Parse the JSON output
 		return IO.readJSON(jsonData, PackageInfo[].class);

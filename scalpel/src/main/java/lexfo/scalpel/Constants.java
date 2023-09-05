@@ -79,34 +79,32 @@ public class Constants {
 	 * Required python packages
 	 */
 	public static final String[] PYTHON_DEPENDENCIES = new String[] {
-		"requests",
-		"requests-toolbelt",
-		"mitmproxy",
+		"requests==2.31.0",
+		"requests-toolbelt==1.0.0",
+		"mitmproxy==9.0.0",
 	};
 
 	/**
 	 * Venv dir containing site-packages
 	 */
-	public static final String VENV_LIB_DIR = Config.isWindows()
-		? "Lib"
-		: "lib";
+	public static final String VENV_LIB_DIR = UIUtil.isWindows ? "Lib" : "lib";
 
 	/**
 	 * JEP native library filename
 	 */
-	public static final String NATIVE_LIBJEP_FILE = Config.isWindows()
+	public static final String NATIVE_LIBJEP_FILE = UIUtil.isWindows
 		? "jep.dll"
-		: UIUtil.isMac ? "libjep.jnilib": "libjep.so";
+		: UIUtil.isMac ? "libjep.jnilib" : "libjep.so";
 
 	/**
 	 * Python 3 executable filename
 	 */
-	public static final String PYTHON_BIN = Config.isWindows()
+	public static final String PYTHON_BIN = UIUtil.isWindows
 		? "python.exe"
 		: "python3";
 
-	public static final String PIP_BIN = Config.isWindows() ? "pip.exe" : "pip";
-	public static final String VENV_BIN_DIR = Config.isWindows()
+	public static final String PIP_BIN = UIUtil.isWindows ? "pip.exe" : "pip";
+	public static final String VENV_BIN_DIR = UIUtil.isWindows
 		? "Scripts"
 		: "bin";
 
