@@ -111,7 +111,7 @@ public class ScalpelEditorProvider
 
 			this.editorsRefs.parallelStream()
 				.map(WeakReference::get)
-				.forEach(ScalpelEditorTabbedPane::recreateEditors);
+				.forEach(ScalpelEditorTabbedPane::recreateEditorsAsync);
 
 			ScalpelLogger.debug("Editors reset.");
 		});
