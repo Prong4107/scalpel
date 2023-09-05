@@ -44,12 +44,14 @@ logger = DebugLogger()
 VENV = None
 
 try:
+    # Importing from pyscalpel might crash so we get the logger before to ensure that all errors are logged in Burp.
+    logger = __scalpel__["logger"]  # type: ignore pylint: disable=undefined-variable
+
     from pyscalpel.venv import activate
     from pyscalpel.java.scalpel_types import Context
 
     ctx: Context = cast(Context, __scalpel__)  # type: ignore pylint: disable=undefined-variable
 
-    logger = ctx["logger"]  # type: ignore
     logger.all("Python: Loading _framework.py ...")
 
     VENV = ctx["venv"]
