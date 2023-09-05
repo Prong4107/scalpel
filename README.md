@@ -1,50 +1,26 @@
 # Scalpel
 
-Scalpel is a powerful Burp Suite extension that allows you to script Burp and intercept, rewrite HTTP traffic on the fly, and program custom Burp editors using Python.
+Scalpel is a powerful **Burp Suite** extension that allows you to script Burp in order to intercept, rewrite HTTP traffic on the fly, and program custom Burp editors in `Python 3`.
 
 It provides an interactive way to edit encoded/encrypted data as plaintext and offers an easy-to-use Python library as an alternative to Burp's Java API.
 
 ## Features
 
--   **Intercept and Rewrite HTTP Traffic**: Scalpel provides a set of predefined function names that you can implement to intercept and modify HTTP requests and responses.
+-   **Intercept and Rewrite HTTP Traffic**: Scalpel provides a set of predefined function names that can be implemented to intercept and modify HTTP requests and responses.
 
--   **Custom Burp Editors**: You can program custom Burp editors using Python. This feature allows you to handle encoded or encrypted data as plaintext.
+-   **Custom Burp Editors**: Program your own Burp editors in Python. Encoded/encrypted data can be handled as plaintext.
 
--   **Python Library**: Scalpel provides a Python library that is easier to use than Burp's Java API.
+-   **Python Library**: Easy-to-use Python library, especially welcomed for non-Java developers.
 
--   **Hex Editor**: Scalpel can create better hex editors than the native one.
+-   **Hex Editor**: Ability to create improved hex editors.
 
-## Requirements
-
--   Python >= 3.10
--   JDK >= 17
-
-### Debian-based distributions
-
-The following packages are required:
-
-```
-    sudo apt install build-essential python3 python3-dev openjdk-17-jdk
-```
-
-### Windows
-
-Microsoft Visual C++ >=14.0 is required:
-https://visualstudio.microsoft.com/visual-cpp-build-tools/
-
-## Installation
-
-To use Scalpel, you need to have Python >= 3.10 and any JDK >= 17 installed on your machine.
-
-You can download the latest release of Scalpel from the GitHub releases page.
-
-The release file is a .jar file that you can add to your Burp Suite as an extension.
+<br>
 
 ## Usage
 
-Scalpel works by creating a script with the GUI the extension embeds in Burp, and implementing a set of functions with predefined names.
+Scalpel provides a Burp extension GUI for scripting. A set of functions whose names are predefined can be implemented.
 
-Here is an example script:
+Below is an example script:
 
 ```py
 from pyscalpel.http import Request, Response
@@ -88,23 +64,40 @@ User documentation is available at [[INSERT DOCUMENTATION LINK]](http://userdoc.
 
 ## Examples
 
-Example scripts are available in the `examples/` directory of the project.
+Example scripts are available in the [`examples/`](examples/) directory of the project.
 
-## Building
+<br>
 
-The project can be built using `./gradlew build`, which generates a .jar file in `./scalpel/build/libs/scalpel-0.0.1.jar`.
-
-## Testing
-
-Unit tests can be run with `./run_tests.sh`.
-
-## Compatibility
+## Requirements
 
 Scalpel is compatible with Windows and Linux.
 
+-   Python >= `3.10`
+-   JDK >= `17`
+### Debian-based distributions
+
+The following packages are required:
+
+```sh
+sudo apt install build-essential python3 python3-dev openjdk-17-jdk
+```
+
+### Windows
+
+Microsoft Visual C++ >=14.0 is required:
+https://visualstudio.microsoft.com/visual-cpp-build-tools/
+
+## Installation
+
+Download the latest release of Scalpel from [GitHub](https://github.com).
+
+The release file is a `.jar` to be added to Burp Suite as an extension.
+
+<br>
+
 ## Contributing
 
-Pull requests are welcome!
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
