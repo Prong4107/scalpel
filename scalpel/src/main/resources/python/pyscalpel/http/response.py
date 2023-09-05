@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from typing import Literal
+from typing import Literal, cast
 from functools import lru_cache
 from mitmproxy.http import (
     Response as MITMProxyResponse,
@@ -90,11 +90,11 @@ class Response(MITMProxyResponse):
         request: IHttpRequest | None = None,
     ) -> Response:
         """Construct an instance of the Response class from a Burp suite :class:`IHttpResponse`."""
-        body = get_bytes(response.body())
+        body = get_bytes(cast(IByteArray, response.body())) if response.body() else b""
         scalpel_response = cls(
             always_bytes(response.httpVersion() or "HTTP/1.1"),
             response.statusCode(),
-            always_bytes(response.reasonPhrase()),
+            always_bytes(response.reasonPhrase() or b""),
             Headers.from_burp(response.headers()),
             body,
             None,

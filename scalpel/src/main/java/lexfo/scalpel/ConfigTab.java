@@ -22,10 +22,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.swing.*;
@@ -49,7 +45,7 @@ public class ConfigTab extends JFrame {
 	private JTextArea frameworkPathTextArea;
 	private JPanel scriptConfigPanel;
 	private JButton scriptBrowseButton;
-	private JTextArea scriptPathTextArea;
+	private JLabel scriptPathTextArea;
 	private JediTermWidget terminalForVenvConfig;
 	private JList<String> venvListComponent;
 	private JTable packagesTable;
@@ -64,7 +60,6 @@ public class ConfigTab extends JFrame {
 	private final ScalpelExecutor scalpelExecutor;
 	private final Config config;
 	private final Theme theme;
-	private final Executor executor = Executors.newFixedThreadPool(6);
 	private final MontoyaApi API;
 
 	public ConfigTab(
@@ -80,25 +75,11 @@ public class ConfigTab extends JFrame {
 
 		$$$setupUI$$$();
 
-		// Make the text fields automatically scroll to the right when selected so that the file basename is visible.
-		autoScroll(frameworkPathField);
-
-		// Scroll to the right on focus
-		setFrameworkPath(config.getFrameworkPath());
-
 		// Open file browser to select the script to execute.
 		scriptBrowseButton.addActionListener(e ->
 			handleBrowseButtonClick(
-				config.unpacker::getDefaultScriptPath,
+				() -> RessourcesUnpacker.DEFAULT_SCRIPT_PATH,
 				this::setAndStoreScript
-			)
-		);
-
-		// Same as above for framework path.
-		frameworkBrowseButton.addActionListener(e ->
-			handleBrowseButtonClick(
-				frameworkPathField::getText,
-				this::setAndStoreFrameworkPath
 			)
 		);
 
@@ -126,10 +107,9 @@ public class ConfigTab extends JFrame {
 		addListDoubleClickListener(
 			venvScriptList,
 			__ -> {
-				final var val =
-					config.getSelectedVenv() +
-					File.separator +
-					venvScriptList.getSelectedValue();
+				final var val = config
+					.getSelectedWorkspacePath()
+					.resolve(venvScriptList.getSelectedValue());
 
 				openDesktopEditor(val);
 				openEditorInTerminal(val);
@@ -147,10 +127,6 @@ public class ConfigTab extends JFrame {
 		createButton.addActionListener(e -> handleNewScriptButton());
 
 		openFolderButton.addActionListener(e -> handleOpenScriptFolderButton());
-	}
-
-	private CompletableFuture<?> runAsync(Runnable runnable) {
-		return CompletableFuture.runAsync(runnable, executor);
 	}
 
 	/**
@@ -207,8 +183,7 @@ public class ConfigTab extends JFrame {
 	}
 
 	private void handleOpenScriptFolderButton() {
-		final File folder = new File(config.getUserScriptPath())
-			.getParentFile();
+		final File folder = config.getUserScriptPath().toFile().getParentFile();
 
 		ScalpelLogger.debug("Opening " + folder.getAbsolutePath());
 
@@ -239,23 +214,26 @@ public class ConfigTab extends JFrame {
 		}
 
 		// Get the selected script name.
-		final Optional<String> selected = Optional
-			.ofNullable(venvScriptList.getSelectedValue())
-			.map(s -> s.toString());
+		final Optional<String> selected = Optional.ofNullable(
+			venvScriptList.getSelectedValue()
+		);
 
 		selected.ifPresent(s -> {
-			final Path path = Path
-				.of(config.getSelectedVenv(), s)
+			final Path path = config
+				.getSelectedWorkspacePath()
+				.resolve(s)
 				.toAbsolutePath();
 
-			selectScript(path.toString());
+			selectScript(path);
 		});
 	}
 
 	private void updateScriptList() {
-		runAsync(() -> {
+		Async.run(() -> {
 			final JList<String> list = this.venvScriptList;
-			final File selectedVenv = new File(config.getSelectedVenv());
+			final File selectedVenv = config
+				.getSelectedWorkspacePath()
+				.toFile();
 			final File[] files = selectedVenv.listFiles(f ->
 				f.getName().endsWith(".py")
 			);
@@ -273,16 +251,19 @@ public class ConfigTab extends JFrame {
 		});
 	}
 
-	private void selectScript(String path) {
+	private void selectScript(Path path) {
 		// Select the script
 		config.setUserScriptPath(path);
+
+		// Reload the executor
+		Async.run(scalpelExecutor::notifyEventLoop);
 
 		// Display the script in the terminal.
 		openEditorInTerminal(path);
 	}
 
 	private void handleNewScriptButton() {
-		final File venv = new File(config.getSelectedVenv());
+		final File venv = config.getSelectedWorkspacePath().toFile();
 
 		// Prompt the user for a name
 		String fileName = JOptionPane.showInputDialog(
@@ -327,7 +308,7 @@ public class ConfigTab extends JFrame {
 				"File was successfully created!"
 			);
 
-			final String absolutePath = destination.toAbsolutePath().toString();
+			final Path absolutePath = destination.toAbsolutePath();
 
 			selectScript(absolutePath);
 			updateScriptList();
@@ -347,7 +328,7 @@ public class ConfigTab extends JFrame {
 	 * @param fileToEdit
 	 * @return Whether the editor was successfully opened.
 	 */
-	private boolean openDesktopEditor(String fileToEdit) {
+	private boolean openDesktopEditor(Path fileToEdit) {
 		if (!Desktop.isDesktopSupported()) {
 			ScalpelLogger.error("Desktop is not supported");
 			return false;
@@ -368,7 +349,7 @@ public class ConfigTab extends JFrame {
 
 		try {
 			// Provide the full path to the Python file
-			final File file = new File(fileToEdit);
+			final File file = fileToEdit.toFile();
 			switch (action) {
 				case OPEN:
 					desktop.open(file);
@@ -395,7 +376,7 @@ public class ConfigTab extends JFrame {
 	 *
 	 * @param fileToEdit
 	 */
-	private void openEditorInTerminal(String fileToEdit) {
+	private void openEditorInTerminal(Path fileToEdit) {
 		final Optional<String> envEditor = Optional.ofNullable(
 			System.getenv("EDITOR")
 		);
@@ -404,23 +385,28 @@ public class ConfigTab extends JFrame {
 		final String editor = envEditor.orElse(
 			Constants.DEFAULT_TERMINAL_EDITOR
 		);
-		final String cmd = editor + " " + Terminal.escapeshellarg(fileToEdit);
+		final String cmd =
+			editor + " " + Terminal.escapeshellarg(fileToEdit.toString());
 
-		final String cwd = Path.of(fileToEdit).getParent().toString();
+		final String cwd = fileToEdit.getParent().toString();
 
-		this.updateTerminal(config.getSelectedVenv(), cwd, cmd);
+		this.updateTerminal(
+				config.getSelectedWorkspacePath().toString(),
+				cwd,
+				cmd
+			);
 	}
 
 	private void handleEditButton() {
-		final String script = config.getUserScriptPath();
+		final Path script = config.getUserScriptPath();
 		if (openDesktopEditor(script)) {
 			return;
 		}
 
 		if (UIUtil.isWindows) {
 			updateTerminal(
-				config.getSelectedVenv(),
-				Path.of(script).getParent().toString(),
+				config.getSelectedWorkspacePath().toString(),
+				script.getParent().toString(),
 				Constants.DEFAULT_WINDOWS_EDITOR + " " + script
 			);
 			return;
@@ -429,7 +415,7 @@ public class ConfigTab extends JFrame {
 		openEditorInTerminal(script);
 	}
 
-	private void installDefaultsAndLog(String venv)
+	private void installDefaultsAndLog(Path venv)
 		throws IOException, InterruptedException {
 		final Process proc = Venv.installDefaults(venv, Map.of(), false);
 		final var stdout = proc.inputReader();
@@ -448,11 +434,11 @@ public class ConfigTab extends JFrame {
 			return;
 		}
 
-		final String path;
+		final Path path;
 		try {
 			if ((new File(value).isAbsolute())) {
 				// The user provided an absolute path, use it as is.
-				path = value;
+				path = Path.of(value);
 			} else if (value.contains(File.separator)) {
 				// The user provided a relative path, forbid it.
 				throw new IllegalArgumentException(
@@ -464,12 +450,10 @@ public class ConfigTab extends JFrame {
 			} else {
 				// The user provided a name, use it to create a venv in the default venvs dir.
 				path =
-					Paths
-						.get(
-							Config.getDefaultVenvsDir().getAbsolutePath(),
-							value
-						)
-						.toString();
+					Paths.get(
+						Workspace.getWorkspacesDir().getAbsolutePath(),
+						value
+					);
 			}
 		} catch (IllegalArgumentException e) {
 			JOptionPane.showMessageDialog(
@@ -486,18 +470,17 @@ public class ConfigTab extends JFrame {
 			label -> {
 				// Create the venv and installed required packages. (i.e. mitmproxy)
 				try {
-					Venv.create(path + File.separator + Config.VENV_DIR);
+					Workspace.createAndInitWorkspace(path, Optional.empty());
+
 					// Add the venv to the config.
 					config.addVenvPath(path);
 
 					// Clear the text field.
 					addVentText.setText("");
 
-					installDefaultsAndLog(path);
-
 					// Display the venv in the list.
 					venvListComponent.setListData(config.getVenvPaths());
-				} catch (IOException | InterruptedException e) {
+				} catch (RuntimeException e) {
 					final String msg =
 						"Failed to create venv: \n" + e.getMessage();
 					ScalpelLogger.error(msg);
@@ -514,7 +497,7 @@ public class ConfigTab extends JFrame {
 		);
 	}
 
-	private void updateTerminal(
+	private synchronized void updateTerminal(
 		String selectedVenvPath,
 		String cwd,
 		String cmd
@@ -523,38 +506,31 @@ public class ConfigTab extends JFrame {
 		final var oldConnector = termWidget.getTtyConnector();
 
 		// Close asynchronously to avoid losing time.
-		var future = runAsync(() -> {
-			termWidget.stop();
-			// Kill the old process.
-			oldConnector.close();
-		});
+		termWidget.stop();
+		// Kill the old process.
+		oldConnector.close();
+
+		final var term = termWidget.getTerminal();
+		final int width = term.getTerminalWidth();
+		final int height = term.getTerminalHeight();
+		final Dimension dimension = new Dimension(width, height);
 
 		// Start the process while the terminal is closing
 		final var connector = Terminal.createTtyConnector(
 			selectedVenvPath,
+			Optional.of(dimension),
 			Optional.ofNullable(cwd),
 			Optional.ofNullable(cmd)
 		);
 
-		future.thenRun(() -> {
-			// Connect the terminal to the new process in the new venv.
-			termWidget.setTtyConnector(connector);
+		// Connect the terminal to the new process in the new venv.
+		termWidget.setTtyConnector(connector);
 
-			final var term = termWidget.getTerminal();
+		term.reset();
+		term.cursorPosition(0, 0);
 
-			term.clearScreen();
-			term.cursorPosition(0, 0);
-
-			// Start the terminal.
-			termWidget.start();
-
-			final int width = term.getTerminalWidth();
-			final int height = term.getTerminalHeight();
-
-			// Tty needs to be resized.
-			final Dimension dimension = new Dimension(width, height);
-			connector.resize(dimension);
-		});
+		// Start the terminal.
+		termWidget.start();
 	}
 
 	private void updateTerminal(String selectedVenvPath) {
@@ -567,45 +543,51 @@ public class ConfigTab extends JFrame {
 
 		// Get the selected venv path.
 		final String selectedVenvPath = venvListComponent.getSelectedValue();
-		config.setSelectedVenvPath(selectedVenvPath);
+		config.setSelectedVenvPath(Path.of(selectedVenvPath));
+
+		Async.run(scalpelExecutor::notifyEventLoop);
 
 		// Update the package table.
-		runAsync(this::updatePackagesTable);
-		runAsync(() -> updateTerminal(selectedVenvPath));
-		runAsync(this::updateScriptList);
+		Async.run(this::updatePackagesTable);
+		Async.run(() -> updateTerminal(selectedVenvPath));
+		Async.run(this::updateScriptList);
 	}
 
-	private void handleBrowseButtonClick(
-		Supplier<String> getter,
-		Consumer<String> setter
+	private CompletableFuture<Void> handleBrowseButtonClick(
+		Supplier<Path> getter,
+		Consumer<Path> setter
 	) {
-		runAsync(() -> {
+		return Async.run(() -> {
 			final JFileChooser fileChooser = new JFileChooser();
 
 			// Allow the user to only select files.
 			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
 			// Set default path to the path in the text field.
-			fileChooser.setCurrentDirectory(new File(getter.get()));
+			fileChooser.setCurrentDirectory(getter.get().toFile());
 
 			final int result = fileChooser.showOpenDialog(this);
 
 			// When the user selects a file, set the text field to the selected file.
 			if (result == JFileChooser.APPROVE_OPTION) {
-				setter.accept(fileChooser.getSelectedFile().getAbsolutePath());
+				setter.accept(
+					fileChooser.getSelectedFile().toPath().toAbsolutePath()
+				);
 			}
 		});
 	}
 
-	private void updatePackagesTable(
+	private CompletableFuture<Void> updatePackagesTable(
 		Consumer<JTable> onSuccess,
 		Runnable onFail
 	) {
-		runAsync(() -> {
+		return Async.run(() -> {
 			final PackageInfo[] installedPackages;
 			try {
 				installedPackages =
-					Venv.getInstalledPackages(config.getSelectedVenv());
+					Venv.getInstalledPackages(
+						config.getSelectedWorkspacePath()
+					);
 			} catch (IOException e) {
 				JOptionPane.showMessageDialog(
 					this,
@@ -647,22 +629,14 @@ public class ConfigTab extends JFrame {
 		updatePackagesTable(__ -> {});
 	}
 
-	private static void scrollToRight(JTextField textField) {
-		textField.requestFocusInWindow();
-		textField.setCaretPosition(textField.getText().length());
-	}
-
-	private void setAndStoreFrameworkPath(String path) {
-		setFrameworkPath(path);
-
-		// Store the path in the config. (writes to disk)
-		config.setFrameworkPath(path);
-	}
-
-	private void setAndStoreScript(final String path) {
-		final String copied;
+	private void setAndStoreScript(final Path path) {
+		final Path copied;
 		try {
-			copied = Config.copyScriptToVenv(config.getSelectedVenv(), path);
+			copied =
+				Workspace.copyScriptToWorkspace(
+					config.getSelectedWorkspacePath(),
+					path
+				);
 		} catch (RuntimeException e) {
 			// Error popup
 			JOptionPane.showMessageDialog(
@@ -676,22 +650,10 @@ public class ConfigTab extends JFrame {
 
 		// Store the path in the config. (writes to disk)
 		config.setUserScriptPath(copied);
+		Async.run(scalpelExecutor::notifyEventLoop);
 
-		runAsync(this::updateScriptList);
-		runAsync(() -> selectScript(copied));
-	}
-
-	/**
-	 * Sets the path to the "framework" script to execute and updates the text field.
-	 *
-	 * @param path the path to the framework
-	 */
-	private void setFrameworkPath(String path) {
-		// Update the path selection text field.
-		frameworkPathField.setText(path);
-
-		// Scroll to the right
-		scrollToRight(frameworkPathField);
+		Async.run(this::updateScriptList);
+		Async.run(() -> selectScript(copied));
 	}
 
 	/**
@@ -708,7 +670,10 @@ public class ConfigTab extends JFrame {
 
 		// Create the TtyConnector
 		terminalForVenvConfig =
-			Terminal.createTerminal(theme, config.getSelectedVenv());
+			Terminal.createTerminal(
+				theme,
+				config.getSelectedWorkspacePath().toString()
+			);
 	}
 
 	/**
@@ -1060,9 +1025,8 @@ public class ConfigTab extends JFrame {
 		);
 		browsePanel = new JPanel();
 		browsePanel.setLayout(
-			new GridLayoutManager(7, 3, new Insets(10, 10, 10, 10), 0, -1)
+			new GridLayoutManager(7, 3, new Insets(3, 3, 3, 3), 0, -1)
 		);
-		browsePanel.setBackground(new Color(-5198676));
 		panel3.add(
 			browsePanel,
 			new GridConstraints(
@@ -1237,7 +1201,7 @@ public class ConfigTab extends JFrame {
 				false
 			)
 		);
-		scriptPathTextArea = new JTextArea();
+		scriptPathTextArea = new JLabel();
 		scriptPathTextArea.setText("Load script file");
 		scriptConfigPanel.add(
 			scriptPathTextArea,
@@ -1441,7 +1405,7 @@ public class ConfigTab extends JFrame {
 		final JLabel label1 = new JLabel();
 		label1.setHorizontalAlignment(0);
 		label1.setHorizontalTextPosition(0);
-		label1.setText("Scripts available for this venv:");
+		label1.setText("  Scripts available for this venv:  ");
 		listPannel.add(
 			label1,
 			new GridConstraints(

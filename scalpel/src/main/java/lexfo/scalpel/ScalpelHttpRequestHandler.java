@@ -20,16 +20,6 @@ import java.util.Optional;
 public class ScalpelHttpRequestHandler implements HttpHandler {
 
 	/**
-    	The MontoyaApi object used to interact with Burp Suite.
-  	*/
-	private final MontoyaApi API;
-
-	/**
-    	The ScalpelEditorProvider object used to provide new 	editors.
-	*/
-	private final ScalpelEditorProvider editorProvider;
-
-	/**
     	The ScalpelExecutor object used to execute Python scripts.
   	*/
 	private final ScalpelExecutor executor;
@@ -45,12 +35,6 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
 		ScalpelEditorProvider editorProvider,
 		ScalpelExecutor executor
 	) {
-		// Keep a reference to the Montoya API.
-		this.API = API;
-
-		// Keep a reference to the provider.
-		this.editorProvider = editorProvider;
-
 		// Reference the executor to be able to call Python callbacks.
 		this.executor = executor;
 	}
@@ -88,7 +72,7 @@ public class ScalpelHttpRequestHandler implements HttpHandler {
 		// Get the network info form the initiating request.
 		final HttpService service = Optional
 			.ofNullable(httpResponseReceived.initiatingRequest())
-			.map(r -> r.httpService())
+			.map(HttpRequest::httpService)
 			.orElse(null);
 
 		// Call the request() Python callback

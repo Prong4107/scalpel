@@ -14,6 +14,7 @@ public class Palette extends ColorPalette {
 		new Color(0xe600e6), // Slightly lighter magenta
 		new Color(0x00e6e6), // Slightly lighter cyan
 		new Color(0xf2f2f2), // Slightly lighter white
+	
 		// Bright versions of the ISO colors
 		new Color(0x5f5f5f), // Bright black
 		new Color(0xff5f5f), // Bright red
@@ -36,6 +37,7 @@ public class Palette extends ColorPalette {
 		new Color(0xcd00cd), // Magenta
 		new Color(0x00cdcd), // Cyan
 		new Color(0xd4d4d4), // Grayish white
+	
 		// Bright versions of the ISO colors
 		new Color(0x555555), // Bright black
 		new Color(0xff0000), // Bright red

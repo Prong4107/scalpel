@@ -1,4 +1,5 @@
 import sys
+from pyscalpel.java import import_java
 
 
 # Define a default logger to use if for some reason the logger is not initialized
@@ -61,3 +62,11 @@ class Logger:
             msg (str): The message to print
         """
         print(msg, file=sys.stderr)
+
+
+try:
+    logger: Logger = import_java("lexfo.scalpel", "ScalpelLogger", Logger)
+except ImportError as ex:
+    logger: Logger = Logger()
+    logger.error("Couldn't import logger")
+    logger.error(str(ex))
