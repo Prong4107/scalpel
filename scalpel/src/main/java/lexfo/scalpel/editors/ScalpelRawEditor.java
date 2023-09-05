@@ -44,13 +44,16 @@ public class ScalpelRawEditor extends AbstractEditor {
 		super(name, editable, API, creationContext, type, provider, executor);
 		try {
 			// Create a new editor UI component.
+			// For some reason, when called from an asynchronous method,
+			// this method might stop executing when calling createRawEditor(), without throwing anything
+			// This results in a Burp deadlock and is probably due to one of the many race conditions in Burp.
 			this.editor = API.userInterface().createRawEditor();
 
 			// Decide wherever the editor must be editable or read only depending on context.
 			editor.setEditable(
 				editable && creationContext.editorMode() != EditorMode.READ_ONLY
 			);
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			// Log the error.
 			ScalpelLogger.error("Couldn't instantiate new editor:");
 

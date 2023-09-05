@@ -144,12 +144,12 @@ public class ScalpelEditorTabbedPane
 		this.hookOutPrefix = this.hookPrefix + Constants.OUT_SUFFIX;
 
 		try {
-			this.recreateEditors().get();
+			this.recreateEditors();
 			ScalpelLogger.log(
 				"Successfully initialized ScalpelProvidedEditor for " +
 				type.name()
 			);
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			// Log the stack trace.
 			ScalpelLogger.error("Couldn't instantiate new editor:");
 			ScalpelLogger.logStackTrace(e);
@@ -157,6 +157,7 @@ public class ScalpelEditorTabbedPane
 			// Throw the error again.
 			throw new RuntimeException(e);
 		}
+		ScalpelLogger.log("???");
 	}
 
 	private int getTabNameOffsetInHookName(String hookName) {
@@ -302,71 +303,82 @@ public class ScalpelEditorTabbedPane
 		
 		Calls Python to get the tabs name.
 	*/
-	public synchronized CompletableFuture<?> recreateEditors() {
-		return Async.run(() -> {
-			// Destroy existing editors
-			this.pane.removeAll();
-			this.editors.clear();
+	public synchronized void recreateEditors() {
+		// Destroy existing editors
+		this.pane.removeAll();
+		this.editors.clear();
 
-			final var callables = getCallables();
-			if (callables == null) {
-				return;
-			}
+		final var callables = getCallables();
+		if (callables == null) {
+			return;
+		}
 
-			// Retain only correct prefixes and parse hook name
-			Stream<PartialHookTabInfo> hooks = filterEditorHooks(callables);
+		// Retain only correct prefixes and parse hook name
+		final Stream<PartialHookTabInfo> hooks = filterEditorHooks(callables);
 
-			// Merge the individual hooks infos
-			final Stream<HookTabInfo> mergedTabInfo = mergeHookTabInfo(hooks);
+		// Merge the individual hooks infos
+		final Stream<HookTabInfo> mergedTabInfo = mergeHookTabInfo(hooks);
 
-			// Create the editors
-			mergedTabInfo.forEach(tabInfo -> {
-				ScalpelLogger.debug("Creating tab for " + tabInfo);
+		// Create the editors
+		mergedTabInfo.forEach(tabInfo -> {
+			ScalpelLogger.debug("Creating tab for " + tabInfo);
 
-				// Get editor implementation corresponding to mode.
-				final Class<? extends AbstractEditor> dispatchedEditor = modeToEditorMap.getOrDefault(
-					tabInfo.mode(),
-					ScalpelRawEditor.class
+			// Get editor implementation corresponding to mode.
+			final Class<? extends AbstractEditor> dispatchedEditor = modeToEditorMap.getOrDefault(
+				tabInfo.mode(),
+				ScalpelRawEditor.class
+			);
+
+			final AbstractEditor editor;
+			try {
+				// There should be a better way to do this..
+				final var construcor = dispatchedEditor.getConstructor(
+					String.class,
+					Boolean.class,
+					MontoyaApi.class,
+					EditorCreationContext.class,
+					EditorType.class,
+					ScalpelEditorTabbedPane.class,
+					ScalpelExecutor.class
 				);
 
-				final AbstractEditor editor;
-				try {
-					// There should be a better way to do this..
-					final var construcor = dispatchedEditor.getConstructor(
-						String.class,
-						Boolean.class,
-						MontoyaApi.class,
-						EditorCreationContext.class,
-						EditorType.class,
-						ScalpelEditorTabbedPane.class,
-						ScalpelExecutor.class
+				editor =
+					construcor.newInstance(
+						tabInfo.name(),
+						tabInfo.directions.contains(this.hookOutPrefix), // Read-only tab if no "out" hook.
+						API,
+						ctx,
+						type,
+						this,
+						executor
 					);
+			} catch (Throwable ex) {
+				ScalpelLogger.fatal("FATAL: Invalid editor constructor");
+				// Should never happen as long as the constructor has not been overriden by an abstract declaration.
+				throw new RuntimeException(ex);
+			}
+			ScalpelLogger.debug("Successfully created tab for " + tabInfo);
 
-					editor =
-						construcor.newInstance(
-							tabInfo.name(),
-							tabInfo.directions.contains(this.hookOutPrefix), // Read-only tab if no out method.
-							API,
-							ctx,
-							type,
-							this,
-							executor
-						);
-				} catch (Exception ex) {
-					// Should never happen as long as the constructor has not been overriden by an abstract declaration.
-					throw new RuntimeException(ex);
-				}
+			this.editors.add(editor);
 
-				this.editors.add(editor);
-
-				if (
-					this._requestResponse != null &&
-					editor.setRequestResponseInternal(_requestResponse)
-				) {
-					this.addEditorToDisplayedTabs(editor);
-				}
-			});
+			if (
+				this._requestResponse != null &&
+				editor.setRequestResponseInternal(_requestResponse)
+			) {
+				this.addEditorToDisplayedTabs(editor);
+			}
 		});
+	}
+
+	/**
+		Recreates the editors tabs asynchronously.
+		
+		Calls Python to get the tabs name.
+
+		Might cause deadlocks or other weird issues if used in constructors directly called by Burp.
+	*/
+	public synchronized CompletableFuture<?> recreateEditorsAsync() {
+		return Async.run(this::recreateEditors);
 	}
 
 	/**
@@ -506,6 +518,8 @@ public class ScalpelEditorTabbedPane
 	public synchronized void setRequestResponse(
 		HttpRequestResponse requestResponse
 	) {
+		ScalpelLogger.trace("TabbedPane: setRequestResponse()");
+
 		this._requestResponse = requestResponse;
 
 		// Hide disabled tabs
@@ -552,6 +566,7 @@ public class ScalpelEditorTabbedPane
 	*/
 	@Override
 	public boolean isEnabledFor(HttpRequestResponse requestResponse) {
+		ScalpelLogger.trace("TabbedPane: isEnabledFor()");
 		try {
 			return editors
 				.parallelStream()
