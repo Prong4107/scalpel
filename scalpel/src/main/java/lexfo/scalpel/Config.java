@@ -114,7 +114,7 @@ public class Config {
 	// Venv that will be created and used when none exists
 	public static final String DEFAULT_VENV_NAME = "default";
 	public static final String VENV_DIR = "venv";
-	private final ScalpelUnpacker unpacker;
+	public final ScalpelUnpacker unpacker;
 	private String _jdkPath = null;
 
 	public Config(final MontoyaApi API, final ScalpelUnpacker unpacker) {

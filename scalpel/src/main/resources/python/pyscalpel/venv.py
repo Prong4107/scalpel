@@ -1,9 +1,9 @@
 """
-    This module provides reimplementations of Python virtual environnements scripts
-    
-    This is designed to be used internally, 
-    but in the case where the user desires to dynamically switch venvs using this,
-    they should ensure the selected venv has the dependencies required by Scalpel.
+This module provides reimplementations of Python virtual environnements scripts
+
+This is designed to be used internally, 
+but in the case where the user desires to dynamically switch venvs using this,
+they should ensure the selected venv has the dependencies required by Scalpel.
 """
 
 import os
@@ -73,7 +73,7 @@ def install(*packages: str) -> int:
         int: The pip install command exit code.
     """
     pip = os.path.join(sys.prefix, "bin", "pip")
-    return subprocess.call([pip, "install", "--require-virtualenv", *packages])
+    return subprocess.call([pip, "install", "--require-virtualenv", "--", *packages])
 
 
 def uninstall(*packages: str) -> int:
@@ -83,7 +83,9 @@ def uninstall(*packages: str) -> int:
         int: The pip uninstall command exit code.
     """
     pip = os.path.join(sys.prefix, "bin", "pip")
-    return subprocess.call([pip, "uninstall", "--require-virtualenv", "-y", *packages])
+    return subprocess.call(
+        [pip, "uninstall", "--require-virtualenv", "-y", "--", *packages]
+    )
 
 
 def create(path: str) -> int:
@@ -92,7 +94,7 @@ def create(path: str) -> int:
     Returns:
         int: The `python3 -m venv` command exit code.
     """
-    return subprocess.call(["python3", "-m", "venv", path])
+    return subprocess.call(["python3", "-m", "venv", "--", path])
 
 
 def create_default() -> str:

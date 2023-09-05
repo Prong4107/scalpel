@@ -1,5 +1,6 @@
 package lexfo.scalpel;
 
+import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.ui.Theme;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -20,6 +21,11 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.swing.*;
@@ -44,7 +50,6 @@ public class ConfigTab extends JFrame {
 	private JPanel scriptConfigPanel;
 	private JButton scriptBrowseButton;
 	private JTextArea scriptPathTextArea;
-	private JTextField scriptPathField;
 	private JediTermWidget terminalForVenvConfig;
 	private JList<String> venvListComponent;
 	private JTable packagesTable;
@@ -56,29 +61,35 @@ public class ConfigTab extends JFrame {
 	private JList<String> venvScriptList;
 	private JPanel listPannel;
 	private JButton openFolderButton;
-	private final ScalpelExecutor executor;
+	private final ScalpelExecutor scalpelExecutor;
 	private final Config config;
 	private final Theme theme;
+	private final Executor executor = Executors.newFixedThreadPool(6);
+	private final MontoyaApi API;
 
-	public ConfigTab(ScalpelExecutor executor, Config config, Theme theme) {
+	public ConfigTab(
+		MontoyaApi API,
+		ScalpelExecutor executor,
+		Config config,
+		Theme theme
+	) {
 		this.config = config;
-		this.executor = executor;
+		this.scalpelExecutor = executor;
 		this.theme = theme;
+		this.API = API;
 
 		$$$setupUI$$$();
 
 		// Make the text fields automatically scroll to the right when selected so that the file basename is visible.
 		autoScroll(frameworkPathField);
-		autoScroll(scriptPathField);
 
 		// Scroll to the right on focus
-		setUserScriptPath(config.getUserScriptPath());
 		setFrameworkPath(config.getFrameworkPath());
 
 		// Open file browser to select the script to execute.
 		scriptBrowseButton.addActionListener(e ->
 			handleBrowseButtonClick(
-				scriptPathField::getText,
+				config.unpacker::getDefaultScriptPath,
 				this::setAndStoreScript
 			)
 		);
@@ -138,10 +149,15 @@ public class ConfigTab extends JFrame {
 		openFolderButton.addActionListener(e -> handleOpenScriptFolderButton());
 	}
 
+	private CompletableFuture<?> runAsync(Runnable runnable) {
+		return CompletableFuture.runAsync(runnable, executor);
+	}
+
 	/**
 	 * JList doesn't natively support double click events, so we implment it ourselves.
+	 *
 	 * @param <T>
-	 * @param list The list to add the listener to.
+	 * @param list    The list to add the listener to.
 	 * @param handler The listener handler callback.
 	 */
 	private <T> void addListDoubleClickListener(
@@ -237,30 +253,29 @@ public class ConfigTab extends JFrame {
 	}
 
 	private void updateScriptList() {
-		final JList<String> list = this.venvScriptList;
-		final File selectedVenv = new File(config.getSelectedVenv());
-		final File[] files = selectedVenv.listFiles(f ->
-			f.getName().endsWith(".py")
-		);
+		runAsync(() -> {
+			final JList<String> list = this.venvScriptList;
+			final File selectedVenv = new File(config.getSelectedVenv());
+			final File[] files = selectedVenv.listFiles(f ->
+				f.getName().endsWith(".py")
+			);
 
-		final DefaultListModel<String> listModel = new DefaultListModel<>();
+			final DefaultListModel<String> listModel = new DefaultListModel<>();
 
-		// Fill the model with the file names
-		if (files != null) {
-			for (File file : files) {
-				listModel.addElement(file.getName());
+			// Fill the model with the file names
+			if (files != null) {
+				for (File file : files) {
+					listModel.addElement(file.getName());
+				}
 			}
-		}
 
-		list.setModel(listModel);
+			list.setModel(listModel);
+		});
 	}
 
 	private void selectScript(String path) {
 		// Select the script
 		config.setUserScriptPath(path);
-
-		// Update displayed selection.
-		this.scriptPathField.setText(path);
 
 		// Display the script in the terminal.
 		openEditorInTerminal(path);
@@ -504,33 +519,42 @@ public class ConfigTab extends JFrame {
 		String cwd,
 		String cmd
 	) {
-		// Stop the terminal whiile we update it.
-		this.terminalForVenvConfig.stop();
+		final var termWidget = this.terminalForVenvConfig;
+		final var oldConnector = termWidget.getTtyConnector();
 
-		// Close the terminal to ensure the process is killed.
-		this.terminalForVenvConfig.getTtyConnector().close();
+		// Close asynchronously to avoid losing time.
+		var future = runAsync(() -> {
+			termWidget.stop();
+			// Kill the old process.
+			oldConnector.close();
+		});
 
+		// Start the process while the terminal is closing
 		final var connector = Terminal.createTtyConnector(
 			selectedVenvPath,
 			Optional.ofNullable(cwd),
 			Optional.ofNullable(cmd)
 		);
 
-		// Connect the terminal to the new process in the new venv.
-		this.terminalForVenvConfig.setTtyConnector(connector);
+		future.thenRun(() -> {
+			// Connect the terminal to the new process in the new venv.
+			termWidget.setTtyConnector(connector);
 
-		final int width =
-			this.terminalForVenvConfig.getTerminal().getTerminalWidth();
+			final var term = termWidget.getTerminal();
 
-		final int height =
-			this.terminalForVenvConfig.getTerminal().getTerminalHeight();
+			term.clearScreen();
+			term.cursorPosition(0, 0);
 
-		// Tty needs to be resized.
-		final Dimension dimension = new Dimension(width, height);
-		connector.resize(dimension);
+			// Start the terminal.
+			termWidget.start();
 
-		// Start the terminal.
-		this.terminalForVenvConfig.start();
+			final int width = term.getTerminalWidth();
+			final int height = term.getTerminalHeight();
+
+			// Tty needs to be resized.
+			final Dimension dimension = new Dimension(width, height);
+			connector.resize(dimension);
+		});
 	}
 
 	private void updateTerminal(String selectedVenvPath) {
@@ -546,68 +570,73 @@ public class ConfigTab extends JFrame {
 		config.setSelectedVenvPath(selectedVenvPath);
 
 		// Update the package table.
-		updatePackagesTable(__ -> updateTerminal(selectedVenvPath));
-		updateScriptList();
+		runAsync(this::updatePackagesTable);
+		runAsync(() -> updateTerminal(selectedVenvPath));
+		runAsync(this::updateScriptList);
 	}
 
 	private void handleBrowseButtonClick(
 		Supplier<String> getter,
 		Consumer<String> setter
 	) {
-		final JFileChooser fileChooser = new JFileChooser();
+		runAsync(() -> {
+			final JFileChooser fileChooser = new JFileChooser();
 
-		// Allow the user to only select files.
-		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			// Allow the user to only select files.
+			fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-		// Set default path to the path in the text field.
-		fileChooser.setCurrentDirectory(new File(getter.get()));
+			// Set default path to the path in the text field.
+			fileChooser.setCurrentDirectory(new File(getter.get()));
 
-		final int result = fileChooser.showOpenDialog(this);
+			final int result = fileChooser.showOpenDialog(this);
 
-		// When the user selects a file, set the text field to the selected file.
-		if (result == JFileChooser.APPROVE_OPTION) {
-			setter.accept(fileChooser.getSelectedFile().getAbsolutePath());
-		}
+			// When the user selects a file, set the text field to the selected file.
+			if (result == JFileChooser.APPROVE_OPTION) {
+				setter.accept(fileChooser.getSelectedFile().getAbsolutePath());
+			}
+		});
 	}
 
 	private void updatePackagesTable(
 		Consumer<JTable> onSuccess,
 		Runnable onFail
 	) {
-		final PackageInfo[] installedPackages;
-		try {
-			installedPackages =
-				Venv.getInstalledPackages(config.getSelectedVenv());
-		} catch (IOException e) {
-			JOptionPane.showMessageDialog(
-				this,
-				"Failed to get installed packages: \n" + e.getMessage(),
-				"Failed to get installed packages",
-				JOptionPane.ERROR_MESSAGE
+		runAsync(() -> {
+			final PackageInfo[] installedPackages;
+			try {
+				installedPackages =
+					Venv.getInstalledPackages(config.getSelectedVenv());
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(
+					this,
+					"Failed to get installed packages: \n" + e.getMessage(),
+					"Failed to get installed packages",
+					JOptionPane.ERROR_MESSAGE
+				);
+				onFail.run();
+				return;
+			}
+
+			// Create a table model with the appropriate column names
+			final DefaultTableModel tableModel = new DefaultTableModel(
+				new Object[] { "Package", "Version" },
+				0
 			);
-			onFail.run();
-			return;
-		}
 
-		// Create a table model with the appropriate column names
-		final DefaultTableModel tableModel = new DefaultTableModel(
-			new Object[] { "Package", "Version" },
-			0
-		);
+			// Parse with jackson and add to the table model
+			Arrays
+				.stream(installedPackages)
+				.map(p -> new Object[] { p.name, p.version })
+				.forEach(tableModel::addRow);
 
-		// Parse with jackson and add to the table model
-		Arrays
-			.stream(installedPackages)
-			.map(p -> new Object[] { p.name, p.version })
-			.forEach(tableModel::addRow);
+			// Set the table model
+			packagesTable.setModel(tableModel);
 
-		// Set the table model
-		packagesTable.setModel(tableModel);
+			// make the table uneditable
+			packagesTable.setDefaultEditor(Object.class, null);
 
-		// make the table uneditable
-		packagesTable.setDefaultEditor(Object.class, null);
-
-		onSuccess.accept(packagesTable);
+			onSuccess.accept(packagesTable);
+		});
 	}
 
 	private void updatePackagesTable(Consumer<JTable> onSuccess) {
@@ -621,19 +650,6 @@ public class ConfigTab extends JFrame {
 	private static void scrollToRight(JTextField textField) {
 		textField.requestFocusInWindow();
 		textField.setCaretPosition(textField.getText().length());
-	}
-
-	/**
-	 * Sets the path to the user script to execute and updates the text field.
-	 *
-	 * @param path the path to the script
-	 */
-	private void setUserScriptPath(String path) {
-		// Update the path selection text field.
-		scriptPathField.setText(path);
-
-		// Scroll to the right
-		scrollToRight(scriptPathField);
 	}
 
 	private void setAndStoreFrameworkPath(String path) {
@@ -658,12 +674,11 @@ public class ConfigTab extends JFrame {
 			return;
 		}
 
-		setUserScriptPath(copied);
-
 		// Store the path in the config. (writes to disk)
 		config.setUserScriptPath(copied);
-		updateScriptList();
-		selectScript(copied);
+
+		runAsync(this::updateScriptList);
+		runAsync(() -> selectScript(copied));
 	}
 
 	/**
@@ -1063,7 +1078,7 @@ public class ConfigTab extends JFrame {
 				GridConstraints.SIZEPOLICY_WANT_GROW,
 				null,
 				null,
-				null,
+				new Dimension(300, -1),
 				0,
 				false
 			)
@@ -1179,7 +1194,7 @@ public class ConfigTab extends JFrame {
 		);
 		scriptConfigPanel = new JPanel();
 		scriptConfigPanel.setLayout(
-			new GridLayoutManager(2, 3, new Insets(0, 0, 10, 10), -1, -1)
+			new GridLayoutManager(2, 1, new Insets(0, 0, 10, 10), -1, -1)
 		);
 		browsePanel.add(
 			scriptConfigPanel,
@@ -1222,32 +1237,13 @@ public class ConfigTab extends JFrame {
 				false
 			)
 		);
-		final Spacer spacer2 = new Spacer();
-		scriptConfigPanel.add(
-			spacer2,
-			new GridConstraints(
-				1,
-				2,
-				1,
-				1,
-				GridConstraints.ANCHOR_CENTER,
-				GridConstraints.FILL_HORIZONTAL,
-				GridConstraints.SIZEPOLICY_WANT_GROW,
-				1,
-				null,
-				null,
-				null,
-				0,
-				false
-			)
-		);
 		scriptPathTextArea = new JTextArea();
 		scriptPathTextArea.setText("Load script file");
 		scriptConfigPanel.add(
 			scriptPathTextArea,
 			new GridConstraints(
 				0,
-				1,
+				0,
 				1,
 				1,
 				GridConstraints.ANCHOR_SOUTH,
@@ -1255,29 +1251,7 @@ public class ConfigTab extends JFrame {
 				GridConstraints.SIZEPOLICY_WANT_GROW,
 				GridConstraints.SIZEPOLICY_WANT_GROW,
 				null,
-				new Dimension(150, 10),
-				null,
-				0,
-				false
-			)
-		);
-		scriptPathField = new JTextField();
-		scriptPathField.setText("");
-		scriptConfigPanel.add(
-			scriptPathField,
-			new GridConstraints(
-				1,
-				1,
-				1,
-				1,
-				GridConstraints.ANCHOR_CENTER,
-				GridConstraints.FILL_BOTH,
-				GridConstraints.SIZEPOLICY_CAN_SHRINK |
-				GridConstraints.SIZEPOLICY_WANT_GROW,
-				GridConstraints.SIZEPOLICY_CAN_SHRINK |
-				GridConstraints.SIZEPOLICY_WANT_GROW,
-				null,
-				new Dimension(50, -1),
+				new Dimension(-1, 10),
 				null,
 				0,
 				false
@@ -1328,9 +1302,9 @@ public class ConfigTab extends JFrame {
 				false
 			)
 		);
-		final Spacer spacer3 = new Spacer();
+		final Spacer spacer2 = new Spacer();
 		panel4.add(
-			spacer3,
+			spacer2,
 			new GridConstraints(
 				0,
 				0,
@@ -1392,9 +1366,9 @@ public class ConfigTab extends JFrame {
 				false
 			)
 		);
-		final Spacer spacer4 = new Spacer();
+		final Spacer spacer3 = new Spacer();
 		panel5.add(
-			spacer4,
+			spacer3,
 			new GridConstraints(
 				0,
 				0,
@@ -1531,9 +1505,9 @@ public class ConfigTab extends JFrame {
 				false
 			)
 		);
-		final Spacer spacer5 = new Spacer();
+		final Spacer spacer4 = new Spacer();
 		panel6.add(
-			spacer5,
+			spacer4,
 			new GridConstraints(
 				0,
 				0,

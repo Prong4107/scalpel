@@ -43,7 +43,7 @@ from pyscalpel.http.body import (
     CONTENT_TYPE_TO_SERIALIZER,
     JSONForm,
     IMPLEMENTED_CONTENT_TYPES,
-    ImplementedContentTypesTp,
+    ImplementedContentType,
     json_escape_bytes,
     json_unescape,
     json_unescape_bytes,
