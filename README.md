@@ -23,7 +23,9 @@ It provides an interactive way to edit encoded/encrypted data as plaintext and o
 
 To use Scalpel, you need to have Python >= 3.10 and any JDK >= 17 installed on your machine.
 
-You can download the latest release of Scalpel from the GitHub releases page. The release file is a .jar file that you can add to your Burp Suite as an extension.
+You can download the latest release of Scalpel from the GitHub releases page.
+
+The release file is a .jar file that you can add to your Burp Suite as an extension.
 
 ## Usage
 
@@ -34,27 +36,33 @@ Here is an example script:
 ```py
 from pyscalpel.http import Request, Response
 
+# Hook to intercept and rewrite a request
 def request(req: Request) -> Request | None:
     req.headers["X-Python-Intercept-Request"] = "request"
     return req
 
+# Hook to intercept and rewrite a response
 def response(res: Response) -> Response | None:
     res.headers["X-Python-Intercept-Response"] = "response"
     return res
 
+# Hook to generate a request editor's content from a request
 def req_edit_in(req: Request) -> bytes | None:
     req.headers["X-Python-In-Request-Editor"] = "req_edit_in"
     return bytes(req)
 
+# Hook to update a request from an editor's edited content
 def req_edit_out(_: Request, text: bytes) -> Request | None:
     req = Request.from_raw(text)
     req.headers["X-Python-Out-Request-Editor"] = "req_edit_out"
     return req
 
+# Hook to generate a response editor's content from a response
 def res_edit_in(res: Response) -> bytes | None:
     res.headers["X-Python-In-Response-Editor"] = "res_edit_in"
     return bytes(res)
 
+# Hook to update a response from an editor's edited content
 def res_edit_out(_: Response, text: bytes) -> Response | None:
     res = Response.from_raw(text)
     res.headers["X-Python-Out-Response-Editor"] = "res_edit_out"
