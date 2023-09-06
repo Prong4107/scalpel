@@ -4,6 +4,7 @@ import inspect
 from typing import Callable, TypeVar, cast, Any, TypedDict
 import sys
 from functools import wraps
+from os.path import dirname
 
 
 # Define a debug logger to be able to debug cases where the logger is not initialized
@@ -46,9 +47,11 @@ VENV = None
 try:
     from pyscalpel.venv import activate
     from pyscalpel.java.scalpel_types import Context
-    from pyscalpel.logger import logger
+    from pyscalpel.logger import logger as _logger
 
     ctx: Context = cast(Context, __scalpel__)  # type: ignore pylint: disable=undefined-variable
+
+    logger = _logger
 
     logger.all("Python: Loading _framework.py ...")
 
