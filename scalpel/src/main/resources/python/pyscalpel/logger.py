@@ -13,7 +13,7 @@ class Logger:
         Args:
             msg (str): The message to print
         """
-        print(msg)
+        print(f"(default): {msg}")
 
     def trace(self, msg: str):
         """Prints the message to the standard output
@@ -21,7 +21,7 @@ class Logger:
         Args:
             msg (str): The message to print
         """
-        print(msg)
+        print(f"(default): {msg}")
 
     def debug(self, msg: str):
         """Prints the message to the standard output
@@ -29,7 +29,7 @@ class Logger:
         Args:
             msg (str): The message to print
         """
-        print(msg)
+        print(f"(default): {msg}")
 
     def info(self, msg: str):
         """Prints the message to the standard output
@@ -37,7 +37,7 @@ class Logger:
         Args:
             msg (str): The message to print
         """
-        print(msg)
+        print(f"(default): {msg}")
 
     def warn(self, msg: str):
         """Prints the message to the standard output
@@ -45,7 +45,7 @@ class Logger:
         Args:
             msg (str): The message to print
         """
-        print(msg)
+        print(f"(default): {msg}")
 
     def fatal(self, msg: str):
         """Prints the message to the standard output
@@ -53,7 +53,7 @@ class Logger:
         Args:
             msg (str): The message to print
         """
-        print(msg)
+        print(f"(default): {msg}")
 
     def error(self, msg: str):
         """Prints the message to the standard error
@@ -61,12 +61,14 @@ class Logger:
         Args:
             msg (str): The message to print
         """
-        print(msg, file=sys.stderr)
+        print(f"(default): {msg}", file=sys.stderr)
 
 
 try:
     logger: Logger = import_java("lexfo.scalpel", "ScalpelLogger", Logger)
+    logger.all("Imported logger")
 except ImportError as ex:
-    logger: Logger = Logger()
-    logger.error("Couldn't import logger")
-    logger.error(str(ex))
+    # logger: Logger = Logger()
+    # logger.error("(default): Couldn't import logger")
+    # logger.error(str(ex))
+    pass
