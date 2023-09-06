@@ -75,6 +75,8 @@ try:
     # specify the absolute path of the script you want to import
     path = user_script
 
+    sys.path.append(dirname(path))
+
     # create a module spec based on the script path
     spec = importlib.util.spec_from_file_location("scalpel_user_module", path)
 
