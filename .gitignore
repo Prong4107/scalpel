@@ -49,7 +49,7 @@ __pycache__
 generated/
 src/public/
 node_modules/
-public/
+# public/
 src/resources/_gen/
 .venv/
 build/
