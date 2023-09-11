@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="icon" type="image/png" href="../favicon.ico">
+    <title>Accessing the Burp API</title>
+    
+    
+
+    
+    <link rel="stylesheet" href="../style.min.css">
+
+    
+
+    <meta name="generator" content="Hugo 0.92.2" />
+</head>
+<body>
+
+<div class="columns container is-marginless">
+    <div id="sidebar" class="column is-one-quarter">
+        <div class="brand">
+    <a href="https://www.lexfo.fr/en/">
+        <img src='../logo-docs.png' alt="scalpel docs"/>
+    </a>
+
+</div>
+<nav class="menu">
+    <p class="menu-label">Overview</p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="../">Introduction</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="../overview-installation/">Installation</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="../overview-usage/">Usage</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="../overview-faq/">FAQ</a>
+            
+        </li>
+    
+</ul>
+
+
+    <p class="menu-label"> Script Development </p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="../api/events.html">Event Hooks &amp; API</a>
+            
+        </li>
+    
+        <li>
+            <a class="is-active"
+               href="../addons-java/">Accessing the Burp API</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="../addons-examples/">Examples</a>
+            
+        </li>
+    
+</ul>
+
+
+    <p class="menu-label"> Tutorials </p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="../tute-aes/">Decrypting custom encryption.</a>
+            
+        </li>
+    
+</ul>
+
+
+    <p class="menu-label">Core concepts</p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="../concepts-howscalpelworks/">How scalpel works</a>
+            
+        </li>
+    
+</ul>
+
+
+    <p class="menu-label">Technical documentation</p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="../pdoc/">pdoc</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="../javadoc/">Scalpel Javadoc</a>
+            
+        </li>
+    
+</ul>
+
+
+</nav>
+
+    </div>
+    <div id="main" class="column content">
+        
+        
+<a class="button is-small is-outlined is-link is-pulled-right"
+   target="_blank"
+   href="https://github.com/scalpel/scalpel/blob/main/docs/src/content/addons-java.md"
+>
+
+    Edit on GitHub
+</a>
+
+
+        <h1 id="accessing-the-burp-api"><a class="anchor" href="#accessing-the-burp-api">#&nbsp;&nbsp;</a>Accessing the Burp API</h1>
+<p>Scalpel communicates with Burp through it&rsquo;s Java API and
+provides the user with an execution context where they should only have to use Python objects.</p>
+<p>However, Scalpel&rsquo;s Python library focuses on handling HTTP objects
+and does not provide utilities for all the Burp API features.</p>
+<p>For example, Scalpel library itself does not provide the ability to generate Collaborator payloads.</p>
+<p>For cases like these, the user can directly access the <a href="https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/MontoyaApi.html">MontoyaApi Java object</a></p>
+<p>Users may look at the <a href="https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/MontoyaApi.html">Montoya API Javadoc</a> to known which objects they can access.</p>
+<ul>
+<li>
+<p>Examples:</p>
+<ul>
+<li>
+<p>A script spoofing the Host header with a collaborator payload</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pyscalpel.http</span> <span class="kn">import</span> <span class="n">Request</span>
+<span class="kn">from</span> <span class="nn">pyscalpel.burp_utils</span> <span class="kn">import</span> <span class="n">ctx</span>
+
+<span class="c1"># Spoof the Host header to a Burp collaborator payload to detect out-of-band interactions and HTTP SSRFs</span>
+
+<span class="c1"># Directly access the Montoya API Java object to generate a payload</span>
+<span class="n">PAYLOAD</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">ctx</span><span class="p">[</span><span class="s2">&#34;API&#34;</span><span class="p">]</span><span class="o">.</span><span class="n">collaborator</span><span class="p">()</span><span class="o">.</span><span class="n">defaultPayloadGenerator</span><span class="p">()</span><span class="o">.</span><span class="n">generatePayload</span><span class="p">())</span>
+
+
+<span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Request</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">req</span><span class="o">.</span><span class="n">host_header</span> <span class="o">=</span> <span class="n">PAYLOAD</span>
+    <span class="k">return</span> <span class="n">req</span>
+</code></pre></div><blockquote>
+<p>Documentation for the collaborator generator can be found in the javadoc at:</p>
+<p><a href="https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/collaborator/CollaboratorPayloadGenerator.html#generatePayload(burp.api.montoya.collaborator.PayloadOption...)">https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/collaborator/CollaboratorPayloadGenerator.html#generatePayload(burp.api.montoya.collaborator.PayloadOption...)</a></p>
+</blockquote>
+</li>
+<li>
+<p>A script sending every request having the &ldquo;cmd&rdquo; param to Burp Repeater:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pyscalpel.http</span> <span class="kn">import</span> <span class="n">Request</span>
+<span class="kn">from</span> <span class="nn">pyscalpel.burp_utils</span> <span class="kn">import</span> <span class="n">ctx</span>
+<span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
+
+<span class="c1"># Send every request that contains the &#34;cmd&#34; param to repeater</span>
+
+<span class="c1"># Set to ensure added request are unique</span>
+<span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;cmd&#34;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">cmd</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">cmd</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">seen</span><span class="p">:</span>
+        <span class="c1"># Convert request to Burp format.</span>
+        <span class="n">breq</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">to_burp</span><span class="p">()</span>
+
+        <span class="c1"># Directly access the Montoya API Java object to send the request to repeater</span>
+        <span class="n">repeater</span> <span class="o">=</span> <span class="n">ctx</span><span class="p">[</span><span class="s2">&#34;API&#34;</span><span class="p">]</span><span class="o">.</span><span class="n">repeater</span><span class="p">()</span>
+
+        <span class="c1"># waiting for sendToRepeater while intercepting a request causes a Burp deadlock</span>
+        <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">repeater</span><span class="o">.</span><span class="n">sendToRepeater</span><span class="p">(</span><span class="n">breq</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&#34;cmd=</span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">))</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</code></pre></div><blockquote>
+<p>Documentation for Burp repeater can be found at:</p>
+<p><a href="https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/repeater/Repeater.html">https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/repeater/Repeater.html</a></p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+
+
+    </div>
+</div>
+</body>
+</html>
+
