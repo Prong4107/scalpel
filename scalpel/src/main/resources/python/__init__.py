@@ -17,5 +17,5 @@ Used by pyscalpel
 
 ---
 
-# [← Go back to the user documentation](../../)
+# [← Go back to the user documentation](../)
 """
