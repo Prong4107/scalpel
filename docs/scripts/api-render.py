@@ -33,8 +33,8 @@ modules = [
     "pyscalpel.encoding",
     "pyscalpel.java",
     "pyscalpel.java.burp",
-    here / ".." / "src" / "generated" / "events.py",
-    here / ".." / "src" / "generated" / "editors.py",
+    here / ".." / "src" / "declarations" / "events.py",
+    here / ".." / "src" / "declarations" / "editors.py",
 ]
 
 pdoc.pdoc(*modules, output_directory=here / ".." / "src" / "generated" / "api")
