@@ -11,65 +11,63 @@ pyscalpel<wbr>.<a href="./../java.html">java</a><wbr>.scalpel_types    </h1>
 
                         <label class="view-source-button" for="mod-scalpel_types-view-source"><span>View Source</span></label>
 
-                        <div class="chroma pdoc-code"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">1</span></a><span class="kn">from</span> <span class="nn">.scalpel</span> <span class="kn">import</span> <span class="n">Scalpel</span>
+                        <div class="chroma pdoc-code"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos">1</span></a><span class="kn">from</span> <span class="nn">.context</span> <span class="kn">import</span> <span class="n">Context</span>
 </span><span id="L-2"><a href="#L-2"><span class="linenos">2</span></a><span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">IPythonUtils</span><span class="p">,</span> <span class="n">PythonUtils</span>
 </span><span id="L-3"><a href="#L-3"><span class="linenos">3</span></a>
-</span><span id="L-4"><a href="#L-4"><span class="linenos">4</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Scalpel&quot;</span><span class="p">,</span> <span class="s2">&quot;IPythonUtils&quot;</span><span class="p">,</span> <span class="s2">&quot;PythonUtils&quot;</span><span class="p">]</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos">4</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Context&quot;</span><span class="p">,</span> <span class="s2">&quot;IPythonUtils&quot;</span><span class="p">,</span> <span class="s2">&quot;PythonUtils&quot;</span><span class="p">]</span>
 </span></pre></div>
 
 
             </section>
-                <section id="Scalpel">
-                            <input id="Scalpel-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+                <section id="Context">
+                            <input id="Context-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr class">
             
     <span class="def">class</span>
-    <span class="name">Scalpel</span><wbr>(<span class="base">typing.TypedDict</span>):
+    <span class="name">Context</span><wbr>(<span class="base">typing.TypedDict</span>):
 
-                <label class="view-source-button" for="Scalpel-view-source"><span>View Source</span></label>
+                <label class="view-source-button" for="Context-view-source"><span>View Source</span></label>
 
     </div>
-    <a class="headerlink" href="#Scalpel"></a>
-            <div class="chroma pdoc-code"><pre><span></span><span id="Scalpel-7"><a href="#Scalpel-7"><span class="linenos"> 7</span></a><span class="k">class</span> <span class="nc">Scalpel</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
-</span><span id="Scalpel-8"><a href="#Scalpel-8"><span class="linenos"> 8</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Scalpel python execution context&quot;&quot;&quot;</span>
-</span><span id="Scalpel-9"><a href="#Scalpel-9"><span class="linenos"> 9</span></a>
-</span><span id="Scalpel-10"><a href="#Scalpel-10"><span class="linenos">10</span></a>    <span class="n">API</span><span class="p">:</span> <span class="n">JavaObject</span>
-</span><span id="Scalpel-11"><a href="#Scalpel-11"><span class="linenos">11</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="Scalpel-12"><a href="#Scalpel-12"><span class="linenos">12</span></a><span class="sd">        The Burp [Montoya API]</span>
-</span><span id="Scalpel-13"><a href="#Scalpel-13"><span class="linenos">13</span></a><span class="sd">        (https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/MontoyaApi.html)</span>
-</span><span id="Scalpel-14"><a href="#Scalpel-14"><span class="linenos">14</span></a><span class="sd">        root object.</span>
-</span><span id="Scalpel-15"><a href="#Scalpel-15"><span class="linenos">15</span></a>
-</span><span id="Scalpel-16"><a href="#Scalpel-16"><span class="linenos">16</span></a><span class="sd">        Allows you to interact with Burp by directly manipulating the Java object.</span>
-</span><span id="Scalpel-17"><a href="#Scalpel-17"><span class="linenos">17</span></a><span class="sd">    </span>
-</span><span id="Scalpel-18"><a href="#Scalpel-18"><span class="linenos">18</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="Scalpel-19"><a href="#Scalpel-19"><span class="linenos">19</span></a>    <span class="n">file</span><span class="p">:</span> <span class="nb">str</span>
-</span><span id="Scalpel-20"><a href="#Scalpel-20"><span class="linenos">20</span></a>    <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span>
-</span><span id="Scalpel-21"><a href="#Scalpel-21"><span class="linenos">21</span></a>
-</span><span id="Scalpel-22"><a href="#Scalpel-22"><span class="linenos">22</span></a>    <span class="n">logger</span><span class="p">:</span> <span class="n">Logging</span>
-</span><span id="Scalpel-23"><a href="#Scalpel-23"><span class="linenos">23</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;The logging object to use to display logs in Burp GUI&quot;&quot;&quot;</span>
-</span><span id="Scalpel-24"><a href="#Scalpel-24"><span class="linenos">24</span></a>
-</span><span id="Scalpel-25"><a href="#Scalpel-25"><span class="linenos">25</span></a>    <span class="n">user_script</span><span class="p">:</span> <span class="nb">str</span>
-</span><span id="Scalpel-26"><a href="#Scalpel-26"><span class="linenos">26</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;The loaded script path&quot;&quot;&quot;</span>
-</span><span id="Scalpel-27"><a href="#Scalpel-27"><span class="linenos">27</span></a>
-</span><span id="Scalpel-28"><a href="#Scalpel-28"><span class="linenos">28</span></a>    <span class="n">framework</span><span class="p">:</span> <span class="nb">str</span>
-</span><span id="Scalpel-29"><a href="#Scalpel-29"><span class="linenos">29</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;The framework (loader script) path&quot;&quot;&quot;</span>
-</span><span id="Scalpel-30"><a href="#Scalpel-30"><span class="linenos">30</span></a>
-</span><span id="Scalpel-31"><a href="#Scalpel-31"><span class="linenos">31</span></a>    <span class="n">venv</span><span class="p">:</span> <span class="nb">str</span>
-</span><span id="Scalpel-32"><a href="#Scalpel-32"><span class="linenos">32</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;The venv the script was loaded in&quot;&quot;&quot;</span>
+    <a class="headerlink" href="#Context"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="Context-6"><a href="#Context-6"><span class="linenos"> 6</span></a><span class="k">class</span> <span class="nc">Context</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
+</span><span id="Context-7"><a href="#Context-7"><span class="linenos"> 7</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Scalpel Python execution context&quot;&quot;&quot;</span>
+</span><span id="Context-8"><a href="#Context-8"><span class="linenos"> 8</span></a>
+</span><span id="Context-9"><a href="#Context-9"><span class="linenos"> 9</span></a>    <span class="n">API</span><span class="p">:</span> <span class="n">Any</span>
+</span><span id="Context-10"><a href="#Context-10"><span class="linenos">10</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="Context-11"><a href="#Context-11"><span class="linenos">11</span></a><span class="sd">        The Burp [Montoya API]</span>
+</span><span id="Context-12"><a href="#Context-12"><span class="linenos">12</span></a><span class="sd">        (https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/MontoyaApi.html)</span>
+</span><span id="Context-13"><a href="#Context-13"><span class="linenos">13</span></a><span class="sd">        root object.</span>
+</span><span id="Context-14"><a href="#Context-14"><span class="linenos">14</span></a>
+</span><span id="Context-15"><a href="#Context-15"><span class="linenos">15</span></a><span class="sd">        Allows you to interact with Burp by directly manipulating the Java object.</span>
+</span><span id="Context-16"><a href="#Context-16"><span class="linenos">16</span></a><span class="sd">    </span>
+</span><span id="Context-17"><a href="#Context-17"><span class="linenos">17</span></a><span class="sd">    &quot;&quot;&quot;</span>
+</span><span id="Context-18"><a href="#Context-18"><span class="linenos">18</span></a>
+</span><span id="Context-19"><a href="#Context-19"><span class="linenos">19</span></a>    <span class="n">directory</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="Context-20"><a href="#Context-20"><span class="linenos">20</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;The framework directory&quot;&quot;&quot;</span>
+</span><span id="Context-21"><a href="#Context-21"><span class="linenos">21</span></a>
+</span><span id="Context-22"><a href="#Context-22"><span class="linenos">22</span></a>    <span class="n">user_script</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="Context-23"><a href="#Context-23"><span class="linenos">23</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;The loaded script path&quot;&quot;&quot;</span>
+</span><span id="Context-24"><a href="#Context-24"><span class="linenos">24</span></a>
+</span><span id="Context-25"><a href="#Context-25"><span class="linenos">25</span></a>    <span class="n">framework</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="Context-26"><a href="#Context-26"><span class="linenos">26</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;The framework (loader script) path&quot;&quot;&quot;</span>
+</span><span id="Context-27"><a href="#Context-27"><span class="linenos">27</span></a>
+</span><span id="Context-28"><a href="#Context-28"><span class="linenos">28</span></a>    <span class="n">venv</span><span class="p">:</span> <span class="nb">str</span>
+</span><span id="Context-29"><a href="#Context-29"><span class="linenos">29</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;The venv the script was loaded in&quot;&quot;&quot;</span>
 </span></pre></div>
 
 
-            <div class="docstring"><p>Scalpel python execution context</p>
+            <div class="docstring"><p>Scalpel Python execution context</p>
 </div>
 
 
-                            <div id="Scalpel.API" class="classattr">
+                            <div id="Context.API" class="classattr">
                                 <div class="attr variable">
-            <span class="name">API</span><span class="annotation">: pyscalpel.java.object.JavaObject</span>
+            <span class="name">API</span><span class="annotation">: Any</span>
 
         
     </div>
-    <a class="headerlink" href="#Scalpel.API"></a>
+    <a class="headerlink" href="#Context.API"></a>
     
             <div class="docstring"><p>The Burp [Montoya API]
 (<a href="https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/MontoyaApi.html">https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/MontoyaApi.html</a>)
@@ -80,74 +78,52 @@ root object.</p>
 
 
                             </div>
-                            <div id="Scalpel.file" class="classattr">
-                                <div class="attr variable">
-            <span class="name">file</span><span class="annotation">: str</span>
-
-        
-    </div>
-    <a class="headerlink" href="#Scalpel.file"></a>
-    
-    
-
-                            </div>
-                            <div id="Scalpel.directory" class="classattr">
+                            <div id="Context.directory" class="classattr">
                                 <div class="attr variable">
             <span class="name">directory</span><span class="annotation">: str</span>
 
         
     </div>
-    <a class="headerlink" href="#Scalpel.directory"></a>
+    <a class="headerlink" href="#Context.directory"></a>
     
-    
-
-                            </div>
-                            <div id="Scalpel.logger" class="classattr">
-                                <div class="attr variable">
-            <span class="name">logger</span><span class="annotation">: pyscalpel.java.burp.logging.Logging</span>
-
-        
-    </div>
-    <a class="headerlink" href="#Scalpel.logger"></a>
-    
-            <div class="docstring"><p>The logging object to use to display logs in Burp GUI</p>
+            <div class="docstring"><p>The framework directory</p>
 </div>
 
 
                             </div>
-                            <div id="Scalpel.user_script" class="classattr">
+                            <div id="Context.user_script" class="classattr">
                                 <div class="attr variable">
             <span class="name">user_script</span><span class="annotation">: str</span>
 
         
     </div>
-    <a class="headerlink" href="#Scalpel.user_script"></a>
+    <a class="headerlink" href="#Context.user_script"></a>
     
             <div class="docstring"><p>The loaded script path</p>
 </div>
 
 
                             </div>
-                            <div id="Scalpel.framework" class="classattr">
+                            <div id="Context.framework" class="classattr">
                                 <div class="attr variable">
             <span class="name">framework</span><span class="annotation">: str</span>
 
         
     </div>
-    <a class="headerlink" href="#Scalpel.framework"></a>
+    <a class="headerlink" href="#Context.framework"></a>
     
             <div class="docstring"><p>The framework (loader script) path</p>
 </div>
 
 
                             </div>
-                            <div id="Scalpel.venv" class="classattr">
+                            <div id="Context.venv" class="classattr">
                                 <div class="attr variable">
             <span class="name">venv</span><span class="annotation">: str</span>
 
         
     </div>
-    <a class="headerlink" href="#Scalpel.venv"></a>
+    <a class="headerlink" href="#Context.venv"></a>
     
             <div class="docstring"><p>The venv the script was loaded in</p>
 </div>

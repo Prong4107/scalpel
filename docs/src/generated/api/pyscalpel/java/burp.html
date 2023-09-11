@@ -27,27 +27,96 @@ pyscalpel<wbr>.<a href="./../java.html">java</a><wbr>.burp    </h1>
 </span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="kn">from</span> <span class="nn">.http_response</span> <span class="kn">import</span> <span class="n">IHttpResponse</span><span class="p">,</span> <span class="n">HttpResponse</span>
 </span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="kn">from</span> <span class="nn">.http_parameter</span> <span class="kn">import</span> <span class="n">IHttpParameter</span><span class="p">,</span> <span class="n">HttpParameter</span>
 </span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="kn">from</span> <span class="nn">.http_service</span> <span class="kn">import</span> <span class="n">IHttpService</span><span class="p">,</span> <span class="n">HttpService</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>    <span class="s2">&quot;IHttpRequest&quot;</span><span class="p">,</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>    <span class="s2">&quot;HttpRequest&quot;</span><span class="p">,</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>    <span class="s2">&quot;IHttpResponse&quot;</span><span class="p">,</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>    <span class="s2">&quot;HttpResponse&quot;</span><span class="p">,</span>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>    <span class="s2">&quot;IHttpHeader&quot;</span><span class="p">,</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>    <span class="s2">&quot;HttpHeader&quot;</span><span class="p">,</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>    <span class="s2">&quot;IHttpMessage&quot;</span><span class="p">,</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>    <span class="s2">&quot;IHttpParameter&quot;</span><span class="p">,</span>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>    <span class="s2">&quot;HttpParameter&quot;</span><span class="p">,</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>    <span class="s2">&quot;IHttpService&quot;</span><span class="p">,</span>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>    <span class="s2">&quot;HttpService&quot;</span><span class="p">,</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>    <span class="s2">&quot;IByteArray&quot;</span><span class="p">,</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>    <span class="s2">&quot;ByteArray&quot;</span><span class="p">,</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="p">]</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="kn">from</span> <span class="nn">.http_request_response</span> <span class="kn">import</span> <span class="n">IHttpRequestResponse</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="kn">from</span> <span class="nn">.http</span> <span class="kn">import</span> <span class="n">IHttp</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="kn">from</span> <span class="nn">.logging</span> <span class="kn">import</span> <span class="n">Logging</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a>    <span class="s2">&quot;IHttp&quot;</span><span class="p">,</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>    <span class="s2">&quot;IHttpRequest&quot;</span><span class="p">,</span>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a>    <span class="s2">&quot;HttpRequest&quot;</span><span class="p">,</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>    <span class="s2">&quot;IHttpResponse&quot;</span><span class="p">,</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a>    <span class="s2">&quot;HttpResponse&quot;</span><span class="p">,</span>
+</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>    <span class="s2">&quot;IHttpRequestResponse&quot;</span><span class="p">,</span>
+</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a>    <span class="s2">&quot;IHttpHeader&quot;</span><span class="p">,</span>
+</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>    <span class="s2">&quot;HttpHeader&quot;</span><span class="p">,</span>
+</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a>    <span class="s2">&quot;IHttpMessage&quot;</span><span class="p">,</span>
+</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a>    <span class="s2">&quot;IHttpParameter&quot;</span><span class="p">,</span>
+</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a>    <span class="s2">&quot;HttpParameter&quot;</span><span class="p">,</span>
+</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a>    <span class="s2">&quot;IHttpService&quot;</span><span class="p">,</span>
+</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>    <span class="s2">&quot;HttpService&quot;</span><span class="p">,</span>
+</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a>    <span class="s2">&quot;IByteArray&quot;</span><span class="p">,</span>
+</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a>    <span class="s2">&quot;ByteArray&quot;</span><span class="p">,</span>
+</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>    <span class="s2">&quot;Logging&quot;</span><span class="p">,</span>
+</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="p">]</span>
 </span></pre></div>
 
 
             </section>
+                <section id="IHttp">
+                            <input id="IHttp-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">IHttp</span><wbr>(<span class="base">pyscalpel.java.object.JavaObject</span>, <span class="base">typing.Protocol</span>):
+
+                <label class="view-source-button" for="IHttp-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#IHttp"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="IHttp-12"><a href="#IHttp-12"><span class="linenos">12</span></a><span class="k">class</span> <span class="nc">IHttp</span><span class="p">(</span><span class="n">JavaObject</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+</span><span id="IHttp-13"><a href="#IHttp-13"><span class="linenos">13</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;generated source for interface Http&quot;&quot;&quot;</span>
+</span><span id="IHttp-14"><a href="#IHttp-14"><span class="linenos">14</span></a>
+</span><span id="IHttp-15"><a href="#IHttp-15"><span class="linenos">15</span></a>    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">ABCMeta</span>
+</span><span id="IHttp-16"><a href="#IHttp-16"><span class="linenos">16</span></a>
+</span><span id="IHttp-17"><a href="#IHttp-17"><span class="linenos">17</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="IHttp-18"><a href="#IHttp-18"><span class="linenos">18</span></a>    <span class="k">def</span> <span class="nf">sendRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">IHttpRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IHttpRequestResponse</span><span class="p">:</span>
+</span><span id="IHttp-19"><a href="#IHttp-19"><span class="linenos">19</span></a>        <span class="o">...</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>generated source for interface Http</p>
+</div>
+
+
+                            <div id="IHttp.sendRequest" class="classattr">
+                                        <input id="IHttp.sendRequest-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+                    <div class="decorator">@abstractmethod</div>
+
+        <span class="def">def</span>
+        <span class="name">sendRequest</span><span class="signature pdoc-code multiline">(<span class="param">	<span class="bp">self</span>,</span><span class="param">	<span class="n">request</span><span class="p">:</span> <span class="n"><a href="#IHttpRequest">pyscalpel.java.burp.IHttpRequest</a></span></span><span class="return-annotation">) -> <span class="n"><a href="#IHttpRequestResponse">pyscalpel.java.burp.IHttpRequestResponse</a></span>:</span></span>
+
+                <label class="view-source-button" for="IHttp.sendRequest-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#IHttp.sendRequest"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="IHttp.sendRequest-17"><a href="#IHttp.sendRequest-17"><span class="linenos">17</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="IHttp.sendRequest-18"><a href="#IHttp.sendRequest-18"><span class="linenos">18</span></a>    <span class="k">def</span> <span class="nf">sendRequest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">:</span> <span class="n">IHttpRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IHttpRequestResponse</span><span class="p">:</span>
+</span><span id="IHttp.sendRequest-19"><a href="#IHttp.sendRequest-19"><span class="linenos">19</span></a>        <span class="o">...</span>
+</span></pre></div>
+
+
+    
+
+                            </div>
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt>pyscalpel.java.object.JavaObject</dt>
+                                <dd id="IHttp.getClass" class="function">getClass</dd>
+                <dd id="IHttp.hashCode" class="function">hashCode</dd>
+                <dd id="IHttp.equals" class="function">equals</dd>
+                <dd id="IHttp.clone" class="function">clone</dd>
+                <dd id="IHttp.notify" class="function">notify</dd>
+                <dd id="IHttp.notifyAll" class="function">notifyAll</dd>
+                <dd id="IHttp.wait" class="function">wait</dd>
+                <dd id="IHttp.finalize" class="function">finalize</dd>
+
+            </div>
+                                </dl>
+                            </div>
+                </section>
                 <section id="IHttpRequest">
                             <input id="IHttpRequest-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr class">
@@ -1461,7 +1530,7 @@ pyscalpel<wbr>.<a href="./../java.html">java</a><wbr>.burp    </h1>
 </span><span id="IHttpResponse-34"><a href="#IHttpResponse-34"><span class="linenos"> 34</span></a>    <span class="c1">#      * @return HTTP Reason phrase.</span>
 </span><span id="IHttpResponse-35"><a href="#IHttpResponse-35"><span class="linenos"> 35</span></a>    <span class="c1">#</span>
 </span><span id="IHttpResponse-36"><a href="#IHttpResponse-36"><span class="linenos"> 36</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="IHttpResponse-37"><a href="#IHttpResponse-37"><span class="linenos"> 37</span></a>    <span class="k">def</span> <span class="nf">reasonPhrase</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="IHttpResponse-37"><a href="#IHttpResponse-37"><span class="linenos"> 37</span></a>    <span class="k">def</span> <span class="nf">reasonPhrase</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="IHttpResponse-38"><a href="#IHttpResponse-38"><span class="linenos"> 38</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method reasonPhrase&quot;&quot;&quot;</span>
 </span><span id="IHttpResponse-39"><a href="#IHttpResponse-39"><span class="linenos"> 39</span></a>
 </span><span id="IHttpResponse-40"><a href="#IHttpResponse-40"><span class="linenos"> 40</span></a>    <span class="c1">#</span>
@@ -1485,7 +1554,7 @@ pyscalpel<wbr>.<a href="./../java.html">java</a><wbr>.burp    </h1>
 </span><span id="IHttpResponse-58"><a href="#IHttpResponse-58"><span class="linenos"> 58</span></a>    <span class="c1">#      * {@inheritDoc}</span>
 </span><span id="IHttpResponse-59"><a href="#IHttpResponse-59"><span class="linenos"> 59</span></a>    <span class="c1">#</span>
 </span><span id="IHttpResponse-60"><a href="#IHttpResponse-60"><span class="linenos"> 60</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="IHttpResponse-61"><a href="#IHttpResponse-61"><span class="linenos"> 61</span></a>    <span class="k">def</span> <span class="nf">body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IByteArray</span><span class="p">:</span>
+</span><span id="IHttpResponse-61"><a href="#IHttpResponse-61"><span class="linenos"> 61</span></a>    <span class="k">def</span> <span class="nf">body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IByteArray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="IHttpResponse-62"><a href="#IHttpResponse-62"><span class="linenos"> 62</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method body&quot;&quot;&quot;</span>
 </span><span id="IHttpResponse-63"><a href="#IHttpResponse-63"><span class="linenos"> 63</span></a>
 </span><span id="IHttpResponse-64"><a href="#IHttpResponse-64"><span class="linenos"> 64</span></a>    <span class="c1">#</span>
@@ -1765,14 +1834,14 @@ pyscalpel<wbr>.<a href="./../java.html">java</a><wbr>.burp    </h1>
                     <div class="decorator">@abstractmethod</div>
 
         <span class="def">def</span>
-        <span class="name">reasonPhrase</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="nb">str</span>:</span></span>
+        <span class="name">reasonPhrase</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
                 <label class="view-source-button" for="IHttpResponse.reasonPhrase-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#IHttpResponse.reasonPhrase"></a>
             <div class="chroma pdoc-code"><pre><span></span><span id="IHttpResponse.reasonPhrase-36"><a href="#IHttpResponse.reasonPhrase-36"><span class="linenos">36</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="IHttpResponse.reasonPhrase-37"><a href="#IHttpResponse.reasonPhrase-37"><span class="linenos">37</span></a>    <span class="k">def</span> <span class="nf">reasonPhrase</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+</span><span id="IHttpResponse.reasonPhrase-37"><a href="#IHttpResponse.reasonPhrase-37"><span class="linenos">37</span></a>    <span class="k">def</span> <span class="nf">reasonPhrase</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="IHttpResponse.reasonPhrase-38"><a href="#IHttpResponse.reasonPhrase-38"><span class="linenos">38</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method reasonPhrase&quot;&quot;&quot;</span>
 </span></pre></div>
 
@@ -1834,14 +1903,14 @@ pyscalpel<wbr>.<a href="./../java.html">java</a><wbr>.burp    </h1>
                     <div class="decorator">@abstractmethod</div>
 
         <span class="def">def</span>
-        <span class="name">body</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="n"><a href="#IByteArray">pyscalpel.java.burp.IByteArray</a></span>:</span></span>
+        <span class="name">body</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="n"><a href="#IByteArray">pyscalpel.java.burp.IByteArray</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
 
                 <label class="view-source-button" for="IHttpResponse.body-view-source"><span>View Source</span></label>
 
     </div>
     <a class="headerlink" href="#IHttpResponse.body"></a>
             <div class="chroma pdoc-code"><pre><span></span><span id="IHttpResponse.body-60"><a href="#IHttpResponse.body-60"><span class="linenos">60</span></a>    <span class="nd">@abstractmethod</span>
-</span><span id="IHttpResponse.body-61"><a href="#IHttpResponse.body-61"><span class="linenos">61</span></a>    <span class="k">def</span> <span class="nf">body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IByteArray</span><span class="p">:</span>
+</span><span id="IHttpResponse.body-61"><a href="#IHttpResponse.body-61"><span class="linenos">61</span></a>    <span class="k">def</span> <span class="nf">body</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IByteArray</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="IHttpResponse.body-62"><a href="#IHttpResponse.body-62"><span class="linenos">62</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method body&quot;&quot;&quot;</span>
 </span></pre></div>
 
@@ -2319,6 +2388,95 @@ pyscalpel<wbr>.<a href="./../java.html">java</a><wbr>.burp    </h1>
     
     
 
+                </section>
+                <section id="IHttpRequestResponse">
+                            <input id="IHttpRequestResponse-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">IHttpRequestResponse</span><wbr>(<span class="base">pyscalpel.java.object.JavaObject</span>, <span class="base">typing.Protocol</span>):
+
+                <label class="view-source-button" for="IHttpRequestResponse-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#IHttpRequestResponse"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="IHttpRequestResponse-12"><a href="#IHttpRequestResponse-12"><span class="linenos">12</span></a><span class="k">class</span> <span class="nc">IHttpRequestResponse</span><span class="p">(</span><span class="n">JavaObject</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+</span><span id="IHttpRequestResponse-13"><a href="#IHttpRequestResponse-13"><span class="linenos">13</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;generated source for interface HttpRequestResponse&quot;&quot;&quot;</span>
+</span><span id="IHttpRequestResponse-14"><a href="#IHttpRequestResponse-14"><span class="linenos">14</span></a>
+</span><span id="IHttpRequestResponse-15"><a href="#IHttpRequestResponse-15"><span class="linenos">15</span></a>    <span class="n">__metaclass__</span> <span class="o">=</span> <span class="n">ABCMeta</span>
+</span><span id="IHttpRequestResponse-16"><a href="#IHttpRequestResponse-16"><span class="linenos">16</span></a>
+</span><span id="IHttpRequestResponse-17"><a href="#IHttpRequestResponse-17"><span class="linenos">17</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="IHttpRequestResponse-18"><a href="#IHttpRequestResponse-18"><span class="linenos">18</span></a>    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IHttpRequest</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="IHttpRequestResponse-19"><a href="#IHttpRequestResponse-19"><span class="linenos">19</span></a>        <span class="o">...</span>
+</span><span id="IHttpRequestResponse-20"><a href="#IHttpRequestResponse-20"><span class="linenos">20</span></a>
+</span><span id="IHttpRequestResponse-21"><a href="#IHttpRequestResponse-21"><span class="linenos">21</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="IHttpRequestResponse-22"><a href="#IHttpRequestResponse-22"><span class="linenos">22</span></a>    <span class="k">def</span> <span class="nf">response</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IHttpResponse</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="IHttpRequestResponse-23"><a href="#IHttpRequestResponse-23"><span class="linenos">23</span></a>        <span class="o">...</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>generated source for interface HttpRequestResponse</p>
+</div>
+
+
+                            <div id="IHttpRequestResponse.request" class="classattr">
+                                        <input id="IHttpRequestResponse.request-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+                    <div class="decorator">@abstractmethod</div>
+
+        <span class="def">def</span>
+        <span class="name">request</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="n"><a href="#IHttpRequest">pyscalpel.java.burp.IHttpRequest</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+
+                <label class="view-source-button" for="IHttpRequestResponse.request-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#IHttpRequestResponse.request"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="IHttpRequestResponse.request-17"><a href="#IHttpRequestResponse.request-17"><span class="linenos">17</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="IHttpRequestResponse.request-18"><a href="#IHttpRequestResponse.request-18"><span class="linenos">18</span></a>    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IHttpRequest</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="IHttpRequestResponse.request-19"><a href="#IHttpRequestResponse.request-19"><span class="linenos">19</span></a>        <span class="o">...</span>
+</span></pre></div>
+
+
+    
+
+                            </div>
+                            <div id="IHttpRequestResponse.response" class="classattr">
+                                        <input id="IHttpRequestResponse.response-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+                    <div class="decorator">@abstractmethod</div>
+
+        <span class="def">def</span>
+        <span class="name">response</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="n"><a href="#IHttpResponse">pyscalpel.java.burp.IHttpResponse</a></span> <span class="o">|</span> <span class="kc">None</span>:</span></span>
+
+                <label class="view-source-button" for="IHttpRequestResponse.response-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#IHttpRequestResponse.response"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="IHttpRequestResponse.response-21"><a href="#IHttpRequestResponse.response-21"><span class="linenos">21</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="IHttpRequestResponse.response-22"><a href="#IHttpRequestResponse.response-22"><span class="linenos">22</span></a>    <span class="k">def</span> <span class="nf">response</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IHttpResponse</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="IHttpRequestResponse.response-23"><a href="#IHttpRequestResponse.response-23"><span class="linenos">23</span></a>        <span class="o">...</span>
+</span></pre></div>
+
+
+    
+
+                            </div>
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt>pyscalpel.java.object.JavaObject</dt>
+                                <dd id="IHttpRequestResponse.getClass" class="function">getClass</dd>
+                <dd id="IHttpRequestResponse.hashCode" class="function">hashCode</dd>
+                <dd id="IHttpRequestResponse.equals" class="function">equals</dd>
+                <dd id="IHttpRequestResponse.clone" class="function">clone</dd>
+                <dd id="IHttpRequestResponse.notify" class="function">notify</dd>
+                <dd id="IHttpRequestResponse.notifyAll" class="function">notifyAll</dd>
+                <dd id="IHttpRequestResponse.wait" class="function">wait</dd>
+                <dd id="IHttpRequestResponse.finalize" class="function">finalize</dd>
+
+            </div>
+                                </dl>
+                            </div>
                 </section>
                 <section id="IHttpHeader">
                             <input id="IHttpHeader-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
@@ -3909,6 +4067,287 @@ pyscalpel<wbr>.<a href="./../java.html">java</a><wbr>.burp    </h1>
     
     
 
+                </section>
+                <section id="Logging">
+                            <input id="Logging-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr class">
+            
+    <span class="def">class</span>
+    <span class="name">Logging</span><wbr>(<span class="base">pyscalpel.java.object.JavaObject</span>):
+
+                <label class="view-source-button" for="Logging-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#Logging"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="Logging-12"><a href="#Logging-12"><span class="linenos">12</span></a><span class="k">class</span> <span class="nc">Logging</span><span class="p">(</span><span class="n">JavaObject</span><span class="p">):</span>
+</span><span id="Logging-13"><a href="#Logging-13"><span class="linenos">13</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;generated source for interface Logging&quot;&quot;&quot;</span>
+</span><span id="Logging-14"><a href="#Logging-14"><span class="linenos">14</span></a>
+</span><span id="Logging-15"><a href="#Logging-15"><span class="linenos">15</span></a>    <span class="c1">#</span>
+</span><span id="Logging-16"><a href="#Logging-16"><span class="linenos">16</span></a>    <span class="c1">#       * Obtain the current extension&#39;s standard output</span>
+</span><span id="Logging-17"><a href="#Logging-17"><span class="linenos">17</span></a>    <span class="c1">#       * stream. Extensions should write all output to this stream, allowing the</span>
+</span><span id="Logging-18"><a href="#Logging-18"><span class="linenos">18</span></a>    <span class="c1">#       * Burp user to configure how that output is handled from within the UI.</span>
+</span><span id="Logging-19"><a href="#Logging-19"><span class="linenos">19</span></a>    <span class="c1">#       *</span>
+</span><span id="Logging-20"><a href="#Logging-20"><span class="linenos">20</span></a>    <span class="c1">#       * @return The extension&#39;s standard output stream.</span>
+</span><span id="Logging-21"><a href="#Logging-21"><span class="linenos">21</span></a>    <span class="c1">#</span>
+</span><span id="Logging-22"><a href="#Logging-22"><span class="linenos">22</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging-23"><a href="#Logging-23"><span class="linenos">23</span></a>    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JavaObject</span><span class="p">:</span>
+</span><span id="Logging-24"><a href="#Logging-24"><span class="linenos">24</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method output&quot;&quot;&quot;</span>
+</span><span id="Logging-25"><a href="#Logging-25"><span class="linenos">25</span></a>
+</span><span id="Logging-26"><a href="#Logging-26"><span class="linenos">26</span></a>    <span class="c1">#</span>
+</span><span id="Logging-27"><a href="#Logging-27"><span class="linenos">27</span></a>    <span class="c1">#       * Obtain the current extension&#39;s standard error</span>
+</span><span id="Logging-28"><a href="#Logging-28"><span class="linenos">28</span></a>    <span class="c1">#       * stream. Extensions should write all error messages to this stream,</span>
+</span><span id="Logging-29"><a href="#Logging-29"><span class="linenos">29</span></a>    <span class="c1">#       * allowing the Burp user to configure how that output is handled from</span>
+</span><span id="Logging-30"><a href="#Logging-30"><span class="linenos">30</span></a>    <span class="c1">#       * within the UI.</span>
+</span><span id="Logging-31"><a href="#Logging-31"><span class="linenos">31</span></a>    <span class="c1">#       *</span>
+</span><span id="Logging-32"><a href="#Logging-32"><span class="linenos">32</span></a>    <span class="c1">#       * @return The extension&#39;s standard error stream.</span>
+</span><span id="Logging-33"><a href="#Logging-33"><span class="linenos">33</span></a>    <span class="c1">#</span>
+</span><span id="Logging-34"><a href="#Logging-34"><span class="linenos">34</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging-35"><a href="#Logging-35"><span class="linenos">35</span></a>    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JavaObject</span><span class="p">:</span>
+</span><span id="Logging-36"><a href="#Logging-36"><span class="linenos">36</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method error&quot;&quot;&quot;</span>
+</span><span id="Logging-37"><a href="#Logging-37"><span class="linenos">37</span></a>
+</span><span id="Logging-38"><a href="#Logging-38"><span class="linenos">38</span></a>    <span class="c1">#</span>
+</span><span id="Logging-39"><a href="#Logging-39"><span class="linenos">39</span></a>    <span class="c1">#       * This method prints a line of output to the current extension&#39;s standard</span>
+</span><span id="Logging-40"><a href="#Logging-40"><span class="linenos">40</span></a>    <span class="c1">#       * output stream.</span>
+</span><span id="Logging-41"><a href="#Logging-41"><span class="linenos">41</span></a>    <span class="c1">#       *</span>
+</span><span id="Logging-42"><a href="#Logging-42"><span class="linenos">42</span></a>    <span class="c1">#       * @param message The message to print.</span>
+</span><span id="Logging-43"><a href="#Logging-43"><span class="linenos">43</span></a>    <span class="c1">#</span>
+</span><span id="Logging-44"><a href="#Logging-44"><span class="linenos">44</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging-45"><a href="#Logging-45"><span class="linenos">45</span></a>    <span class="k">def</span> <span class="nf">logToOutput</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Logging-46"><a href="#Logging-46"><span class="linenos">46</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method logToOutput&quot;&quot;&quot;</span>
+</span><span id="Logging-47"><a href="#Logging-47"><span class="linenos">47</span></a>
+</span><span id="Logging-48"><a href="#Logging-48"><span class="linenos">48</span></a>    <span class="c1">#</span>
+</span><span id="Logging-49"><a href="#Logging-49"><span class="linenos">49</span></a>    <span class="c1">#       * This method prints a line of output to the current extension&#39;s standard</span>
+</span><span id="Logging-50"><a href="#Logging-50"><span class="linenos">50</span></a>    <span class="c1">#       * error stream.</span>
+</span><span id="Logging-51"><a href="#Logging-51"><span class="linenos">51</span></a>    <span class="c1">#       *</span>
+</span><span id="Logging-52"><a href="#Logging-52"><span class="linenos">52</span></a>    <span class="c1">#       * @param message The message to print.</span>
+</span><span id="Logging-53"><a href="#Logging-53"><span class="linenos">53</span></a>    <span class="c1">#</span>
+</span><span id="Logging-54"><a href="#Logging-54"><span class="linenos">54</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging-55"><a href="#Logging-55"><span class="linenos">55</span></a>    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Logging-56"><a href="#Logging-56"><span class="linenos">56</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method error&quot;&quot;&quot;</span>
+</span><span id="Logging-57"><a href="#Logging-57"><span class="linenos">57</span></a>
+</span><span id="Logging-58"><a href="#Logging-58"><span class="linenos">58</span></a>    <span class="c1">#</span>
+</span><span id="Logging-59"><a href="#Logging-59"><span class="linenos">59</span></a>    <span class="c1">#       * This method can be used to display a debug event in the Burp Suite</span>
+</span><span id="Logging-60"><a href="#Logging-60"><span class="linenos">60</span></a>    <span class="c1">#       * event log.</span>
+</span><span id="Logging-61"><a href="#Logging-61"><span class="linenos">61</span></a>    <span class="c1">#       *</span>
+</span><span id="Logging-62"><a href="#Logging-62"><span class="linenos">62</span></a>    <span class="c1">#       * @param message The debug message to display.</span>
+</span><span id="Logging-63"><a href="#Logging-63"><span class="linenos">63</span></a>    <span class="c1">#</span>
+</span><span id="Logging-64"><a href="#Logging-64"><span class="linenos">64</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging-65"><a href="#Logging-65"><span class="linenos">65</span></a>    <span class="k">def</span> <span class="nf">raiseDebugEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Logging-66"><a href="#Logging-66"><span class="linenos">66</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method raiseDebugEvent&quot;&quot;&quot;</span>
+</span><span id="Logging-67"><a href="#Logging-67"><span class="linenos">67</span></a>
+</span><span id="Logging-68"><a href="#Logging-68"><span class="linenos">68</span></a>    <span class="c1">#</span>
+</span><span id="Logging-69"><a href="#Logging-69"><span class="linenos">69</span></a>    <span class="c1">#       * This method can be used to display an informational event in the Burp</span>
+</span><span id="Logging-70"><a href="#Logging-70"><span class="linenos">70</span></a>    <span class="c1">#       * Suite event log.</span>
+</span><span id="Logging-71"><a href="#Logging-71"><span class="linenos">71</span></a>    <span class="c1">#       *</span>
+</span><span id="Logging-72"><a href="#Logging-72"><span class="linenos">72</span></a>    <span class="c1">#       * @param message The informational message to display.</span>
+</span><span id="Logging-73"><a href="#Logging-73"><span class="linenos">73</span></a>    <span class="c1">#</span>
+</span><span id="Logging-74"><a href="#Logging-74"><span class="linenos">74</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging-75"><a href="#Logging-75"><span class="linenos">75</span></a>    <span class="k">def</span> <span class="nf">raiseInfoEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Logging-76"><a href="#Logging-76"><span class="linenos">76</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method raiseInfoEvent&quot;&quot;&quot;</span>
+</span><span id="Logging-77"><a href="#Logging-77"><span class="linenos">77</span></a>
+</span><span id="Logging-78"><a href="#Logging-78"><span class="linenos">78</span></a>    <span class="c1">#</span>
+</span><span id="Logging-79"><a href="#Logging-79"><span class="linenos">79</span></a>    <span class="c1">#       * This method can be used to display an error event in the Burp Suite</span>
+</span><span id="Logging-80"><a href="#Logging-80"><span class="linenos">80</span></a>    <span class="c1">#       * event log.</span>
+</span><span id="Logging-81"><a href="#Logging-81"><span class="linenos">81</span></a>    <span class="c1">#       *</span>
+</span><span id="Logging-82"><a href="#Logging-82"><span class="linenos">82</span></a>    <span class="c1">#       * @param message The error message to display.</span>
+</span><span id="Logging-83"><a href="#Logging-83"><span class="linenos">83</span></a>    <span class="c1">#</span>
+</span><span id="Logging-84"><a href="#Logging-84"><span class="linenos">84</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging-85"><a href="#Logging-85"><span class="linenos">85</span></a>    <span class="k">def</span> <span class="nf">raiseErrorEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Logging-86"><a href="#Logging-86"><span class="linenos">86</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method raiseErrorEvent&quot;&quot;&quot;</span>
+</span><span id="Logging-87"><a href="#Logging-87"><span class="linenos">87</span></a>
+</span><span id="Logging-88"><a href="#Logging-88"><span class="linenos">88</span></a>    <span class="c1">#</span>
+</span><span id="Logging-89"><a href="#Logging-89"><span class="linenos">89</span></a>    <span class="c1">#       * This method can be used to display a critical event in the Burp Suite</span>
+</span><span id="Logging-90"><a href="#Logging-90"><span class="linenos">90</span></a>    <span class="c1">#       * event log.</span>
+</span><span id="Logging-91"><a href="#Logging-91"><span class="linenos">91</span></a>    <span class="c1">#       *</span>
+</span><span id="Logging-92"><a href="#Logging-92"><span class="linenos">92</span></a>    <span class="c1">#       * @param message The critical message to display.</span>
+</span><span id="Logging-93"><a href="#Logging-93"><span class="linenos">93</span></a>    <span class="c1">#</span>
+</span><span id="Logging-94"><a href="#Logging-94"><span class="linenos">94</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging-95"><a href="#Logging-95"><span class="linenos">95</span></a>    <span class="k">def</span> <span class="nf">raiseCriticalEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Logging-96"><a href="#Logging-96"><span class="linenos">96</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method raiseCriticalEvent&quot;&quot;&quot;</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>generated source for interface Logging</p>
+</div>
+
+
+                            <div id="Logging.output" class="classattr">
+                                        <input id="Logging.output-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+                    <div class="decorator">@abstractmethod</div>
+
+        <span class="def">def</span>
+        <span class="name">output</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span></span><span class="return-annotation">) -> <span class="n">pyscalpel</span><span class="o">.</span><span class="n">java</span><span class="o">.</span><span class="n">object</span><span class="o">.</span><span class="n">JavaObject</span>:</span></span>
+
+                <label class="view-source-button" for="Logging.output-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#Logging.output"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="Logging.output-22"><a href="#Logging.output-22"><span class="linenos">22</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging.output-23"><a href="#Logging.output-23"><span class="linenos">23</span></a>    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">JavaObject</span><span class="p">:</span>
+</span><span id="Logging.output-24"><a href="#Logging.output-24"><span class="linenos">24</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method output&quot;&quot;&quot;</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>generated source for method output</p>
+</div>
+
+
+                            </div>
+                            <div id="Logging.error" class="classattr">
+                                        <input id="Logging.error-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+                    <div class="decorator">@abstractmethod</div>
+
+        <span class="def">def</span>
+        <span class="name">error</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">message</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+
+                <label class="view-source-button" for="Logging.error-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#Logging.error"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="Logging.error-54"><a href="#Logging.error-54"><span class="linenos">54</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging.error-55"><a href="#Logging.error-55"><span class="linenos">55</span></a>    <span class="k">def</span> <span class="nf">error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Logging.error-56"><a href="#Logging.error-56"><span class="linenos">56</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method error&quot;&quot;&quot;</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>generated source for method error</p>
+</div>
+
+
+                            </div>
+                            <div id="Logging.logToOutput" class="classattr">
+                                        <input id="Logging.logToOutput-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+                    <div class="decorator">@abstractmethod</div>
+
+        <span class="def">def</span>
+        <span class="name">logToOutput</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">message</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+
+                <label class="view-source-button" for="Logging.logToOutput-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#Logging.logToOutput"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="Logging.logToOutput-44"><a href="#Logging.logToOutput-44"><span class="linenos">44</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging.logToOutput-45"><a href="#Logging.logToOutput-45"><span class="linenos">45</span></a>    <span class="k">def</span> <span class="nf">logToOutput</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Logging.logToOutput-46"><a href="#Logging.logToOutput-46"><span class="linenos">46</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method logToOutput&quot;&quot;&quot;</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>generated source for method logToOutput</p>
+</div>
+
+
+                            </div>
+                            <div id="Logging.raiseDebugEvent" class="classattr">
+                                        <input id="Logging.raiseDebugEvent-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+                    <div class="decorator">@abstractmethod</div>
+
+        <span class="def">def</span>
+        <span class="name">raiseDebugEvent</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">message</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+
+                <label class="view-source-button" for="Logging.raiseDebugEvent-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#Logging.raiseDebugEvent"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="Logging.raiseDebugEvent-64"><a href="#Logging.raiseDebugEvent-64"><span class="linenos">64</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging.raiseDebugEvent-65"><a href="#Logging.raiseDebugEvent-65"><span class="linenos">65</span></a>    <span class="k">def</span> <span class="nf">raiseDebugEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Logging.raiseDebugEvent-66"><a href="#Logging.raiseDebugEvent-66"><span class="linenos">66</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method raiseDebugEvent&quot;&quot;&quot;</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>generated source for method raiseDebugEvent</p>
+</div>
+
+
+                            </div>
+                            <div id="Logging.raiseInfoEvent" class="classattr">
+                                        <input id="Logging.raiseInfoEvent-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+                    <div class="decorator">@abstractmethod</div>
+
+        <span class="def">def</span>
+        <span class="name">raiseInfoEvent</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">message</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+
+                <label class="view-source-button" for="Logging.raiseInfoEvent-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#Logging.raiseInfoEvent"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="Logging.raiseInfoEvent-74"><a href="#Logging.raiseInfoEvent-74"><span class="linenos">74</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging.raiseInfoEvent-75"><a href="#Logging.raiseInfoEvent-75"><span class="linenos">75</span></a>    <span class="k">def</span> <span class="nf">raiseInfoEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Logging.raiseInfoEvent-76"><a href="#Logging.raiseInfoEvent-76"><span class="linenos">76</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method raiseInfoEvent&quot;&quot;&quot;</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>generated source for method raiseInfoEvent</p>
+</div>
+
+
+                            </div>
+                            <div id="Logging.raiseErrorEvent" class="classattr">
+                                        <input id="Logging.raiseErrorEvent-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+                    <div class="decorator">@abstractmethod</div>
+
+        <span class="def">def</span>
+        <span class="name">raiseErrorEvent</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">message</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+
+                <label class="view-source-button" for="Logging.raiseErrorEvent-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#Logging.raiseErrorEvent"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="Logging.raiseErrorEvent-84"><a href="#Logging.raiseErrorEvent-84"><span class="linenos">84</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging.raiseErrorEvent-85"><a href="#Logging.raiseErrorEvent-85"><span class="linenos">85</span></a>    <span class="k">def</span> <span class="nf">raiseErrorEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Logging.raiseErrorEvent-86"><a href="#Logging.raiseErrorEvent-86"><span class="linenos">86</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method raiseErrorEvent&quot;&quot;&quot;</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>generated source for method raiseErrorEvent</p>
+</div>
+
+
+                            </div>
+                            <div id="Logging.raiseCriticalEvent" class="classattr">
+                                        <input id="Logging.raiseCriticalEvent-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+                    <div class="decorator">@abstractmethod</div>
+
+        <span class="def">def</span>
+        <span class="name">raiseCriticalEvent</span><span class="signature pdoc-code condensed">(<span class="param"><span class="bp">self</span>, </span><span class="param"><span class="n">message</span><span class="p">:</span> <span class="nb">str</span></span><span class="return-annotation">) -> <span class="kc">None</span>:</span></span>
+
+                <label class="view-source-button" for="Logging.raiseCriticalEvent-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#Logging.raiseCriticalEvent"></a>
+            <div class="chroma pdoc-code"><pre><span></span><span id="Logging.raiseCriticalEvent-94"><a href="#Logging.raiseCriticalEvent-94"><span class="linenos">94</span></a>    <span class="nd">@abstractmethod</span>
+</span><span id="Logging.raiseCriticalEvent-95"><a href="#Logging.raiseCriticalEvent-95"><span class="linenos">95</span></a>    <span class="k">def</span> <span class="nf">raiseCriticalEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="Logging.raiseCriticalEvent-96"><a href="#Logging.raiseCriticalEvent-96"><span class="linenos">96</span></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;generated source for method raiseCriticalEvent&quot;&quot;&quot;</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>generated source for method raiseCriticalEvent</p>
+</div>
+
+
+                            </div>
+                            <div class="inherited">
+                                <h5>Inherited Members</h5>
+                                <dl>
+                                    <div><dt>pyscalpel.java.object.JavaObject</dt>
+                                <dd id="Logging.getClass" class="function">getClass</dd>
+                <dd id="Logging.hashCode" class="function">hashCode</dd>
+                <dd id="Logging.equals" class="function">equals</dd>
+                <dd id="Logging.clone" class="function">clone</dd>
+                <dd id="Logging.notify" class="function">notify</dd>
+                <dd id="Logging.notifyAll" class="function">notifyAll</dd>
+                <dd id="Logging.wait" class="function">wait</dd>
+                <dd id="Logging.finalize" class="function">finalize</dd>
+
+            </div>
+                                </dl>
+                            </div>
                 </section>
     </main>
 <script>
