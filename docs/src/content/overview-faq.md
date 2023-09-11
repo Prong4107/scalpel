@@ -15,7 +15,7 @@ menu:
 ### Once the .jar is loaded, no additional request shows up in the editor!
 -   On the first install, Scalpel's dependencies installation may take a while. Look at the "Output" logs in the Burp "Extension" tab to ensure that the extension has completed.
 -   Examine the "Errors" logs in the Burp "Extension" tab. There should be an explicit error message with some tips to solve the problem.
--   Make sure you followed the [installation guidelines](install.md). In case you didn't, remove the `~/.scalpel` directory and retry the install.
+-   Make sure you followed the [installation guidelines](../install.md). In case you didn't, remove the `~/.scalpel` directory and retry the install.
 -   If the error message doesn't help you solve the issue, please open a GitHub issue including the "Output" and "Errors" logs and your system information (OS / Distribution version, CPU architecture, JDK and Python version and installation path, environment variables which Burp runs with, and so forth).
 
 ### Why using Java with Jep to execute Python whereas Burp already supports Python extensions with [Jython](https://www.jython.org/)?
