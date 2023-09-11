@@ -14,9 +14,7 @@ import java.util.stream.Stream;
 import javax.swing.JOptionPane;
 import org.apache.commons.io.FileUtils;
 
-/**
- *  A workspace is a folder containing a venv and the associated scripts
- *  
+/* 
  *  Note: The Scalpel data folder follows this architeture:
  * 
     ~
@@ -28,7 +26,11 @@ import org.apache.commons.io.FileUtils;
             └── <workspace-name>
                 ├── default.py
                 └── .venv
+*/
 
+/**
+ *  A workspace is a folder containing a venv and the associated scripts.
+ * <br />
  *  We may still call that a "venv" in the front-end to avoid confusing the user.
  */
 public class Workspace {
