@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="icon" type="image/png" href="./favicon.ico">
+    <title>Introduction</title>
+    
+    
+
+    
+    <link rel="stylesheet" href="./style.min.css">
+
+    
+
+    <link rel="alternate" type="application/rss+xml" href="./index.xml" title="scalpel.org docs" />
+    <meta name="generator" content="Hugo 0.92.2" />
+</head>
+<body>
+
+<div class="columns container is-marginless">
+    <div id="sidebar" class="column is-one-quarter">
+        <div class="brand">
+    <a href="https://www.lexfo.fr/en/">
+        <img src='./logo-docs.png' alt="scalpel docs"/>
+    </a>
+
+</div>
+<nav class="menu">
+    <p class="menu-label">Overview</p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class="is-active"
+               href="./">Introduction</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="./overview-installation/">Installation</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="./overview-usage/">Usage</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="./overview-faq/">FAQ</a>
+            
+        </li>
+    
+</ul>
+
+
+    <p class="menu-label"> Script Development </p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="./api/events.html">Event Hooks &amp; API</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="./addons-java/">Accessing the Burp API</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="./addons-examples/">Examples</a>
+            
+        </li>
+    
+</ul>
+
+
+    <p class="menu-label"> Tutorials </p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="./tute-aes/">Decrypting custom encryption.</a>
+            
+        </li>
+    
+</ul>
+
+
+    <p class="menu-label">Core concepts</p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="./concepts-howscalpelworks/">How scalpel works</a>
+            
+        </li>
+    
+</ul>
+
+
+    <p class="menu-label">Technical documentation</p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="./pdoc/">pdoc</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="./javadoc/">Scalpel Javadoc</a>
+            
+        </li>
+    
+</ul>
+
+
+</nav>
+
+    </div>
+    <div id="main" class="column content">
+        
+        
+
+        <h1 id="introduction"><a class="anchor" href="#introduction">#&nbsp;&nbsp;</a>Introduction</h1>
+<p>Scalpel is a Burp extension for intercepting and modifying HTTP trafic using simple Python scripting.</p>
+<h1 id="index"><a class="anchor" href="#index">#&nbsp;&nbsp;</a>Index</h1>
+<ul>
+<li><a href="./overview-installation/">Installation</a></li>
+<li><a href="./overview-usage/">Usage</a></li>
+<li><a href="./overview-faq/">FAQ</a></li>
+<li><a href="./api/events.html">Technical documentation</a></li>
+<li><a href="./tute-aes/">Example use-case</a></li>
+<li><a href="./concepts-howscalpelworks/">How scalpel works</a></li>
+</ul>
+<h2 id="features"><a class="anchor" href="#features">#&nbsp;&nbsp;</a>Features</h2>
+<ul>
+<li>Make scripted changes to HTTP traffic using Python.</li>
+<li>Interactively edit plaintext decoded and encoded by a custom script.</li>
+<li>Better hexadecimal editor.</li>
+</ul>
+<p><a href="https://REMOVED/scalpel">GitHub repository</a>.</p>
+<p>^TODO: set github repo</p>
+<h2 id="use-cases"><a class="anchor" href="#use-cases">#&nbsp;&nbsp;</a>Use-cases</h2>
+<ul>
+<li><a href="./tute-aes/">Decrypting custom encryption</a></li>
+<li><a href="./addons-examples/#GZIP">Editing encoded requests/responses</a></li>
+</ul>
+<blockquote>
+<p>Note: One might think existing Burp extensions like piper can handle such cases, but it is actually too limited, for example, when intercepting a response, piper cannot get informations form the originating request, which is required in the above case. In general, Scalpel allows you to work around cases more complex than other Burp extensions like Piper or Hackvertor.</p>
+</blockquote>
+
+
+    </div>
+</div>
+</body>
+</html>
+
