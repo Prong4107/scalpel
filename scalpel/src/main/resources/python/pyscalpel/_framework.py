@@ -45,6 +45,9 @@ logger = DebugLogger()
 VENV = None
 
 try:
+    # Importing from pyscalpel might crash so we get the logger before to ensure that all errors are logged in Burp.
+    logger = __scalpel__["logger"]  # type: ignore pylint: disable=undefined-variable
+
     from pyscalpel.venv import activate
     from pyscalpel.java.scalpel_types import Context
     from pyscalpel.logger import logger as _logger
