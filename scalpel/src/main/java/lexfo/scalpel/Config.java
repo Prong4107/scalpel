@@ -3,8 +3,10 @@ package lexfo.scalpel;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.persistence.PersistedObject;
 import com.jediterm.terminal.ui.UIUtil;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -245,6 +247,34 @@ public class Config {
 				.map(Path::toAbsolutePath)
 				.filter(Config::hasIncludeDir)
 				.findFirst();
+		}
+
+		if (UIUtil.isMac) {
+			// Get output of /usr/libexec/java_home
+			final String javaHomeCommand = "/usr/libexec/java_home";
+			try {
+				final Process process = Runtime
+					.getRuntime()
+					.exec(javaHomeCommand);
+				try (
+					final BufferedReader reader = new BufferedReader(
+						new InputStreamReader(process.getInputStream())
+					)
+				) {
+					final String jdkPathStr = reader.readLine();
+					if (jdkPathStr != null && !jdkPathStr.isBlank()) {
+						final Path macJdkPath = Path.of(jdkPathStr);
+						if (hasIncludeDir(macJdkPath)) {
+							return Optional.of(macJdkPath);
+						}
+					}
+				}
+			} catch (IOException e) {
+				ScalpelLogger.error(
+					"Could not execute " + javaHomeCommand + " :"
+				);
+				ScalpelLogger.logStackTrace(e);
+			}
 		}
 
 		// We try to find the JDK from the javac binary path
