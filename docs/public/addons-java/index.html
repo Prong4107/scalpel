@@ -180,8 +180,7 @@ and does not provide utilities for all the Burp API features.</p>
 <ul>
 <li>
 <p>A script spoofing the Host header with a collaborator payload</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pyscalpel</span> <span class="kn">import</span> <span class="n">Request</span>
-<span class="kn">from</span> <span class="nn">pyscalpel.burp_utils</span> <span class="kn">import</span> <span class="n">ctx</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pyscalpel</span> <span class="kn">import</span> <span class="n">Request</span><span class="p">,</span> <span class="n">ctx</span>
 
 <span class="c1"># Spoof the Host header to a Burp collaborator payload to detect out-of-band interactions and HTTP SSRFs</span>
 
@@ -199,8 +198,7 @@ and does not provide utilities for all the Burp API features.</p>
 </li>
 <li>
 <p>A script sending every request having the &ldquo;cmd&rdquo; param to Burp Repeater:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pyscalpel</span> <span class="kn">import</span> <span class="n">Request</span>
-<span class="kn">from</span> <span class="nn">pyscalpel.burp_utils</span> <span class="kn">import</span> <span class="n">ctx</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pyscalpel</span> <span class="kn">import</span> <span class="n">Request</span><span class="p">,</span> <span class="n">ctx</span>
 <span class="kn">from</span> <span class="nn">threading</span> <span class="kn">import</span> <span class="n">Thread</span>
 
 <span class="c1"># Send every request that contains the &#34;cmd&#34; param to repeater</span>
