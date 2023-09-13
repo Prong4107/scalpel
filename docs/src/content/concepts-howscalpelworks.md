@@ -9,11 +9,11 @@ menu:
 
 ## Dependencies
 
--   Scalpel embeds it's Python library in it's .jar file and unzips it when Burp loads the extension.
+-   Scalpels Python library is embedded in a JAR file and is unzipped when Burp loads the extension.
 -   Scalpel requires external dependencies and will install them using `pip` when needed.
--   Scalpel will always use a venv for every action, hence it will never modify your global Python installation.
--   Scalpel uses a project calls Jep to communicate with Python, which requires to have a JDK installed on your machine.
--   User Scripts are executed in a venv the user can select in the "Scalpel" tab.
+-   Scalpel will always use a virtual environment for every action. Hence, it will never modify the user's global Python installation.
+-   Scalpel relies on [Jep](https://github.com/ninia/jep/) to communicate with Python. It requires to have a JDK installed on your machine.
+-   User scripts are executed in a virtual environment selected from the `Scalpel` tab.
 -   Scalpel provides a terminal with a shell running in the selected venv to allow you to easily install packages.
 -   You can add existing venvs or create new ones using the dedicated GUI.
 -   All data is stored in the `~/.scalpel` directory.
@@ -32,7 +32,7 @@ menu:
 ## Python scripting
 
 -   Scalpel uses a single shared interpreter, so if any global variables are changed in a hook, it's value will remain changed on next hook calls.
--   For easy scripting in Python, scalpel provides many utilities described in the Event Hooks & API section.
+-   For easy Python scripting, Scalpel provides many utilities described in the [Event Hooks & API]({{< relref "addons-api" >}}) section.
 
 ---
 

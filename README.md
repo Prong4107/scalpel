@@ -18,7 +18,7 @@ It provides an interactive way to edit encoded/encrypted data as plaintext and o
 
 ## Usage
 
-Scalpel provides a Burp extension GUI for scripting. A set of functions whose names are predefined can be implemented.
+Scalpel provides a Burp extension GUI for scripting and a set of predefined function names corresponding to specific actions. Simply write a Python script implementing the ones you need.
 
 Below is an example script:
 
@@ -35,23 +35,23 @@ def response(res: Response) -> Response | None:
     res.headers["X-Python-Intercept-Response"] = "response"
     return res
 
-# Hook to generate a request editor's content from a request
+# Hook to create or update a request editor's content from a request
 def req_edit_in(req: Request) -> bytes | None:
     req.headers["X-Python-In-Request-Editor"] = "req_edit_in"
     return bytes(req)
 
-# Hook to update a request from an editor's edited content
+# Hook to update a request from an editor's modified content
 def req_edit_out(_: Request, text: bytes) -> Request | None:
     req = Request.from_raw(text)
     req.headers["X-Python-Out-Request-Editor"] = "req_edit_out"
     return req
 
-# Hook to generate a response editor's content from a response
+# Hook to create or update a request editor's content from a response
 def res_edit_in(res: Response) -> bytes | None:
     res.headers["X-Python-In-Response-Editor"] = "res_edit_in"
     return bytes(res)
 
-# Hook to update a response from an editor's edited content
+# Hook to update a response from an editor's modified content
 def res_edit_out(_: Response, text: bytes) -> Response | None:
     res = Response.from_raw(text)
     res.headers["X-Python-Out-Response-Editor"] = "res_edit_out"
@@ -72,8 +72,10 @@ Example scripts are available in the [`examples/`](examples/) directory of the p
 
 Scalpel is compatible with Windows and Linux.
 
+-   OpenJDK >= `17`
 -   Python >= `3.10`
--   JDK >= `17`
+-   pip
+-   venv
 ### Debian-based distributions
 
 The following packages are required:
@@ -89,9 +91,9 @@ https://visualstudio.microsoft.com/visual-cpp-build-tools/
 
 ## Installation
 
-Download the latest release of Scalpel from [GitHub](https://github.com).
+Download the latest JAR release of Scalpel from [GitHub](https://github.com).
 
-The release file is a `.jar` to be added to Burp Suite as an extension.
+The release file has to be added to Burp Suite as an extension. Learn more in the [documentation](https://).
 
 <br>
 
@@ -105,4 +107,4 @@ Scalpel is licensed under [INSERT LICENSE HERE].
 
 ## Contact
 
-For any questions or feedback, please create an issue or contact [INSERT CONTACT INFORMATION HERE].
+For any questions or feedback, please open an issue or contact [INSERT CONTACT INFORMATION HERE].

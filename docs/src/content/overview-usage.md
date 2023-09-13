@@ -8,13 +8,24 @@ menu:
 
 # Usage
 
--   Scalpel allows you to programatically intercept and modify HTTP requests and response that goes through Burp as well as creating custom request/response editors with Python.
+Scalpel allows you to programmatically intercept and modify HTTP requests/responses going through Burp, as well as creating custom request/response editors with Python.
 
--   To do that you simply have to write a Python script containing your code in functions that follows defined names and load the file with Scalpel Burp GUI: {{< figure src="/screenshots//choose_script.png" >}}
+To do so, Scalpel provides a **Burp extension GUI** for scripting and a set of **predefined function names** corresponding to specific actions:
+- `[match]({{< relref "addons-api#match" >}})`: Determine whether an event will be handled by a hook.
+- `[request]({{< relref "addons-api#request" >}})`: Intercept and rewrite a request.
+- `[response]({{< relref "addons-api#response" >}})`: Intercept and rewrite a response.
+- `[req_edit_in]({{< relref "addons-api#req_edit_in" >}})`: Create or update a request editor's content from a request.
+- `[req_edit_out]({{< relref "addons-api#req_edit_out" >}})`: Update a request from an editor's modified content.
+- `[res_edit_in]({{< relref "addons-api#res_edit_in" >}})`: Create or update a request editor's content from a response.
+- `[res_edit_out]({{< relref "addons-api#res_edit_out" >}})`: Update a response from an editor's modified content.
+
+-   Simply write a Python script implementing the ones you need and load the file with Scalpel Burp GUI: {{< figure src="/screenshots//choose_script.png" >}}
 <!-- ^^ TODO: Better screenshot -->
--   You can intercept requests/response by creating a `request()` and `response()` functions in your script:
+## Intercept and Rewrite HTTP Traffic
 
-    -   E.g: Hooks that adds an arbitrary header to every requests and response:
+-   To intercept requests/response, implement the `[request()]({{< relref "addons-api#request" >}})` and `[response()]({{< relref "addons-api#response" >}})` functions in your script:
+
+    -   E.g: Hooks that add an arbitrary header to every requests and response:
 
     ```python
         from pyscalpel.http import Request, Response
@@ -26,15 +37,15 @@ menu:
             # Return the modified request
             return req
 
-        # Same thing for response
+        # Same for response
         def response(res: Response) -> Response:
             res.headers["X-Python-Intercept-Response"] = "response"
             return res
     ```
 
--   You can choose whether to intercept an HTTP message by declaring a `match()` function:
+-   Decide whether to intercept an HTTP message with the `[match()]({{< relref "addons-api#match" >}})` function:
 
-    -   E.g: A match intercepting requests to localhost / 127.0.0.1 only
+    -   E.g: A match intercepting requests to `localhost` and `127.0.0.1` only:
 
         ```python
         from pyscalpel.http import Flow
@@ -44,11 +55,11 @@ menu:
             return flow.host_is("localhost", "127.0.0.1")
         ```
 
-## Editors
+## Custom Burp Editors
 
--   Scalpel's main _killer feature_ is the ability to program your own editors using simple Python
+Scalpel's main _killer feature_ is the ability to **program your own editors** using simple Python.
 
-    -   E.g: A simple example script that allows you to edit a fully URL encoded query string parameter in a request:
+    -   E.g: A simple script to edit a fully URL encoded query string parameter in a request:
 
         ```python
         from pyscalpel.http import Request
@@ -70,14 +81,14 @@ menu:
             return req
         ```
 
-    -   If you open a request with a "filename" query parameter, a "Scalpel" tab should appear in the editor {{< figure src="/screenshots/urlencode.png" >}}
-    -   Your `req_edit_in()` python hook will be invoked and the tab should contain the filename parameter URL decoded content {{< figure src="/screenshots/decoded.png" >}}
-    -   Which you can modify to update the request and include anything you want (e.g: path traversal sequences) {{< figure src="/screenshots/traversal.png" >}}
-    -   When you send the request or switch to another editor tab, your python hook `req_edit_out()` will be invoked to update the parameter. {{< figure src="/screenshots/updated.png" >}}
+    -   If you open a request with a `filename` query parameter, a `Scalpel` tab should appear in the editor like shown below: {{< figure src="/screenshots/urlencode.png" >}}
+    -   Once your `[req_edit_in()]({{< relref "addons-api#req_edit_in" >}})` Python hook is invoked, the tab should contain the `filename` parameter's URL decoded content. {{< figure src="/screenshots/decoded.png" >}}
+    -  You can modify it to update the request and thus, include anything you want (e.g: path traversal sequences). {{< figure src="/screenshots/traversal.png" >}}
+    -   When you send the request or switch to another editor tab, your Python hook `[req_edit_out()]({{< relref "addons-api#req_edit_out" >}})` will be invoked to update the parameter. {{< figure src="/screenshots/updated.png" >}}
 
--   You can have multiple tabs by adding a suffix to your function names:
+-   You can have multiple open tabs at the same time. Just suffix your function names:
 
-    -   E.g: Same script as above but for two parameters "filename" and "directory"
+    -   E.g: Same script as above but for two parameters: "filename" and "directory".
 
         ```python
         from pyscalpel.http import Request
@@ -104,10 +115,13 @@ menu:
             return req
         ```
 
-    -   You will have a tab for the "filename" parameter and a tab for the "directory" parameter.
+    -   This will result in two open tabs. One for the `filename` parameter and one for the `directory` parameter (see the second image below).
         {{< figure src="/screenshots/multiple_params.png" >}}
         {{< figure src="/screenshots/multiple_tabs.png" >}}
 
+## Further reading
+
+Learn more about the available hooks in the technical documentation's [Event Hooks & API]({{< relref "addons-api" >}}) section.
 ## Notes:
 
 -   If your hooks return `None`, it will pass the original object without any modification

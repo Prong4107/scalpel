@@ -1,27 +1,28 @@
 ---
-title: "Decrypting custom encryption."
+title: "Decrypting custom encryption"
 menu:
     tutes:
         weight: 2
 ---
 
-# Decrypting custom encryption.
+# Decrypting custom encryption
 
-## Problem
+## Context
 
 An IOT appliance adds an obfuscation layer to its HTTP communications by encrypting the body of its requests and responses with a key.
 
 On every HTTP request, the program sends two POST parameters, `secret` (the encryption key) and `encrypted` (the ciphertext).
 
-We will use scalpel to provide an additional tab in the repeater which displays the plaintext for each request and response.
+Let's solve this problem by using Scalpel. It will provide an additional tab in the Repeater which displays the plaintext for every request and response.
 
-Additionally, we'll be able to edit the plaintext, and scalpel will automatically encrypt it when we hit "Send".
+Also, the plaintext can be edited. Scalpel will automatically encrypt it when the "Send" button is hit.
 
-We added a mock API to test this case in the Scalpel repository at `test/server.js`.
+Find a mock API to test this case in the GitHub repository: `test/server.js`.
+<!-- ^^ TODO: Add link to test -->
 
-## Taking a look at the target:
+## 1. Take a look at the target
 
-Lets take a first look at our API code:
+Take the time to get familiar with the API code:
 
 ```ts
 const { urlencoded } = require("express");
@@ -84,58 +85,58 @@ app.post("/encrypt", (req, res) => {
 app.listen(3000, ["localhost"]);
 ```
 
-As we can see, every request content is encrypted using AES using a secret passed alongside the content and the response is encrypted using the same provided secret.
+As shown above, every request content is encrypted using AES, using a secret passed alongside the content, that also encrypt the response.
 
-With Burp vanilla, it would make editing the request very tedious (using "copy to file"), and when faced against a case like this, people will either work with custom scripts outside of Burp, use tools like [mitmproxy](https://docs.mitmproxy.org/stable/), write their own Burp Extension in Java for this specific use case (which is slow) or give up.
+In vanilla Burp, editing the request would be very tedious (using `copy to file`). When faced against a case like this, users will either work with custom scripts outside of Burp, use tools like [mitmproxy](https://docs.mitmproxy.org/stable/), write their own Burp Java extension, or give up.
 
-Scalpel's main goal and reason to exist is to make working around such cases trivial.
+Scalpel's main objective is to make working around such cases trivial.
 
-## Reimplementing the encryption / decryption.
+## 2. Reimplement the encryption / decryption
 
-To use Scalpel for handling this API's encryption, we first have to reimplement the encryption process in Python.
+Before using Scalpel for handling this API's encryption, the first thing to do is to implement the encryption process in Python.
 
 ### Installing Python dependencies
 
-To work with AES in Python, we need the `pycryptodome` module, which isn't installed by default.
-All Scalpel python scripts run in a virtual env, and Scalpel provides a way to switch venvs and install packages through Burp GUI.
+To work with AES in Python, the `pycryptodome` module is required but not installed by default.
+All Scalpel Python scripts run in a virtual environment. Fortunately, Scalpel provides a way to switch between venvs and install packages through Burp GUI.
 
-Let's jump to the "Scalpel" tab:
+Let's jump to the `Scalpel` tab:
 {{< figure src="/screenshots/terminal.png" >}}
 
-On the left, you can see UI you can use to create and select new venvs.
+Focus on the left part. You can use this interface to create and select new venvs.
 {{< figure src="/screenshots/venv.png" >}}
 
-Let's create a venv for this use case by entering a name and pressing enter:
+Let's create a venv for this use case. Enter a name and press enter:
 {{< figure src="/screenshots/aes-venv.png" >}}
 {{< figure src="/screenshots/venv-installing.png" >}}
 
-We can now select our venv by clicking on it:
+It is now possible to select it by clicking on its path:
 {{< figure src="/screenshots/select-venv.png" >}}
 
-The central terminal is now activated in the selected venv and can be used to install packages using pip in the usual way:
+The central terminal is now activated in the selected venv and can be used to install packages using `pip` in the usual way:
 {{< figure src="/screenshots/venv-pycryptodome.png" >}}
 
-We now have pycryptodome installed and we're ready to create our scalpel script.
+`pycryptodome` is now installed. Let's create the Scalpel script!
 
-## Creating the script in Scalpel
+## 3. Create the script using Scalpel
 
 You can create a new script for Scalpel using the GUI:
 
--   Click the "Create new script" button
+-   Click the `Create new script` button (underlined in red below).
     -   {{< figure src="/screenshots/create-script.png" >}}
--   Enter the desired filename
+-   Enter the desired filename.
     -   {{< figure src="/screenshots/create-script-prompt.png" >}}
--   The file should now be successfully created.
+-   Once the file is created, this message will show up:
     -   {{< figure src="/screenshots/create-script-success.png" >}}
 
 After following this steps, the script should either be opened in your OS graphical editor or in the terminal provided by Scalpel:
 {{< figure src="/screenshots/create-script-edit.png" >}}
 
-For now, it contains commented hooks declarations, you can remove them, as we will rewrite them further in this tutorial.
+It contains commented hooks declarations. Remove them, as you will rewrite them further in this tutorial.
 
-## Implementing the encryption algorithm
+## 4. Implement the encryption algorithm
 
-With pycryptodome, we can reimplement the encryption in Python like this:
+With `pycryptodome`, the encryption can be written in Python like this:
 
 ```python
 from Crypto.Cipher import AES
@@ -165,22 +166,22 @@ def encrypt(secret: bytes, data: bytes) -> bytes:
     return b64encode(encrypted)
 ```
 
-## Creating custom editors
+## 5. Create custom editors
 
-We can now use our above code to automatically decrypt our content to plaintext and re-encrypt a modified plaintext.
+The above code can now be used to automatically decrypt your content to plaintext and re-encrypt a modified plaintext.
 
-As you should have seen in [Usage]({{< relref "overview-usage" >}}), request editors are created by declaring the `req_edit_in` hook:
+As explained in [Usage]({{< relref "overview-usage" >}}), request editors are created by declaring the `req_edit_in` hook:
 
 ```python
 def req_edit_in_encrypted(req: Request) -> bytes | None:
     ...
 ```
 
-Here, we added the "\_encrypted" suffix to the hook name to give the title "encrypted" to the tab.
+Here, the `_encrypted` suffix was added to the hook name, creating a tab named "encrypted".
 
-This hook is called when Burp opens the request in an editor, it receives the request to edit and returns the bytes to display in the editor.
+This hook is called when Burp opens the request in an editor. It receives the request to edit and returns the bytes to display in the editor.
 
--   We want to display the plain text, so we:
+-   In order to display the plain text, the following must be done:
 
     -   Get the secret and the encrypted content from the body.
     -   Decrypt the content using the secret.
@@ -198,13 +199,13 @@ This hook is called when Burp opens the request in an editor, it receives the re
         return decrypt(secret, encrypted)
     ```
 
-Now, after loading this script with Scalpel and opening such an encrypted request in Burp, you should see a "Scalpel" tab along the "Pretty", "Raw", and "Hex" tabs:
+Once this script is loaded with Scalpel, if you open an encrypted request in Burp, you will see a `Scalpel` tab along the `Pretty`, `Raw`, and `Hex` tabs:
 {{< figure src="/screenshots/encrypty-scalpel-tab.png" >}}
 {{< figure src="/screenshots/encrypt-tab-selected.png" >}}
 
-Right-now, the additional tab is uneditable as it has no way to encrypt the content back. To do so, we need to implement the `req_edit_out` hook.
+But there is an issue. Right now, the additional tab cannot be edited since it has no way to encrypt the content back. To do so, the `req_edit_out` hook will be handful.
 
--   The `req_edit_out` simply has to implement the inverse effect of `req_edit_in`, which means:
+-   The `req_edit_out` hook has to implement the opposite behavior of `req_edit_in`, which means:
     -   Encrypt the plain text using the secret.
     -   Replace the old encrypted content in the request.
     -   Return the new request.
@@ -214,12 +215,13 @@ Right-now, the additional tab is uneditable as it has no way to encrypt the cont
       req.form[b"encrypted"] = encrypt(secret, text)
       return req
     ```
-    > When present, the req_edit_out suffix has to match the req_edit_in suffix (here: `_encrypted`)
+    > When present, the `req_edit_out` suffix **must match** the `req_edit_in` suffix.
+    > In this tutorial example, the suffix is: `_encrypted`
 
-By adding this hook, you should now be able to edit the plain text and it will automatically be encrypted using the hook you just implemented.
+Add the hook. You should now be able to edit the plaintext. It will automatically be encrypted using `req_edit_out_encrypted`.
 {{< figure src="/screenshots/encrypt-edited.png" >}}
 
-Now, we would like to be able to decrypt the response to see if our changes were reflected.
+After that, it would be nice to decrypt the response to see if the changes were reflected.
 
 The process is basically the same:
 
@@ -248,7 +250,7 @@ You can now edit the responses received by the browser as well.
 
 Scalpel provides a [match()]({{< relref "addons-api#match" >}}) hook to filter unwanted requests from being treated by your hooks.
 
-In this case, the encrypted requests are only sent to the `/encrypt` path and contains a `secret`, so we shouldn't try to decrypt traffic that do not match this.
+In this case, the encrypted requests are only sent to the `/encrypt` path and contain a `secret`. Thus, better not try to decrypt traffic that don't match these conditions.
 
 ```python
 from pyscalpel.http import Request, Response, Flow
@@ -257,17 +259,17 @@ def match(flow: Flow) -> bool:
     return flow.path_is("/encrypt*") and flow.request.form.get(b"secret") is not None
 ```
 
-The above match hook receives a [Flow](/api/pyscalpel/http.html#Flow) object, it contains a request, and, when treating a response, it contains both the response and its initiating request.
+The above `match` hook receives a [Flow](/api/pyscalpel/http.html#Flow) object. It contains a request. When treating a response, it contains both the response and its initiating request.
 
 It ensures the initiating request contained a `secret` field and was sent to a path matching `/encrypt*`
 
 # Conclusion
 
-In this tutorial, we've taken a look at how to decrypt a custom encryption in IoT appliance communications using Scalpel.
-This involved understanding the existing API encryption code, recreating the encryption process in Python, installing necessary Python dependencies, and creating custom editors to handle decryption and re-encryption of modified content.
+In this tutorial, you saw how to decrypt a custom encryption in IoT appliance communications using Scalpel.
+This involved: understanding the existing API encryption code, recreating the encryption process in Python, installing necessary Python dependencies, and creating custom editors to handle decryption and re-encryption of modified content.
 
-We implemented this process for both request and response flows, allowing us to view and manipulate the plaintext communication, then re-encrypt it before sending. This approach considerably simplifies the process of analyzing and interacting with encrypted data, reducing the need for cumbersome workarounds or additional external tools.
+This process was implemented for both request and response flows, allowing to view and manipulate the plaintext communication, then encrypt it again before sending. This approach greatly simplifies the process of analyzing and interacting with encrypted data, reducing the need for cumbersome work arounds or additional external tools.
 
-Remember, although we've used a specific case of AES-256-CBC encryption in this tutorial, the general principle and steps can be applied to various other encryption techniques as well. The main requirement is to understand the encryption process and be able to reproduce it in Python.
+While this tutorial covers a specific case of AES-256-CBC encryption, have in mind that the main concept and steps can be applied to various other encryption techniques as well. The only requirement is to understand the encryption process and be able to reproduce it in Python.
 
-Scalpel is meant to be a versatile tool in scenarios where we encounter custom encryption, making it easier to analyze and modify such encrypted data for security testing purposes.
+Scalpel is meant to be a versatile tool in scenarios where custom encryption is encountered. It aims to make data easier to analyze and modify for security testing purposes.
