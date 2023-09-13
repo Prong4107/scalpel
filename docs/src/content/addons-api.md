@@ -21,7 +21,7 @@ For instance, here is an script that adds a response
 header with the number of seen responses:
 
 ```python
-from pyscalpel.http import Response
+from pyscalpel import Response
 
 count = 0
 
