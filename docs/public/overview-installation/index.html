@@ -22,14 +22,13 @@
 <div class="columns container is-marginless">
     <div id="sidebar" class="column is-one-quarter">
         <div class="brand">
-    <a href="https://www.lexfo.fr/en/">
-        <img src='../logo-docs.png' alt="scalpel docs"/>
-    </a>
-
+	<a href="https://www.lexfo.fr/en/">
+		<img src='../logo-docs.png' alt="scalpel docs" />
+	</a>
 </div>
 <nav class="menu">
-    <p class="menu-label">Overview</p>
-    <ul class="menu-list">
+	<p class="menu-label">Overview</p>
+	<ul class="menu-list">
     
     
     
@@ -61,8 +60,29 @@
 </ul>
 
 
-    <p class="menu-label"> Script Development </p>
-    <ul class="menu-list">
+	<p class="menu-label">Features</p>
+	<ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="../feature-http/">Intercept and rewrite HTTP traffic</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="../feature-editors/">Custom Burp editors</a>
+            
+        </li>
+    
+</ul>
+
+
+	<p class="menu-label">Script Development</p>
+	<ul class="menu-list">
     
     
     
@@ -88,23 +108,23 @@
 </ul>
 
 
-    <p class="menu-label"> Tutorials </p>
-    <ul class="menu-list">
+	<p class="menu-label">Tutorials</p>
+	<ul class="menu-list">
     
     
     
     
         <li>
             <a class=""
-               href="../tute-aes/">Decrypting custom encryption.</a>
+               href="../tute-aes/">Decrypting custom encryption</a>
             
         </li>
     
 </ul>
 
 
-    <p class="menu-label">Core concepts</p>
-    <ul class="menu-list">
+	<p class="menu-label">Core concepts</p>
+	<ul class="menu-list">
     
     
     
@@ -118,27 +138,19 @@
 </ul>
 
 
-    <p class="menu-label">Technical documentation</p>
-    <ul class="menu-list">
-    
-    
-    
-    
-        <li>
-            <a class=""
-               href="../pdoc/">pdoc</a>
-            
-        </li>
-    
-        <li>
-            <a class=""
-               href="../javadoc/">Scalpel Javadoc</a>
-            
-        </li>
-    
-</ul>
+	<p class="menu-label">Technical documentation</p>
+	<ul class="menu-list">
+		<li>
+			<a class="" href="../pdoc/">Python library</a>
+		</li>
 
-
+		<li>
+			<a class="" href="../javadoc/">Java extension</a>
+		</li>
+		<li>
+			<a class="" href="https://github.com/Prong4107/scalpel">Github</a>
+		</li>
+	</ul>
 </nav>
 
     </div>
@@ -147,57 +159,59 @@
         
 <a class="button is-small is-outlined is-link is-pulled-right"
    target="_blank"
-   href="https://github.com/scalpel/scalpel/blob/main/docs/src/content/overview-installation.md"
+   href="https://github.com/Prong4107/scalpel/tree/docs/readme/docs/src/content/overview-installation.md"
 >
 
     Edit on GitHub
 </a>
 
 
-        <h1 id="install"><a class="anchor" href="#install">#&nbsp;&nbsp;</a>Install</h1>
+        <h1 id="installation"><a class="anchor" href="#installation">#&nbsp;&nbsp;</a>Installation</h1>
+<h2 id="requirements"><a class="anchor" href="#requirements">#&nbsp;&nbsp;</a>Requirements</h2>
+<ul>
+<li>OpenJDK &gt;= <code>17</code></li>
+<li>Python &gt;= <code>3.10</code></li>
+<li>pip</li>
+<li>venv</li>
+</ul>
+<h2 id="step-by-step-instructions"><a class="anchor" href="#step-by-step-instructions">#&nbsp;&nbsp;</a>Step-by-step instructions</h2>
 <ul>
 <li>
-<p>Install openjdk &gt;= 17, python &gt;= 3.10, pip and venv</p>
-</li>
-<li>
-<p>Download the <a href="https://code.corp.lexfo.fr/pentester/scalpel/-/releases">release</a> .jar <figure><img src="../screenshots/release.png"/>
+<p>Download the latest <a href="https://code.corp.lexfo.fr/pentester/scalpel/-/releases">JAR release</a>. <figure><img src="../screenshots/release.png"/>
 </figure>
 </p>
 </li>
 <li>
-<p>Import the .jar in Burp <figure><img src="../screenshots/import.png"/>
+<p>Import the <code>.jar</code> to Burp. <figure><img src="../screenshots/import.png"/>
 </figure>
 </p>
 </li>
 <li>
-<p>Wait for the dependencies to install <figure><img src="../screenshots/wait.png"/>
+<p>Wait for the dependencies to install. <figure><img src="../screenshots/wait.png"/>
 </figure>
 </p>
 </li>
 <li>
-<p>It should look like this when Scalpel is properly initialized <figure><img src="../screenshots/init.png"/>
+<p>Once Scalpel is properly initialized, you should get the following: <figure><img src="../screenshots/init.png"/>
 </figure>
 </p>
 </li>
 <li>
-<p>If Scalpel is properly installed, you should now have a &ldquo;Scalpel&rdquo; tab in the Request/Response editor <figure><img src="../screenshots/tabs.png"/>
+<p>If the installation was successful, a <code>Scalpel</code> tab should show in the Request/Response editor as follows: <figure><img src="../screenshots/tabs.png"/>
 </figure>
 </p>
 </li>
 <li>
-<p>You should also have a Scalpel config tab where you have a terminal you can use to install new packages <figure><img src="../screenshots/terminal.png"/>
+<p>And also a <code>Scalpel</code> tab for configuration to install additional packages via terminal. <figure><img src="../screenshots/terminal.png"/>
 </figure>
 </p>
 </li>
-<li>
-<p>Scalpel is now properly installed and initialized !</p>
-</li>
-<li>
-<p>You can now see <a href="../overview-usage/">Usage</a> to know how to use Scalpel.</p>
-</li>
-<li>
-<p>You can also read this <a href="../tute-aes/">tutorial</a> to see Scalpel in action for a real use case.</p>
-</li>
+</ul>
+<p>Scalpel is now properly installed and initialized!</p>
+<h2 id="whats-next"><a class="anchor" href="#whats-next">#&nbsp;&nbsp;</a>What&rsquo;s next</h2>
+<ul>
+<li>Check the <a href="../overview-usage/">Usage</a> page to get a glimpse at how to use the tool.</li>
+<li>Read this <a href="../tute-aes/">tutorial</a> to see Scalpel in a real use case context.</li>
 </ul>
 
 

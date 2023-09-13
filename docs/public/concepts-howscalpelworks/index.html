@@ -22,14 +22,13 @@
 <div class="columns container is-marginless">
     <div id="sidebar" class="column is-one-quarter">
         <div class="brand">
-    <a href="https://www.lexfo.fr/en/">
-        <img src='../logo-docs.png' alt="scalpel docs"/>
-    </a>
-
+	<a href="https://www.lexfo.fr/en/">
+		<img src='../logo-docs.png' alt="scalpel docs" />
+	</a>
 </div>
 <nav class="menu">
-    <p class="menu-label">Overview</p>
-    <ul class="menu-list">
+	<p class="menu-label">Overview</p>
+	<ul class="menu-list">
     
     
     
@@ -61,8 +60,29 @@
 </ul>
 
 
-    <p class="menu-label"> Script Development </p>
-    <ul class="menu-list">
+	<p class="menu-label">Features</p>
+	<ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="../feature-http/">Intercept and rewrite HTTP traffic</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="../feature-editors/">Custom Burp editors</a>
+            
+        </li>
+    
+</ul>
+
+
+	<p class="menu-label">Script Development</p>
+	<ul class="menu-list">
     
     
     
@@ -88,23 +108,23 @@
 </ul>
 
 
-    <p class="menu-label"> Tutorials </p>
-    <ul class="menu-list">
+	<p class="menu-label">Tutorials</p>
+	<ul class="menu-list">
     
     
     
     
         <li>
             <a class=""
-               href="../tute-aes/">Decrypting custom encryption.</a>
+               href="../tute-aes/">Decrypting custom encryption</a>
             
         </li>
     
 </ul>
 
 
-    <p class="menu-label">Core concepts</p>
-    <ul class="menu-list">
+	<p class="menu-label">Core concepts</p>
+	<ul class="menu-list">
     
     
     
@@ -118,27 +138,19 @@
 </ul>
 
 
-    <p class="menu-label">Technical documentation</p>
-    <ul class="menu-list">
-    
-    
-    
-    
-        <li>
-            <a class=""
-               href="../pdoc/">pdoc</a>
-            
-        </li>
-    
-        <li>
-            <a class=""
-               href="../javadoc/">Scalpel Javadoc</a>
-            
-        </li>
-    
-</ul>
+	<p class="menu-label">Technical documentation</p>
+	<ul class="menu-list">
+		<li>
+			<a class="" href="../pdoc/">Python library</a>
+		</li>
 
-
+		<li>
+			<a class="" href="../javadoc/">Java extension</a>
+		</li>
+		<li>
+			<a class="" href="https://github.com/Prong4107/scalpel">Github</a>
+		</li>
+	</ul>
 </nav>
 
     </div>
@@ -147,7 +159,7 @@
         
 <a class="button is-small is-outlined is-link is-pulled-right"
    target="_blank"
-   href="https://github.com/scalpel/scalpel/blob/main/docs/src/content/concepts-howscalpelworks.md"
+   href="https://github.com/Prong4107/scalpel/tree/docs/readme/docs/src/content/concepts-howscalpelworks.md"
 >
 
     Edit on GitHub
@@ -157,11 +169,11 @@
         <h1 id="how-scalpel-works"><a class="anchor" href="#how-scalpel-works">#&nbsp;&nbsp;</a>How Scalpel works</h1>
 <h2 id="dependencies"><a class="anchor" href="#dependencies">#&nbsp;&nbsp;</a>Dependencies</h2>
 <ul>
-<li>Scalpel embeds it&rsquo;s Python library in it&rsquo;s .jar file and unzips it when Burp loads the extension.</li>
+<li>Scalpels Python library is embedded in a JAR file and is unzipped when Burp loads the extension.</li>
 <li>Scalpel requires external dependencies and will install them using <code>pip</code> when needed.</li>
-<li>Scalpel will always use a venv for every action, hence it will never modify your global Python installation.</li>
-<li>Scalpel uses a project calls Jep to communicate with Python, which requires to have a JDK installed on your machine.</li>
-<li>User Scripts are executed in a venv the user can select in the &ldquo;Scalpel&rdquo; tab.</li>
+<li>Scalpel will always use a virtual environment for every action. Hence, it will never modify the user&rsquo;s global Python installation.</li>
+<li>Scalpel relies on <a href="https://github.com/ninia/jep/">Jep</a> to communicate with Python. It requires to have a JDK installed on your machine.</li>
+<li>User scripts are executed in a virtual environment selected from the <code>Scalpel</code> tab.</li>
 <li>Scalpel provides a terminal with a shell running in the selected venv to allow you to easily install packages.</li>
 <li>You can add existing venvs or create new ones using the dedicated GUI.</li>
 <li>All data is stored in the <code>~/.scalpel</code> directory.</li>
@@ -180,7 +192,7 @@
 <h2 id="python-scripting"><a class="anchor" href="#python-scripting">#&nbsp;&nbsp;</a>Python scripting</h2>
 <ul>
 <li>Scalpel uses a single shared interpreter, so if any global variables are changed in a hook, it&rsquo;s value will remain changed on next hook calls.</li>
-<li>For easy scripting in Python, scalpel provides many utilities described in the Event Hooks &amp; API section.</li>
+<li>For easy Python scripting, Scalpel provides many utilities described in the <a href="../api/events.html">Event Hooks &amp; API</a> section.</li>
 </ul>
 <hr>
 <p>Here is a diagram illustating the points above:
