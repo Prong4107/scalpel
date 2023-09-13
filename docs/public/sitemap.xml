@@ -8,6 +8,8 @@
   </url><url>
     <loc>/categories/</loc>
   </url><url>
+    <loc>/feature-editors/</loc>
+  </url><url>
     <loc>/tute-aes/</loc>
   </url><url>
     <loc>/api/events.html</loc>
@@ -20,9 +22,9 @@
   </url><url>
     <loc>/overview-installation/</loc>
   </url><url>
-    <loc>/</loc>
+    <loc>/feature-http/</loc>
   </url><url>
-    <loc>/pdoc/</loc>
+    <loc>/</loc>
   </url><url>
     <loc>/api/pyscalpel/edit.html</loc>
   </url><url>
@@ -41,8 +43,6 @@
     <loc>/api/pyscalpel/utils.html</loc>
   </url><url>
     <loc>/api/pyscalpel/venv.html</loc>
-  </url><url>
-    <loc>/javadoc/</loc>
   </url><url>
     <loc>/tags/</loc>
   </url><url>
