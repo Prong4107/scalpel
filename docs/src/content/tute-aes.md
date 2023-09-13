@@ -20,6 +20,14 @@ Also, the plaintext can be edited. Scalpel will automatically encrypt it when th
 Find a mock API to test this case in the GitHub repository: `test/server.js`.
 <!-- ^^ TODO: Add link to test -->
 
+## Table of content
+
+1. [Take a look at the target](#1-take-a-look-at-the-target)
+2. [Reimplement the encryption / decryption](#2-reimplement-the-encryption--decryption)
+3. [Create the script using Scalpel](#3-create-the-script-using-scalpel)
+4. [Implement the encryption algorithm](#4-implement-the-encryption-algorithm)
+
+
 ## 1. Take a look at the target
 
 Take the time to get familiar with the API code:
@@ -188,7 +196,7 @@ This hook is called when Burp opens the request in an editor. It receives the re
     -   Return the decrypted bytes.
 
     ```python
-    from pyscalpel.http import Request, Response, Flow
+    from pyscalpel import Request, Response, Flow
 
     def req_edit_in_encrypted(req: Request) -> bytes | None:
         secret = req.form[b"secret"]
@@ -253,7 +261,7 @@ Scalpel provides a [match()]({{< relref "addons-api#match" >}}) hook to filter u
 In this case, the encrypted requests are only sent to the `/encrypt` path and contain a `secret`. Thus, better not try to decrypt traffic that don't match these conditions.
 
 ```python
-from pyscalpel.http import Request, Response, Flow
+from pyscalpel import Request, Response, Flow
 
 def match(flow: Flow) -> bool:
     return flow.path_is("/encrypt*") and flow.request.form.get(b"secret") is not None
