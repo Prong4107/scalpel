@@ -2,8 +2,11 @@ package lexfo.scalpel;
 
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
+import com.jediterm.terminal.ui.UIUtil;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -45,12 +48,84 @@ public class Scalpel implements BurpExtension {
 		);
 	}
 
+	private static void loadLibPython3() {
+		String libPath = executePythonCommand(
+			"import sysconfig; print('/'.join([sysconfig.get_config_var('LIBDIR'), 'libpython' + sysconfig.get_config_var('VERSION') + '.dylib']))"
+		);
+
+		ScalpelLogger.all("Loading Python library from " + libPath);
+		try {
+			System.load(libPath);
+		} catch (Exception e) {
+			throw new RuntimeException(
+				"Failed loading" +
+				libPath +
+				"\nIf you are using an ARM/M1 macOS, make sure you installed the ARM/M1 Burp package and not the Intel one:\n" +
+				"https://portswigger.net/burp/releases/professional-community-2023-10-1?requestededition=professional&requestedplatform=macos%20(arm/m1)",
+				e
+			);
+		}
+		ScalpelLogger.all("Successfully loaded Python library from " + libPath);
+	}
+
+	private static void checkPythonVersion() {
+		String version = executePythonCommand(
+			"import sys; print('.'.join(map(str, sys.version_info[:3])))"
+		);
+
+		if (version != null) {
+			String[] versionParts = version.split("\\.");
+			int major = Integer.parseInt(versionParts[0]);
+			int minor = Integer.parseInt(versionParts[1]);
+
+			if (major < 3 || (major == 3 && minor < 10)) {
+				throw new RuntimeException(
+					"Detected Python version " +
+					version +
+					". Requires Python version 3.10 or greater."
+				);
+			}
+		} else {
+			throw new RuntimeException("Failed to retrieve Python version.");
+		}
+	}
+
+	private static String executePythonCommand(String command) {
+		try {
+			String[] cmd = { "python3", "-c", command };
+
+			ProcessBuilder pb = new ProcessBuilder(cmd);
+			pb.redirectErrorStream(true); // Redirect stderr to stdout
+
+			Process process = pb.start();
+			String output;
+			try (
+				BufferedReader reader = new BufferedReader(
+					new InputStreamReader(process.getInputStream())
+				)
+			) {
+				output = reader.readLine();
+			}
+
+			int exitCode = process.waitFor();
+			if (exitCode != 0) {
+				throw new RuntimeException(
+					"Python command failed with exit code " + exitCode
+				);
+			}
+
+			return output;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	private static void setupJepFromConfig(Config config) throws IOException {
 		final Path venvPath = Workspace
 			.getOrCreateDefaultWorkspace(config.getJdkPath())
 			.resolve(Workspace.VENV_DIR);
 
-		var dir = Venv.getSitePackagesPath(venvPath).toFile();
+		final var dir = Venv.getSitePackagesPath(venvPath).toFile();
 
 		final File[] jepDirs = dir.listFiles((__, name) -> name.matches("jep"));
 
@@ -95,8 +170,15 @@ public class Scalpel implements BurpExtension {
 		try {
 			ScalpelLogger.all("Initializing...");
 
-			// Extract embeded ressources.
+			// Ensure we have python >=3.10
+			checkPythonVersion();
+			if (UIUtil.isMac) {
+				// It may be required to manually load libpython on MacOS for jep not to break
+				// https://github.com/ninia/jep/issues/432#issuecomment-1317590878
+				loadLibPython3();
+			}
 
+			// Extract embeded ressources.
 			ScalpelLogger.all("Extracting ressources...");
 			RessourcesUnpacker.extractRessourcesToHome();
 
@@ -159,6 +241,15 @@ public class Scalpel implements BurpExtension {
 			);
 			ScalpelLogger.error("Failed to initialize scalpel:");
 			ScalpelLogger.logStackTrace(e);
+
+			// Burp race-condition: cannot unload an extension while in initialize()
+			Async.run(() -> {
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException __) {}
+
+				API.extension().unload();
+			});
 		}
 	}
 }
