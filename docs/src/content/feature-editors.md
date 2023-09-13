@@ -48,6 +48,21 @@ def req_edit_out(req: Request, modified_content: bytes) -> Request:
 -   You can modify it to update the request and thus, include anything you want (e.g: path traversal sequences). {{< figure src="/screenshots/traversal.png" >}}
 -   When you send the request or switch to another editor tab, your Python hook [`req_edit_out()`]({{< relref "addons-api#req_edit_out" >}}) will be invoked to update the parameter. {{< figure src="/screenshots/updated.png" >}}
 
+
+It is the same process for editing responses:
+```py
+def res_edit_in(res: Response) -> bytes | None:
+    # Displays an additional header in the editor
+    res.headers["X-Python-In-Response-Editor"] = "res_edit_in"
+    return bytes(res)
+
+
+def res_edit_out(_: Response, text: bytes) -> Response | None:
+    # Recreate a response from the editor's content
+    res = Response.from_raw(text)
+    return res
+```
+
 <br>
 
 #### 2. Multiple tabs example
