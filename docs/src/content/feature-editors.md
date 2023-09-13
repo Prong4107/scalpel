@@ -15,7 +15,7 @@ Scalpel's main _killer feature_ is the ability to **program your own editors** u
 -   [Event hooks](#event-hooks)
     1. [Basic example](#1-basic-example)
     2. [Multiple tabs example](#2-multiple-tabs-example)
--   [Decorator](#decorator)
+-   [Binary editors](#binary-editors)
 
 ## Event hooks
 
@@ -102,6 +102,28 @@ This will result in two open tabs. One for the `filename` parameter and one for 
 
 <br>
 
-## Decorator
+## Binary editors
 
 {{< readfile file="/generated/api/editors.html" >}}
+
+
+### Example
+_E.g.:  A simple script displaying requests in a hexadecimal editor and responses in a binary editor:_
+```py
+from pyscalpel import Request, Response, editor
+
+
+@editor("hex")
+def req_edit_in(req: Request) -> bytes | None:
+    return bytes(req)
+
+@editor("binary")
+def res_edit_in(res: Response) -> bytes | None:
+    return bytes(res)
+```
+_The hexadecimal editor:_
+{{< figure src="/screenshots/bin-request.png" >}}
+
+_The binary editor:_
+{{< figure src="/screenshots/bin-response.png" >}}
+
