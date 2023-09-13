@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <link rel="icon" type="image/png" href="../favicon.ico">
+    <title>Usage</title>
+    
+    
+
+    
+    <link rel="stylesheet" href="../style.min.css">
+
+    
+
+    <meta name="generator" content="Hugo 0.92.2" />
+</head>
+<body>
+
+<div class="columns container is-marginless">
+    <div id="sidebar" class="column is-one-quarter">
+        <div class="brand">
+    <a href="https://www.lexfo.fr/en/">
+        <img src='../logo-docs.png' alt="scalpel docs"/>
+    </a>
+
+</div>
+<nav class="menu">
+    <p class="menu-label">Overview</p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="../">Introduction</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="../overview-installation/">Installation</a>
+            
+        </li>
+    
+        <li>
+            <a class="is-active"
+               href="../overview-usage/">Usage</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="../overview-faq/">FAQ</a>
+            
+        </li>
+    
+</ul>
+
+
+    <p class="menu-label"> Script Development </p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="../api/events.html">Event Hooks &amp; API</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="../addons-java/">Accessing the Burp API</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="../addons-examples/">Examples</a>
+            
+        </li>
+    
+</ul>
+
+
+    <p class="menu-label"> Tutorials </p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="../tute-aes/">Decrypting custom encryption.</a>
+            
+        </li>
+    
+</ul>
+
+
+    <p class="menu-label">Core concepts</p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="../concepts-howscalpelworks/">How scalpel works</a>
+            
+        </li>
+    
+</ul>
+
+
+    <p class="menu-label">Technical documentation</p>
+    <ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="../pdoc/">pdoc</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="../javadoc/">Scalpel Javadoc</a>
+            
+        </li>
+    
+</ul>
+
+
+</nav>
+
+    </div>
+    <div id="main" class="column content">
+        
+        
+<a class="button is-small is-outlined is-link is-pulled-right"
+   target="_blank"
+   href="https://github.com/scalpel/scalpel/blob/main/docs/src/content/overview-usage.md"
+>
+
+    Edit on GitHub
+</a>
+
+
+        <h1 id="usage"><a class="anchor" href="#usage">#&nbsp;&nbsp;</a>Usage</h1>
+<ul>
+<li>
+<p>Scalpel allows you to programatically intercept and modify HTTP requests and response that goes through Burp as well as creating custom request/response editors with Python.</p>
+</li>
+<li>
+<p>To do that you simply have to write a Python script containing your code in functions that follows defined names and load the file with Scalpel Burp GUI: <figure><img src="../screenshots//choose_script.png"/>
+</figure>
+</p>
+</li>
+</ul>
+<!-- ^^ TODO: Better screenshot -->
+<ul>
+<li>
+<p>You can intercept requests/response by creating a <code>request()</code> and <code>response()</code> functions in your script:</p>
+<ul>
+<li>E.g: Hooks that adds an arbitrary header to every requests and response:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python">    <span class="kn">from</span> <span class="nn">pyscalpel.http</span> <span class="kn">import</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Response</span>
+
+    <span class="c1"># Intercept the request</span>
+    <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Request</span><span class="p">:</span>
+        <span class="c1"># Add an header</span>
+        <span class="n">req</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&#34;X-Python-Intercept-Request&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&#34;request&#34;</span>
+        <span class="c1"># Return the modified request</span>
+        <span class="k">return</span> <span class="n">req</span>
+
+    <span class="c1"># Same thing for response</span>
+    <span class="k">def</span> <span class="nf">response</span><span class="p">(</span><span class="n">res</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+        <span class="n">res</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&#34;X-Python-Intercept-Response&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&#34;response&#34;</span>
+        <span class="k">return</span> <span class="n">res</span>
+</code></pre></div></li>
+<li>
+<p>You can choose whether to intercept an HTTP message by declaring a <code>match()</code> function:</p>
+<ul>
+<li>
+<p>E.g: A match intercepting requests to localhost / 127.0.0.1 only</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pyscalpel.http</span> <span class="kn">import</span> <span class="n">Flow</span>
+
+<span class="k">def</span> <span class="nf">match</span><span class="p">(</span><span class="n">flow</span><span class="p">:</span> <span class="n">Flow</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="c1"># True if host is localhost or 127.0.0.1</span>
+    <span class="k">return</span> <span class="n">flow</span><span class="o">.</span><span class="n">host_is</span><span class="p">(</span><span class="s2">&#34;localhost&#34;</span><span class="p">,</span> <span class="s2">&#34;127.0.0.1&#34;</span><span class="p">)</span>
+</code></pre></div></li>
+</ul>
+</li>
+</ul>
+<h2 id="editors"><a class="anchor" href="#editors">#&nbsp;&nbsp;</a>Editors</h2>
+<ul>
+<li>
+<p>Scalpel&rsquo;s main <em>killer feature</em> is the ability to program your own editors using simple Python</p>
+<ul>
+<li>
+<p>E.g: A simple example script that allows you to edit a fully URL encoded query string parameter in a request:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pyscalpel.http</span> <span class="kn">import</span> <span class="n">Request</span>
+<span class="kn">from</span> <span class="nn">pyscalpel.utils</span> <span class="kn">import</span> <span class="n">urldecode</span><span class="p">,</span> <span class="n">urlencode_all</span>
+
+
+<span class="c1"># Hook to initialize the editor&#39;s content</span>
+<span class="k">def</span> <span class="nf">req_edit_in</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">param</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;filename&#34;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">param</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">urldecode</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+
+    <span class="c1"># Do not modify the request</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+<span class="c1"># Hook to update the request from the editor&#39;s modified content</span>
+<span class="k">def</span> <span class="nf">req_edit_out</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">modified_content</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Request</span><span class="p">:</span>
+    <span class="n">req</span><span class="o">.</span><span class="n">query</span><span class="p">[</span><span class="s2">&#34;filename&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="n">urlencode_all</span><span class="p">(</span><span class="n">modified_content</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">req</span>
+</code></pre></div></li>
+<li>
+<p>If you open a request with a &ldquo;filename&rdquo; query parameter, a &ldquo;Scalpel&rdquo; tab should appear in the editor <figure><img src="../screenshots/urlencode.png"/>
+</figure>
+</p>
+</li>
+<li>
+<p>Your <code>req_edit_in()</code> python hook will be invoked and the tab should contain the filename parameter URL decoded content <figure><img src="../screenshots/decoded.png"/>
+</figure>
+</p>
+</li>
+<li>
+<p>Which you can modify to update the request and include anything you want (e.g: path traversal sequences) <figure><img src="../screenshots/traversal.png"/>
+</figure>
+</p>
+</li>
+<li>
+<p>When you send the request or switch to another editor tab, your python hook <code>req_edit_out()</code> will be invoked to update the parameter. <figure><img src="../screenshots/updated.png"/>
+</figure>
+</p>
+</li>
+</ul>
+</li>
+<li>
+<p>You can have multiple tabs by adding a suffix to your function names:</p>
+<ul>
+<li>
+<p>E.g: Same script as above but for two parameters &ldquo;filename&rdquo; and &ldquo;directory&rdquo;</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pyscalpel.http</span> <span class="kn">import</span> <span class="n">Request</span>
+<span class="kn">from</span> <span class="nn">pyscalpel.utils</span> <span class="kn">import</span> <span class="n">urldecode</span><span class="p">,</span> <span class="n">urlencode_all</span>
+
+<span class="k">def</span> <span class="nf">req_edit_in_filename</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">):</span>
+    <span class="n">param</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;filename&#34;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">param</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">urldecode</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">req_edit_out_filename</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+    <span class="n">req</span><span class="o">.</span><span class="n">query</span><span class="p">[</span><span class="s2">&#34;filename&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="n">urlencode_all</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">req</span>
+
+
+<span class="k">def</span> <span class="nf">req_edit_in_directory</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">):</span>
+    <span class="n">param</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">query</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;directory&#34;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">param</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">urldecode</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">req_edit_out_directory</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
+    <span class="n">req</span><span class="o">.</span><span class="n">query</span><span class="p">[</span><span class="s2">&#34;directory&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="n">urlencode_all</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">req</span>
+</code></pre></div></li>
+<li>
+<p>You will have a tab for the &ldquo;filename&rdquo; parameter and a tab for the &ldquo;directory&rdquo; parameter.
+<figure><img src="../screenshots/multiple_params.png"/>
+</figure>
+
+<figure><img src="../screenshots/multiple_tabs.png"/>
+</figure>
+</p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="notes"><a class="anchor" href="#notes">#&nbsp;&nbsp;</a>Notes:</h2>
+<ul>
+<li>
+<p>If your hooks return <code>None</code>, it will pass the original object without any modification</p>
+<ul>
+<li>If <code>request()</code> returns <code>None</code>, the original request will be forwarded without modifications.
+<ul>
+<li>Same for <code>response()</code></li>
+</ul>
+</li>
+<li>If <code>req_edit_in()</code> or <code>res_edit_in()</code> returns <code>None</code>, the editor tab will not be displayed.</li>
+<li>If <code>req_edit_out()</code> or <code>res_edit_out()</code> returns <code>None</code>, the request will not be modified.</li>
+<li>If <code>req_edit_out()</code> / <code>res_edit_out()</code> isn&rsquo;t declared but <code>req_edit_in()</code> / <code>res_edit_in()</code> is, the corresponding editor will be <strong>read-only</strong>.</li>
+</ul>
+</li>
+<li>
+<p>You do not have to declare every hook if you don&rsquo;t need them, if you only want to modify requests, you can declare the <code>request()</code> hook only.</p>
+</li>
+</ul>
+
+
+    </div>
+</div>
+</body>
+</html>
+
