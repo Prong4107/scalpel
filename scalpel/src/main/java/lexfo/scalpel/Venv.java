@@ -44,6 +44,21 @@ public class Venv {
 
 		return process;
 	}
+	// https://github.com/ninia/jep/issues/495
+	private static void clearPipCache(Path venv)
+		throws IOException, InterruptedException {
+		final ProcessBuilder cacheClearProcessBuilder = new ProcessBuilder(
+			getPipPath(venv).toString(),
+			"cache",
+			"remove",
+			"jep"
+		);
+		final Process cacheClearProcess = cacheClearProcessBuilder.start();
+		cacheClearProcess.waitFor();
+		if (cacheClearProcess.exitValue() != 0) {
+			throw new IOException("Failed to clear the pip cache for jep");
+		}
+	}
 
 	public static Process installDefaults(
 		Path venv,
@@ -60,6 +75,7 @@ public class Venv {
 
 		final String[] pkgsToInstall;
 		if (installJep) {
+			clearPipCache(venv);
 			pkgsToInstall = ArrayUtils.addAll(javaDeps, scriptDeps);
 		} else {
 			pkgsToInstall = scriptDeps;
