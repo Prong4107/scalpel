@@ -17,7 +17,7 @@ Let's solve this problem by using Scalpel. It will provide an additional tab in 
 
 Also, the plaintext can be edited. Scalpel will automatically encrypt it when the "Send" button is hit.
 
-Find a mock API to test this case in the GitHub repository: `test/server.js`.
+Find a mock API to test this case in the GitHub repository: [`test/server.js`](https://github.com/Prong4107/scalpel/blob/4b935cb29b496f3627a319d963a009dda79a1aa7/test/server.js#L117C1-L118C1).
 <!-- ^^ TODO: Add link to test -->
 
 ## Table of content
