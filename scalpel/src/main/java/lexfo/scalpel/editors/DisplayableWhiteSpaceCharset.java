@@ -9,7 +9,7 @@ public class DisplayableWhiteSpaceCharset extends Charset {
 	private final Charset utf8;
 
 	public DisplayableWhiteSpaceCharset() {
-		super("MyCharset", null);
+		super("DisplayableWhiteSpaceCharset", null);
 		utf8 = StandardCharsets.UTF_8;
 	}
 
@@ -18,20 +18,22 @@ public class DisplayableWhiteSpaceCharset extends Charset {
 	}
 
 	public CharsetDecoder newDecoder() {
-		return new MyCharsetDecoder(this, utf8.newDecoder());
+		return new WhitspaceCharsetDecoder(this, utf8.newDecoder());
 	}
 
 	public CharsetEncoder newEncoder() {
 		return utf8.newEncoder();
-		// return new MyCharsetEncoder(this, utf8.newEncoder());
 	}
 }
 
-class MyCharsetDecoder extends CharsetDecoder {
+class WhitspaceCharsetDecoder extends CharsetDecoder {
 
 	private final CharsetDecoder originalDecoder;
 
-	protected MyCharsetDecoder(Charset cs, CharsetDecoder originalDecoder) {
+	protected WhitspaceCharsetDecoder(
+		Charset cs,
+		CharsetDecoder originalDecoder
+	) {
 		super(
 			cs,
 			originalDecoder.averageCharsPerByte(),
@@ -68,11 +70,14 @@ class MyCharsetDecoder extends CharsetDecoder {
 	}
 }
 
-class MyCharsetEncoder extends CharsetEncoder {
+class WhitspaceCharsetEncoder extends CharsetEncoder {
 
 	private final CharsetEncoder originalEncoder;
 
-	protected MyCharsetEncoder(Charset cs, CharsetEncoder originalEncoder) {
+	protected WhitspaceCharsetEncoder(
+		Charset cs,
+		CharsetEncoder originalEncoder
+	) {
 		super(
 			cs,
 			originalEncoder.averageBytesPerChar(),
