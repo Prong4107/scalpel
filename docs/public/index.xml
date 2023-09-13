@@ -25,7 +25,7 @@ For cases like these, the user can directly access the MontoyaApi Java object</d
       
       <guid>/feature-editors/</guid>
       <description>Custom Burp Editors Scalpel&amp;rsquo;s main killer feature is the ability to program your own editors using Python.
-Table of content  Event hooks  Basic example Multiple tabs example   Decorator  Event hooks 1. Basic example E.g: A simple script to edit a fully URL encoded query string parameter in a request:
+Table of content  Event hooks  Basic example Multiple tabs example   Binary editors  Event hooks 1. Basic example E.g: A simple script to edit a fully URL encoded query string parameter in a request:
 from pyscalpel import Request from pyscalpel.utils import urldecode, urlencode_all # Hook to initialize the editor&amp;#39;s content def req_edit_in(req: Request) -&amp;gt; bytes | None: param = req.</description>
     </item>
     
