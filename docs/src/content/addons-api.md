@@ -39,10 +39,6 @@ The following list all available event hooks.
 
 {{< readfile file="/generated/api/events.html" >}}
 
-## Editors
-
-{{< readfile file="/generated/api/editors.html" >}}
-
 ## Notes
 
 -   If your hooks return `None`, they will follow these behaviors:
@@ -54,3 +50,7 @@ The following list all available event hooks.
 -   If `req_edit_out()` or `res_edit_out()` isn't declared but `req_edit_in()` or `res_edit_in()` is, the corresponding editor will be **read-only**.
 
 -   You do not have to declare every hook if you don't need them, if you only want to modify requests, you can declare the `request()` hook only.
+
+## Further reading
+
+Check out the [Custom Burp Editors]({{< relref "feature-editors" >}}) section.
