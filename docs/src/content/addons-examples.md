@@ -16,8 +16,7 @@ For this case, we've encountered an API using a custom protocol that gzips multi
 A quick-and-dirty Scalpel script allowed us to directly edit the unzipped data and find hidden secrets:
 
 ```python
-from pyscalpel.http import Request, Response
-from pyscalpel.burp_utils import logger
+from pyscalpel import Request, Response, logger
 import gzip
 
 
@@ -84,7 +83,7 @@ This script demonstrates that Scalpel can be easily used to deal with stateful b
 > This use case is testable using the test lab in the repository at `test/server.js`.
 
 ```python
-from pyscalpel.http import Request, Response, Flow
+from pyscalpel import Request, Response, Flow
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 from Crypto.Util.Padding import pad, unpad

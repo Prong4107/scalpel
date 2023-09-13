@@ -25,7 +25,7 @@ Users may look at the [Montoya API Javadoc](https://portswigger.github.io/burp-e
     -   A script spoofing the Host header with a collaborator payload
 
         ```python
-        from pyscalpel.http import Request
+        from pyscalpel import Request
         from pyscalpel.burp_utils import ctx
 
         # Spoof the Host header to a Burp collaborator payload to detect out-of-band interactions and HTTP SSRFs
@@ -46,7 +46,7 @@ Users may look at the [Montoya API Javadoc](https://portswigger.github.io/burp-e
     -   A script sending every request having the "cmd" param to Burp Repeater:
 
         ```python
-        from pyscalpel.http import Request
+        from pyscalpel import Request
         from pyscalpel.burp_utils import ctx
         from threading import Thread
 
