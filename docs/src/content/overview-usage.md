@@ -25,4 +25,4 @@ Simply write a Python script implementing the ones you need and load the file wi
 
 ## Further reading
 
-Learn more about the predefined function names in the [Features]({{< relref "feature-http" >}}) category.
+Learn more about the predefined function names and find examples in the [Features]({{< relref "feature-http" >}}) category.
