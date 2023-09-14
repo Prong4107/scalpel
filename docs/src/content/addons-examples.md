@@ -7,13 +7,19 @@ menu:
 
 # Script examples
 
-Here are example scripts to familiarize yourself with Scalpel's Python library a bit more. They were designed for real use-cases.
+This page provides example scripts to get familiar with Scalpel's Python library. They are designed for real use cases.
+
+## Table of content
+
+- [GZIP-ed API](#gzip-ed-api)
+- [Cryptography using a session as a secret](#cryptography-using-a-session-as-a-secret)
 
 ## GZIP-ed API
 
-For this case, we've encountered an API using a custom protocol that gzips multiple form-data fields.
 
-A quick-and-dirty Scalpel script allowed us to directly edit the unzipped data and find hidden secrets:
+Let's assume you encountered an API using a custom protocol that gzips multiple form-data fields.
+
+Quick-and-dirty Scalpel script to directly edit the unzipped data and find hidden secrets:
 
 ```python
 from pyscalpel import Request, Response, logger
@@ -34,7 +40,7 @@ def unzip_bytes(data):
 def req_edit_in_fs(req: Request) -> bytes | None:
     gz = req.multipart_form["fs"].content
 
-    # Decoding utf-16 and re-encoding to get rid of null bytes in the editor
+    # Decode utf-16 and re-encoding to get rid of null bytes in the editor
     content = gzip.decompress(gz).decode("utf-16le").encode("latin-1")
     return content
 
@@ -76,11 +82,11 @@ def res_edit_out(res: Response, text: bytes) -> Response | None:
 
 ## Cryptography using a session as a secret
 
-We had the case where the client encrypted its form data using a session token obtained when authenticating.
+In this case, the client encrypted its form data using a session token obtained upon authentication.
 
-This script demonstrates that Scalpel can be easily used to deal with stateful behaviours:
+This script demonstrates that Scalpel can be easily used to deal with **stateful behaviors**:
 
-> This use case is testable using the test lab in the repository at `test/server.js`.
+> 💡 Find a mock API to test this case in Scalpel's GitHub repository: [`test/server.js`](https://github.com/Prong4107/scalpel/blob/4b935cb29b496f3627a319d963a009dda79a1aa7/test/server.js#L117C1-L118C1).
 
 ```python
 from pyscalpel import Request, Response, Flow
@@ -161,4 +167,4 @@ def res_edit_out_encrypted(res: Response, text: bytes) -> Response:
 
 ---
 
-> Feel free to contact us to add your own one if you had an interesting case !
+> If you encountered an interesting case, feel free to contact us to add it!

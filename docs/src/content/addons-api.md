@@ -39,7 +39,7 @@ The following list all available event hooks.
 
 {{< readfile file="/generated/api/events.html" >}}
 
-## Notes
+## ⚠️ Good to know
 
 -   If your hooks return `None`, they will follow these behaviors:
 

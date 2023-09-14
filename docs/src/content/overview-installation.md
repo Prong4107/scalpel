@@ -29,5 +29,5 @@ Scalpel is now properly installed and initialized!
 
 ## What's next
 
--   Check the [Usage]({{< relref "overview-usage" >}}) page to get a glimpse at how to use the tool.
+-   Check the [Usage]({{< relref "overview-usage" >}}) page to get a glimpse of how to use the tool.
 -   Read this [tutorial]({{< relref "tute-aes" >}}) to see Scalpel in a real use case context.

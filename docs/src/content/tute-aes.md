@@ -11,13 +11,15 @@ menu:
 
 An IOT appliance adds an obfuscation layer to its HTTP communications by encrypting the body of its requests and responses with a key.
 
-On every HTTP request, the program sends two POST parameters, `secret` (the encryption key) and `encrypted` (the ciphertext).
+On every HTTP request, the program sends two POST parameters:
+- `secret` (the encryption key)
+- and `encrypted` (the ciphertext).
 
 Let's solve this problem by using Scalpel. It will provide an additional tab in the Repeater which displays the plaintext for every request and response.
 
 Also, the plaintext can be edited. Scalpel will automatically encrypt it when the "Send" button is hit.
 
-Find a mock API to test this case in the GitHub repository: [`test/server.js`](https://github.com/Prong4107/scalpel/blob/4b935cb29b496f3627a319d963a009dda79a1aa7/test/server.js#L117C1-L118C1).
+> 💡 Find a mock API to test this case in Scalpel's GitHub repository: [`test/server.js`](https://github.com/Prong4107/scalpel/blob/4b935cb29b496f3627a319d963a009dda79a1aa7/test/server.js#L117C1-L118C1).
 <!-- ^^ TODO: Add link to test -->
 
 ## Table of content
@@ -26,7 +28,7 @@ Find a mock API to test this case in the GitHub repository: [`test/server.js`](h
 2. [Reimplement the encryption / decryption](#2-reimplement-the-encryption--decryption)
 3. [Create the script using Scalpel](#3-create-the-script-using-scalpel)
 4. [Implement the encryption algorithm](#4-implement-the-encryption-algorithm)
-
+5. [Conclusion](#conclusion)
 
 ## 1. Take a look at the target
 
@@ -274,10 +276,14 @@ It ensures the initiating request contained a `secret` field and was sent to a p
 # Conclusion
 
 In this tutorial, you saw how to decrypt a custom encryption in IoT appliance communications using Scalpel.
-This involved: understanding the existing API encryption code, recreating the encryption process in Python, installing necessary Python dependencies, and creating custom editors to handle decryption and re-encryption of modified content.
+This involved:
+- understanding the existing API encryption code
+- recreating the encryption process in Python
+- installing necessary Python dependencies
+- and creating custom editors to handle decryption and re-encryption of modified content.
 
 This process was implemented for both request and response flows, allowing to view and manipulate the plaintext communication, then encrypt it again before sending. This approach greatly simplifies the process of analyzing and interacting with encrypted data, reducing the need for cumbersome work arounds or additional external tools.
 
-While this tutorial covers a specific case of AES-256-CBC encryption, have in mind that the main concept and steps can be applied to various other encryption techniques as well. The only requirement is to understand the encryption process and be able to reproduce it in Python.
+While this tutorial covers a specific case of AES-256-CBC encryption, have in mind that the main concept and steps can be applied to various other encryption techniques as well. **The only requirement is to understand the encryption process and be able to reproduce it in Python.**
 
 Scalpel is meant to be a versatile tool in scenarios where custom encryption is encountered. It aims to make data easier to analyze and modify for security testing purposes.

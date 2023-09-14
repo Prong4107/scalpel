@@ -8,21 +8,17 @@ menu:
 
 # Accessing the Burp API
 
-Scalpel communicates with Burp through it's Java API and
-provides the user with an execution context where they should only have to use Python objects.
+Scalpel communicates with Burp through its Java API and provides the user with an execution context in which they should only have to use **Python objects**.
 
-However, Scalpel's Python library focuses on handling HTTP objects
-and does not provide utilities for all the Burp API features.
+However, Scalpel's Python library focuses on handling HTTP objects and **does not provide utilities for all the Burp API features** (for example, the ability to generate Collaborator payloads).
 
-For example, Scalpel library itself does not provide the ability to generate Collaborator payloads.
 
-For cases like these, the user can directly access the [MontoyaApi Java object](https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/MontoyaApi.html)
+For such cases, the user can directly access the [MontoyaApi Java object](https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/MontoyaApi.html) to find out what objects can be used.
 
-Users may look at the [Montoya API Javadoc](https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/MontoyaApi.html) to known which objects they can access.
 
--   Examples:
+## Examples
 
-    -   A script spoofing the Host header with a collaborator payload
+    _A script spoofing the Host header with a collaborator payload:_
 
         ```python
         from pyscalpel import Request, ctx
@@ -38,11 +34,11 @@ Users may look at the [Montoya API Javadoc](https://portswigger.github.io/burp-e
             return req
         ```
 
-        > Documentation for the collaborator generator can be found in the javadoc at:
-        >
-        > https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/collaborator/CollaboratorPayloadGenerator.html#generatePayload(burp.api.montoya.collaborator.PayloadOption...)
+        > 💡 [PortSwigger's documentation for the Collaborator Generator](https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/collaborator/CollaboratorPayloadGenerator.html#generatePayload(burp.api.montoya.collaborator.PayloadOption...)).
 
-    -   A script sending every request having the "cmd" param to Burp Repeater:
+<br>
+
+_A script sending every request that has the `cmd` param to Burp Repeater:_
 
         ```python
         from pyscalpel import Request, ctx
@@ -50,23 +46,21 @@ Users may look at the [Montoya API Javadoc](https://portswigger.github.io/burp-e
 
         # Send every request that contains the "cmd" param to repeater
 
-        # Set to ensure added request are unique
+        # Ensure added request are unique by using a set
         seen = set()
 
 
         def request(req: Request) -> None:
             cmd = req.query.get("cmd")
             if cmd is not None and cmd not in seen:
-                # Convert request to Burp format.
+                # Convert request to Burp format
                 breq = req.to_burp()
 
                 # Directly access the Montoya API Java object to send the request to repeater
                 repeater = ctx["API"].repeater()
 
-                # waiting for sendToRepeater while intercepting a request causes a Burp deadlock
+                # Wait for sendToRepeater() while intercepting a request causes a Burp deadlock
                 Thread(target=lambda: repeater.sendToRepeater(breq, f"cmd={cmd}")).start()
         ```
 
-        > Documentation for Burp repeater can be found at:
-        >
-        > https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/repeater/Repeater.html
+        > 💡 [PortSwigger's documentation for Burp repeater](https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/repeater/Repeater.html)

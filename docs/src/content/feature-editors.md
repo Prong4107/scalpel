@@ -13,13 +13,14 @@ Scalpel's main _killer feature_ is the ability to **program your own editors** u
 ## Table of content
 
 -   [Event hooks](#event-hooks)
-    1. [Basic example](#1-basic-example)
-    2. [Multiple tabs example](#2-multiple-tabs-example)
+    1. [Edit a request](#1-edit-a-request)
+    2. [Edit a response](#1-edit-a-response)
+    3. [Multiple tabs example](#3-multiple-tabs-example)
 -   [Binary editors](#binary-editors)
 
 ## Event hooks
 
-#### 1. Basic example
+#### 1. Edit a request
 
 _E.g: A simple script to edit a fully URL encoded query string parameter in a request:_
 
@@ -49,6 +50,8 @@ def req_edit_out(req: Request, modified_content: bytes) -> Request:
 -   When you send the request or switch to another editor tab, your Python hook [`req_edit_out()`]({{< relref "addons-api#req_edit_out" >}}) will be invoked to update the parameter. {{< figure src="/screenshots/updated.png" >}}
 
 
+#### 2. Edit a response
+
 It is the same process for editing responses:
 ```py
 def res_edit_in(res: Response) -> bytes | None:
@@ -65,9 +68,9 @@ def res_edit_out(_: Response, text: bytes) -> Response | None:
 
 <br>
 
-#### 2. Multiple tabs example
+#### 3. Multiple tabs example
 
-You can have multiple open tabs at the same time. Just suffix your function names:
+You can have multiple tabs open at the same time. Just **suffix** your function names:
 
 _E.g: Same script as above but for two parameters: "filename" and "directory"._
 
