@@ -2,11 +2,11 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>/addons-java/</loc>
-  </url><url>
     <loc>/api/</loc>
   </url><url>
     <loc>/categories/</loc>
+  </url><url>
+    <loc>/feature-editors/</loc>
   </url><url>
     <loc>/tute-aes/</loc>
   </url><url>
@@ -20,9 +20,9 @@
   </url><url>
     <loc>/overview-installation/</loc>
   </url><url>
-    <loc>/</loc>
+    <loc>/feature-http/</loc>
   </url><url>
-    <loc>/pdoc/</loc>
+    <loc>/</loc>
   </url><url>
     <loc>/api/pyscalpel/edit.html</loc>
   </url><url>
@@ -42,10 +42,10 @@
   </url><url>
     <loc>/api/pyscalpel/venv.html</loc>
   </url><url>
-    <loc>/javadoc/</loc>
-  </url><url>
     <loc>/tags/</loc>
   </url><url>
     <loc>/overview-usage/</loc>
+  </url><url>
+    <loc>/addons-java/</loc>
   </url>
 </urlset>

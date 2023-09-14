@@ -23,14 +23,14 @@
 <div class="columns container is-marginless">
     <div id="sidebar" class="column is-one-quarter">
         <div class="brand">
-    <a href="https://www.lexfo.fr/en/">
-        <img src='./logo-docs.png' alt="scalpel docs"/>
-    </a>
-
+	<a href="https://www.lexfo.fr/en/">
+		<img src='./logo-docs.png' alt="scalpel docs" />
+	</a>
 </div>
+
 <nav class="menu">
-    <p class="menu-label">Overview</p>
-    <ul class="menu-list">
+	<p class="menu-label">Overview</p>
+	<ul class="menu-list">
     
     
     
@@ -62,8 +62,29 @@
 </ul>
 
 
-    <p class="menu-label"> Script Development </p>
-    <ul class="menu-list">
+	<p class="menu-label">Features</p>
+	<ul class="menu-list">
+    
+    
+    
+    
+        <li>
+            <a class=""
+               href="./feature-http/">Intercept and rewrite HTTP traffic</a>
+            
+        </li>
+    
+        <li>
+            <a class=""
+               href="./feature-editors/">Custom Burp editors</a>
+            
+        </li>
+    
+</ul>
+
+
+	<p class="menu-label">Script Development</p>
+	<ul class="menu-list">
     
     
     
@@ -76,7 +97,7 @@
     
         <li>
             <a class=""
-               href="./addons-java/">Accessing the Burp API</a>
+               href="./addons-java/">Using the Burp API</a>
             
         </li>
     
@@ -89,23 +110,23 @@
 </ul>
 
 
-    <p class="menu-label"> Tutorials </p>
-    <ul class="menu-list">
+	<p class="menu-label">Tutorials</p>
+	<ul class="menu-list">
     
     
     
     
         <li>
             <a class=""
-               href="./tute-aes/">Decrypting custom encryption.</a>
+               href="./tute-aes/">Decrypting custom encryption</a>
             
         </li>
     
 </ul>
 
 
-    <p class="menu-label">Core concepts</p>
-    <ul class="menu-list">
+	<p class="menu-label">Core concepts</p>
+	<ul class="menu-list">
     
     
     
@@ -119,27 +140,22 @@
 </ul>
 
 
-    <p class="menu-label">Technical documentation</p>
-    <ul class="menu-list">
-    
-    
-    
-    
-        <li>
-            <a class=""
-               href="./pdoc/">pdoc</a>
-            
-        </li>
-    
-        <li>
-            <a class=""
-               href="./javadoc/">Scalpel Javadoc</a>
-            
-        </li>
-    
-</ul>
+	<p class="menu-label">Technical documentation</p>
+	<ul class="menu-list">
+		<li>
+			<a class="" href="../pdoc/">Python library</a>
+		</li>
 
-
+		<li>
+			<a class="" href="../javadoc/">Java extension</a>
+		</li>
+		<br>
+		<li>
+			<a class="" href="https://github.com/Prong4107/scalpel">
+				<img src='./github.svg' alt="github" style="height: 16px; vertical-align: middle; margin-right: 5px;" /> Github
+			</a>
+		</li>
+	</ul>
 </nav>
 
     </div>
@@ -148,31 +164,35 @@
         
 
         <h1 id="introduction"><a class="anchor" href="#introduction">#&nbsp;&nbsp;</a>Introduction</h1>
-<p>Scalpel is a Burp extension for intercepting and modifying HTTP trafic using simple Python scripting.</p>
+<p>Scalpel is a powerful <strong>Burp Suite</strong> extension that allows you to script Burp in order to intercept, rewrite HTTP traffic on the fly, and program custom Burp editors in Python 3.</p>
+<p>It provides an interactive way to edit encoded/encrypted data as plaintext and offers an easy-to-use Python library as an alternative to Burp&rsquo;s Java API.</p>
 <h1 id="index"><a class="anchor" href="#index">#&nbsp;&nbsp;</a>Index</h1>
 <ul>
 <li><a href="./overview-installation/">Installation</a></li>
 <li><a href="./overview-usage/">Usage</a></li>
 <li><a href="./overview-faq/">FAQ</a></li>
-<li><a href="./api/events.html">Technical documentation</a></li>
+<li><a href="./api/events.html">Technical documentation for script development</a></li>
 <li><a href="./tute-aes/">Example use-case</a></li>
 <li><a href="./concepts-howscalpelworks/">How scalpel works</a></li>
 </ul>
 <h2 id="features"><a class="anchor" href="#features">#&nbsp;&nbsp;</a>Features</h2>
 <ul>
-<li>Make scripted changes to HTTP traffic using Python.</li>
-<li>Interactively edit plaintext decoded and encoded by a custom script.</li>
-<li>Better hexadecimal editor.</li>
+<li><a href="./api/events.html"><strong>Python Library</strong></a>: Easy-to-use Python library, especially welcome for non-Java developers.</li>
+<li><a href="./feature-http/"><strong>Intercept and Rewrite HTTP Traffic</strong></a>: Scalpel provides a set of predefined function names that can be implemented to intercept and modify HTTP requests and responses.</li>
+<li><a href="./feature-editors/"><strong>Custom Burp Editors</strong></a>: Program your own Burp editors in Python. Encoded/encrypted data can be handled as plaintext.
+<ul>
+<li><a href="./feature-editors/#binary-editors"><strong>Hex Editors</strong></a>: Ability to create improved hex editors.</li>
 </ul>
-<p><a href="https://REMOVED/scalpel">GitHub repository</a>.</p>
-<p>^TODO: set github repo</p>
-<h2 id="use-cases"><a class="anchor" href="#use-cases">#&nbsp;&nbsp;</a>Use-cases</h2>
+</li>
+</ul>
+<h2 id="use-cases"><a class="anchor" href="#use-cases">#&nbsp;&nbsp;</a>Use cases</h2>
 <ul>
 <li><a href="./tute-aes/">Decrypting custom encryption</a></li>
 <li><a href="./addons-examples/#GZIP">Editing encoded requests/responses</a></li>
 </ul>
 <blockquote>
-<p>Note: One might think existing Burp extensions like piper can handle such cases, but it is actually too limited, for example, when intercepting a response, piper cannot get informations form the originating request, which is required in the above case. In general, Scalpel allows you to work around cases more complex than other Burp extensions like Piper or Hackvertor.</p>
+<p>Note: One might think existing Burp extensions like <code>Piper</code> can handle such cases. But actually they can&rsquo;t.<br>
+For example, when intercepting a response, <code>Piper</code> cannot get information from the initiating request, which is required in the above use cases. Scalpel generally allows you to manage complex cases that are not handled by other Burp extensions like <code>Piper</code> or <code>Hackvertor</code>.</p>
 </blockquote>
 
 
