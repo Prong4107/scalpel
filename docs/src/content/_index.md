@@ -24,7 +24,7 @@ Scalpel is a Burp extension for intercepting and modifying HTTP trafic using sim
 -   [**Intercept and Rewrite HTTP Traffic**]({{< relref "feature-http"  >}}): Scalpel provides a set of predefined function names that can be implemented to intercept and modify HTTP requests and responses.
 -   [**Custom Burp Editors**]({{< relref "feature-editors" >}}): Program your own Burp editors in Python. Encoded/encrypted data can be handled as plaintext.
 -   [**Python Library**]({{< relref "addons-api" >}}): Easy-to-use Python library, especially welcomed for non-Java developers.
--   **Hex Editor**: Ability to create improved hex editors.
+-   [**Hex Editor**]({{< relref "feature-editors#binary-editors" >}}): Ability to create improved hex editors.
 
 
 ## Use cases
