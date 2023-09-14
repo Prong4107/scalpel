@@ -27,8 +27,6 @@ Scalpel is a Burp extension for intercepting and modifying HTTP trafic using sim
 -   **Hex Editor**: Ability to create improved hex editors.
 
 
-^TODO: set github repo
-
 ## Use cases
 
 -   [Decrypting custom encryption]({{< relref "tute-aes" >}})
