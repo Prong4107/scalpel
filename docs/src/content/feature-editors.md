@@ -130,3 +130,8 @@ _The hexadecimal editor:_
 _The binary editor:_
 {{< figure src="/screenshots/bin-response.png" >}}
 
+<br>
+
+## Further reading
+
+Learn more about the available hooks in the technical documentation's [Event Hooks & API]({{< relref "addons-api" >}}) section.

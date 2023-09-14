@@ -72,4 +72,5 @@ def match(flow: Flow) -> bool:
 
 ## Further reading
 
-Learn more about the available hooks in the technical documentation's [Event Hooks & API]({{< relref "addons-api" >}}) section.
+- Learn more about the available hooks in the technical documentation's [Event Hooks & API]({{< relref "addons-api" >}}) section.
+- Or check out the [Custom Burp Editors]({{< relref "feature-editors" >}}).
