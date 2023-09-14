@@ -12,14 +12,16 @@ menu:
 An IOT appliance adds an obfuscation layer to its HTTP communications by encrypting the body of its requests and responses with a key.
 
 On every HTTP request, the program sends two POST parameters:
-- `secret` (the encryption key)
-- and `encrypted` (the ciphertext).
 
-Let's solve this problem by using Scalpel. It will provide an additional tab in the Repeater which displays the plaintext for every request and response.
+-   `secret` (the encryption key)
+-   `encrypted` (the ciphertext).
 
-Also, the plaintext can be edited. Scalpel will automatically encrypt it when the "Send" button is hit.
+Let's solve this problem by using Scalpel!
+
+It will provide an additional tab in the Repeater which displays the plaintext for every request and response. The plaintext can also be edited. Scalpel will automatically encrypt it when the "Send" button is hit.
 
 > 💡 Find a mock API to test this case in Scalpel's GitHub repository: [`test/server.js`](https://github.com/Prong4107/scalpel/blob/4b935cb29b496f3627a319d963a009dda79a1aa7/test/server.js#L117C1-L118C1).
+
 <!-- ^^ TODO: Add link to test -->
 
 ## Table of content
@@ -28,7 +30,9 @@ Also, the plaintext can be edited. Scalpel will automatically encrypt it when th
 2. [Reimplement the encryption / decryption](#2-reimplement-the-encryption--decryption)
 3. [Create the script using Scalpel](#3-create-the-script-using-scalpel)
 4. [Implement the encryption algorithm](#4-implement-the-encryption-algorithm)
-5. [Conclusion](#conclusion)
+5. [Create custom editors](#5-create-custom-editors)
+6. [Filtering requests/responses sent to hooks](#6-filtering-requestsresponses-sent-to-hooks)
+7. [Conclusion](#conclusion)
 
 ## 1. Take a look at the target
 
@@ -107,42 +111,52 @@ Before using Scalpel for handling this API's encryption, the first thing to do i
 
 ### Installing Python dependencies
 
-To work with AES in Python, the `pycryptodome` module is required but not installed by default.
-All Scalpel Python scripts run in a virtual environment. Fortunately, Scalpel provides a way to switch between venvs and install packages through Burp GUI.
+To work with AES in Python, the `pycryptodome` module is required but not installed by default. All Scalpel Python scripts run in a virtual environment. Fortunately, Scalpel provides a way to switch between venvs and install packages through Burp GUI.
 
-Let's jump to the `Scalpel` tab:
+1. Let's jump to the `Scalpel` tab:
+
 {{< figure src="/screenshots/terminal.png" >}}
 
-Focus on the left part. You can use this interface to create and select new venvs.
+2. Focus on the left part. You can use this interface to create and select new venvs.
+
 {{< figure src="/screenshots/venv.png" >}}
 
-Let's create a venv for this use case. Enter a name and press enter:
+3. Let's create a venv for this use case. Enter a name and press enter:
+
 {{< figure src="/screenshots/aes-venv.png" >}}
 {{< figure src="/screenshots/venv-installing.png" >}}
 
-It is now possible to select it by clicking on its path:
+4. It is now possible to select it by clicking on its path:
+
 {{< figure src="/screenshots/select-venv.png" >}}
 
-The central terminal is now activated in the selected venv and can be used to install packages using `pip` in the usual way:
+5. The central terminal is now activated in the selected venv and can be used to install packages using `pip` in the usual way:
+
 {{< figure src="/screenshots/venv-pycryptodome.png" >}}
 
-`pycryptodome` is now installed. Let's create the Scalpel script!
+6. `pycryptodome` is now installed. Let's create the Scalpel script!
 
 ## 3. Create the script using Scalpel
 
 You can create a new script for Scalpel using the GUI:
 
--   Click the `Create new script` button (underlined in red below).
-    -   {{< figure src="/screenshots/create-script.png" >}}
--   Enter the desired filename.
-    -   {{< figure src="/screenshots/create-script-prompt.png" >}}
--   Once the file is created, this message will show up:
-    -   {{< figure src="/screenshots/create-script-success.png" >}}
+1. Click the `Create new script` button (underlined in red below).
 
-After following this steps, the script should either be opened in your OS graphical editor or in the terminal provided by Scalpel:
+{{< figure src="/screenshots/create-script.png" >}}
+
+2. Enter the desired filename.
+
+{{< figure src="/screenshots/create-script-prompt.png" >}}
+
+3. Once the file is created, this message will show up:
+
+{{< figure src="/screenshots/create-script-success.png" >}}
+
+4. After following this steps, the script should either be opened in your OS graphical editor or in the terminal provided by Scalpel:
+
 {{< figure src="/screenshots/create-script-edit.png" >}}
 
-It contains commented hooks declarations. Remove them, as you will rewrite them further in this tutorial.
+5. It contains commented hooks declarations. Remove them, as you will rewrite them further in this tutorial.
 
 ## 4. Implement the encryption algorithm
 
@@ -180,7 +194,7 @@ def encrypt(secret: bytes, data: bytes) -> bytes:
 
 The above code can now be used to automatically decrypt your content to plaintext and re-encrypt a modified plaintext.
 
-As explained in [Usage]({{< relref "overview-usage" >}}), request editors are created by declaring the `req_edit_in` hook:
+As explained in [Editors]({{< relref "feature-editors#1-edit-a-request" >}}), request editors are created by declaring the `req_edit_in` hook:
 
 ```python
 def req_edit_in_encrypted(req: Request) -> bytes | None:
@@ -189,13 +203,15 @@ def req_edit_in_encrypted(req: Request) -> bytes | None:
 
 Here, the `_encrypted` suffix was added to the hook name, creating a tab named "encrypted".
 
-This hook is called when Burp opens the request in an editor. It receives the request to edit and returns the bytes to display in the editor.
+1. Create a request editor.
 
--   In order to display the plain text, the following must be done:
+    This hook is called when Burp opens the request in an editor. It receives the request to edit and returns the bytes to display in the editor.
 
-    -   Get the secret and the encrypted content from the body.
-    -   Decrypt the content using the secret.
-    -   Return the decrypted bytes.
+    In order to display the plain text, the following must be done:
+
+    - Get the secret and the encrypted content from the body.
+    - Decrypt the content using the secret.
+    - Return the decrypted bytes.
 
     ```python
     from pyscalpel import Request, Response, Flow
@@ -209,54 +225,69 @@ This hook is called when Burp opens the request in an editor. It receives the re
         return decrypt(secret, encrypted)
     ```
 
-Once this script is loaded with Scalpel, if you open an encrypted request in Burp, you will see a `Scalpel` tab along the `Pretty`, `Raw`, and `Hex` tabs:
-{{< figure src="/screenshots/encrypty-scalpel-tab.png" >}}
-{{< figure src="/screenshots/encrypt-tab-selected.png" >}}
+    Once this script is loaded with Scalpel, if you open an encrypted request in Burp, you will see a `Scalpel` tab along the `Pretty`, `Raw`, and `Hex` tabs:
 
-But there is an issue. Right now, the additional tab cannot be edited since it has no way to encrypt the content back. To do so, the `req_edit_out` hook will be handful.
+    {{< figure src="/screenshots/encrypty-scalpel-tab.png" >}}
+    {{< figure src="/screenshots/encrypt-tab-selected.png" >}}
 
--   The `req_edit_out` hook has to implement the opposite behavior of `req_edit_in`, which means:
-    -   Encrypt the plain text using the secret.
-    -   Replace the old encrypted content in the request.
-    -   Return the new request.
+    But there is an issue. Right now, the additional tab cannot be edited since it has no way to encrypt the content back.
+
+<br>
+
+2. To do so, the `req_edit_out` hook will be handful.
+
+    The `req_edit_out` hook has to implement the opposite behavior of `req_edit_in`, which means:
+
+    - Encrypt the plain text using the secret.
+    - Replace the old encrypted content in the request.
+    - Return the new request.
+
     ```python
     def req_edit_out_encrypted(req: Request, text: bytes) -> Request:
-      secret = req.form[b"secret"]
-      req.form[b"encrypted"] = encrypt(secret, text)
-      return req
+        secret = req.form[b"secret"]
+        req.form[b"encrypted"] = encrypt(secret, text)
+        return req
     ```
-    > When present, the `req_edit_out` suffix **must match** the `req_edit_in` suffix.
+
+    > ⚠️ When present, the `req_edit_out` suffix **must match** the `req_edit_in` suffix.  
     > In this tutorial example, the suffix is: `_encrypted`
 
-Add the hook. You should now be able to edit the plaintext. It will automatically be encrypted using `req_edit_out_encrypted`.
-{{< figure src="/screenshots/encrypt-edited.png" >}}
+<br>
 
-After that, it would be nice to decrypt the response to see if the changes were reflected.
+3. Add the hook. You should now be able to edit the plaintext. It will automatically be encrypted using `req_edit_out_encrypted`.
 
-The process is basically the same:
+    {{< figure src="/screenshots/encrypt-edited.png" >}}
 
-```python
-def res_edit_in_encrypted(res: Response) -> bytes | None:
-    secret = res.request.form[b"secret"]
-    encrypted = res.content
+<br>
 
-    if not encrypted:
-        return b""
+4. After that, it would be nice to decrypt the response to see if the changes were reflected.
 
-    return decrypt(secret, encrypted)
+    The process is basically the same:
 
-# This is used to edit the response received by the browser in the proxy, but is useless in Repeater/Logger.
-def res_edit_out_encrypted(res: Response, text: bytes) -> Response:
-    secret = res.request.form[b"secret"]
-    res.content = encrypt(secret, text)
-    return res
-```
+    ```python
+    def res_edit_in_encrypted(res: Response) -> bytes | None:
+        secret = res.request.form[b"secret"]
+        encrypted = res.content
+
+        if not encrypted:
+            return b""
+
+        return decrypt(secret, encrypted)
+
+    # This is used to edit the response received by the browser in the proxy, but is useless in Repeater/Logger.
+    def res_edit_out_encrypted(res: Response, text: bytes) -> Response:
+        secret = res.request.form[b"secret"]
+        res.content = encrypt(secret, text)
+        return res
+    ```
 
     {{< figure src="/screenshots/decrypted-response.png" >}}
 
-You can now edit the responses received by the browser as well.
+<br>
 
-### Filtering requests/responses sent to hooks.
+5. You can now edit the responses received by the browser as well.
+
+## 6. Filtering requests/responses sent to hooks
 
 Scalpel provides a [match()]({{< relref "addons-api#match" >}}) hook to filter unwanted requests from being treated by your hooks.
 
@@ -277,10 +308,11 @@ It ensures the initiating request contained a `secret` field and was sent to a p
 
 In this tutorial, you saw how to decrypt a custom encryption in IoT appliance communications using Scalpel.
 This involved:
-- understanding the existing API encryption code
-- recreating the encryption process in Python
-- installing necessary Python dependencies
-- and creating custom editors to handle decryption and re-encryption of modified content.
+
+-   understanding the existing API encryption code
+-   recreating the encryption process in Python
+-   installing necessary Python dependencies
+-   and creating custom editors to handle decryption and re-encryption of modified content.
 
 This process was implemented for both request and response flows, allowing to view and manipulate the plaintext communication, then encrypt it again before sending. This approach greatly simplifies the process of analyzing and interacting with encrypted data, reducing the need for cumbersome work arounds or additional external tools.
 
