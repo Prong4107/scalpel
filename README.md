@@ -108,7 +108,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-Scalpel is licensed under [INSERT LICENSE HERE].
+Scalpel is licensed under [Apache License 2.0](LICENCE.MD).
 
 ## Contact
 

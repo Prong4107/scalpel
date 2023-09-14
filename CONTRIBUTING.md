@@ -6,13 +6,13 @@ Thank you for your interest in contributing to Scalpel! This document outlines t
 
 1. **Fork the Repository**: Start by forking the Scalpel repository to your own GitHub account.
 
-2. **Clone Your Fork**: Once forked, clone your fork to your local machine:
+2. **Clone Your Fork**: Once done, clone your repository to your local machine:
 
     ```sh
     git clone https://github.com/YOUR_USERNAME/scalpel.git
     ```
 
-3. **Set Up the Upstream Remote**: After cloning, add the original Scalpel repository as an "upstream" remote:
+3. **Set Up the Upstream Remote**: Add the original Scalpel repository as an "upstream" remote:
     ```sh
     git remote add upstream https://github.com/ORIGINAL_OWNER/scalpel.git
     ```
