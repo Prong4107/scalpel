@@ -1,18 +1,18 @@
 # Scalpel
 
-Scalpel is a powerful **Burp Suite** extension that allows you to script Burp in order to intercept, rewrite HTTP traffic on the fly, and program custom Burp editors in `Python 3`.
+Scalpel is a powerful **Burp Suite** extension that allows you to script Burp in order to intercept, rewrite HTTP traffic on the fly, and program custom Burp editors in Python 3.
 
 It provides an interactive way to edit encoded/encrypted data as plaintext and offers an easy-to-use Python library as an alternative to Burp's Java API.
 
 ## Features
 
+-   **Python Library**: Easy-to-use Python library, especially welcome for non-Java developers.
+
 -   **Intercept and Rewrite HTTP Traffic**: Scalpel provides a set of predefined function names that can be implemented to intercept and modify HTTP requests and responses.
 
 -   **Custom Burp Editors**: Program your own Burp editors in Python. Encoded/encrypted data can be handled as plaintext.
 
--   **Python Library**: Easy-to-use Python library, especially welcomed for non-Java developers.
-
--   **Hex Editor**: Ability to create improved hex editors.
+    -   **Hex Editors**: Ability to create improved hex editors.
 
 <br>
 
@@ -50,7 +50,7 @@ def req_edit_out(_: Request, text: bytes) -> Request | None:
     req.headers["X-Python-Out-Request-Editor"] = "req_edit_out"
     return req
 
-# Hook to create or update a request editor's content from a response
+# Hook to create or update a response editor's content from a response
 def res_edit_in(res: Response) -> bytes | None:
     res.headers["X-Python-In-Response-Editor"] = "res_edit_in"
     return bytes(res)
@@ -80,6 +80,7 @@ Scalpel is compatible with Windows and Linux.
 -   Python >= `3.10`
 -   pip
 -   venv
+
 ### Debian-based distributions
 
 The following packages are required:
