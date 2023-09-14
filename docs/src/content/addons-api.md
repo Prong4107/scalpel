@@ -19,9 +19,9 @@ The following list all available event hooks.
 
 -   If your hooks return `None`, they will follow these behaviors:
 
-    -   `request()` or `response()`: The original request is be forwarded without any modifications.
-    -   `req_edit_in()` or `res_edit_in()`: The editor tab is not displayed.
-    -   `req_edit_out()` or `res_edit_out()`: The request is not modified.
+    -   `request()` or `response()`: The original request is be **forwarded without any modifications**.
+    -   `req_edit_in()` or `res_edit_in()`: The editor tab is **not displayed**.
+    -   `req_edit_out()` or `res_edit_out()`: The request is **not modified**.
 
 -   If `req_edit_out()` or `res_edit_out()` isn't declared but `req_edit_in()` or `res_edit_in()` is, the corresponding editor will be **read-only**.
 
