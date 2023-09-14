@@ -97,7 +97,7 @@
     
         <li>
             <a class=""
-               href="./addons-java/">Accessing the Burp API</a>
+               href="./addons-java/">Using the Burp API</a>
             
         </li>
     
@@ -149,6 +149,7 @@
 		<li>
 			<a class="" href="../javadoc/">Java extension</a>
 		</li>
+		<br>
 		<li>
 			<a class="" href="https://github.com/Prong4107/scalpel">
 				<img src='./github.svg' alt="github" style="height: 16px; vertical-align: middle; margin-right: 5px;" /> Github
@@ -163,7 +164,8 @@
         
 
         <h1 id="introduction"><a class="anchor" href="#introduction">#&nbsp;&nbsp;</a>Introduction</h1>
-<p>Scalpel is a Burp extension for intercepting and modifying HTTP trafic using simple Python scripting.</p>
+<p>Scalpel is a powerful <strong>Burp Suite</strong> extension that allows you to script Burp in order to intercept, rewrite HTTP traffic on the fly, and program custom Burp editors in Python 3.</p>
+<p>It provides an interactive way to edit encoded/encrypted data as plaintext and offers an easy-to-use Python library as an alternative to Burp&rsquo;s Java API.</p>
 <h1 id="index"><a class="anchor" href="#index">#&nbsp;&nbsp;</a>Index</h1>
 <ul>
 <li><a href="./overview-installation/">Installation</a></li>
@@ -175,19 +177,22 @@
 </ul>
 <h2 id="features"><a class="anchor" href="#features">#&nbsp;&nbsp;</a>Features</h2>
 <ul>
+<li><a href="./api/events.html"><strong>Python Library</strong></a>: Easy-to-use Python library, especially welcome for non-Java developers.</li>
 <li><a href="./feature-http/"><strong>Intercept and Rewrite HTTP Traffic</strong></a>: Scalpel provides a set of predefined function names that can be implemented to intercept and modify HTTP requests and responses.</li>
-<li><a href="./feature-editors/"><strong>Custom Burp Editors</strong></a>: Program your own Burp editors in Python. Encoded/encrypted data can be handled as plaintext.</li>
-<li><a href="./api/events.html"><strong>Python Library</strong></a>: Easy-to-use Python library, especially welcomed for non-Java developers.</li>
-<li><strong>Hex Editor</strong>: Ability to create improved hex editors.</li>
+<li><a href="./feature-editors/"><strong>Custom Burp Editors</strong></a>: Program your own Burp editors in Python. Encoded/encrypted data can be handled as plaintext.
+<ul>
+<li><a href="./feature-editors/#binary-editors"><strong>Hex Editors</strong></a>: Ability to create improved hex editors.</li>
 </ul>
-<p>^TODO: set github repo</p>
+</li>
+</ul>
 <h2 id="use-cases"><a class="anchor" href="#use-cases">#&nbsp;&nbsp;</a>Use cases</h2>
 <ul>
 <li><a href="./tute-aes/">Decrypting custom encryption</a></li>
 <li><a href="./addons-examples/#GZIP">Editing encoded requests/responses</a></li>
 </ul>
 <blockquote>
-<p>Note: One might think existing Burp extensions like Piper can handle such cases. But actually they can&rsquo;t. For example, when intercepting a response, Piper cannot get information from the initiating request, which is required in the above use cases. Scalpel generally allows you to manage complex cases that are not handled by other Burp extensions like Piper or Hackvertor.</p>
+<p>Note: One might think existing Burp extensions like <code>Piper</code> can handle such cases. But actually they can&rsquo;t.<br>
+For example, when intercepting a response, <code>Piper</code> cannot get information from the initiating request, which is required in the above use cases. Scalpel generally allows you to manage complex cases that are not handled by other Burp extensions like <code>Piper</code> or <code>Hackvertor</code>.</p>
 </blockquote>
 
 
