@@ -23,7 +23,11 @@ Scalpel provides a Burp extension GUI for scripting and a set of predefined func
 Below is an example script:
 
 ```py
-from pyscalpel.http import Request, Response
+from pyscalpel.http import Request, Response, Flow
+
+# Hook to determine whether an event should be handled by a hook
+def match(flow: Flow) -> bool:
+    return flow.host_is("localhost")
 
 # Hook to intercept and rewrite a request
 def request(req: Request) -> Request | None:
