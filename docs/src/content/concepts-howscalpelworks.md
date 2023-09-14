@@ -41,8 +41,6 @@ menu:
 -   Scalpel uses a single shared interpreter. Then, if any global variables are changed in a hook, their values remain changed in the next hook calls.
 -   For easy Python scripting, Scalpel provides many utilities described in the [Event Hooks & API]({{< relref "addons-api" >}}) section.
 
----
-
 ## Diagram
 
 Here is a diagram illustating the points above:
