@@ -9,30 +9,6 @@ menu:
         weight: 1
 ---
 
-# Event Hooks
-
-Scalpel scripts hook into Burps's internal mechanisms through **event hooks**.
-
-These are implemented as methods with a set of well-known names.
-Events receive `Request`, `Response`, `Flow` and `bytes` objects as arguments. By modifying these objects, scripts can
-change traffic on the fly and program custom request/response editors.
-
-For instance, here is an script that adds a response
-header with the number of seen responses:
-
-```python
-from pyscalpel import Response
-
-count = 0
-
-def response(res: Response) -> Response:
-    global count
-
-    count += 1
-    res.headers["count"] = count
-    return res
-```
-
 ## Available Hooks
 
 The following list all available event hooks.
