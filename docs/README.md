@@ -11,3 +11,4 @@ This directory houses the  documentation available at https://prong4107.github.i
  1. Make sure the Python requirements are installed and the virtual python environment is activated.
  2. Run `./build.py` to generate additional documentation source files.
  3. Now you can change your working directory to `./src` and run `hugo server -D`.
+
