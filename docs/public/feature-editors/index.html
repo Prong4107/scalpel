@@ -96,7 +96,7 @@
     
         <li>
             <a class=""
-               href="../addons-java/">Accessing the Burp API</a>
+               href="../addons-java/">Using the Burp API</a>
             
         </li>
     
@@ -148,6 +148,7 @@
 		<li>
 			<a class="" href="../javadoc/">Java extension</a>
 		</li>
+		<br>
 		<li>
 			<a class="" href="https://github.com/Prong4107/scalpel">
 				<img src='../github.svg' alt="github" style="height: 16px; vertical-align: middle; margin-right: 5px;" /> Github
@@ -175,14 +176,15 @@
 <ul>
 <li><a href="#event-hooks">Event hooks</a>
 <ol>
-<li><a href="#1-basic-example">Basic example</a></li>
-<li><a href="#2-multiple-tabs-example">Multiple tabs example</a></li>
+<li><a href="#1-edit-a-request">Edit a request</a></li>
+<li><a href="#1-edit-a-response">Edit a response</a></li>
+<li><a href="#3-multiple-tabs-example">Multiple tabs example</a></li>
 </ol>
 </li>
 <li><a href="#binary-editors">Binary editors</a></li>
 </ul>
 <h2 id="event-hooks"><a class="anchor" href="#event-hooks">#&nbsp;&nbsp;</a>Event hooks</h2>
-<h4 id="1-basic-example"><a class="anchor" href="#1-basic-example">#&nbsp;&nbsp;</a>1. Basic example</h4>
+<h4 id="1-edit-a-request"><a class="anchor" href="#1-edit-a-request">#&nbsp;&nbsp;</a>1. Edit a request</h4>
 <p><em>E.g: A simple script to edit a fully URL encoded query string parameter in a request:</em></p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pyscalpel</span> <span class="kn">import</span> <span class="n">Request</span>
 <span class="kn">from</span> <span class="nn">pyscalpel.utils</span> <span class="kn">import</span> <span class="n">urldecode</span><span class="p">,</span> <span class="n">urlencode_all</span>
@@ -215,6 +217,7 @@
 </figure>
 </li>
 </ul>
+<h4 id="2-edit-a-response"><a class="anchor" href="#2-edit-a-response">#&nbsp;&nbsp;</a>2. Edit a response</h4>
 <p>It is the same process for editing responses:</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="k">def</span> <span class="nf">res_edit_in</span><span class="p">(</span><span class="n">res</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
     <span class="c1"># Displays an additional header in the editor</span>
@@ -227,8 +230,8 @@
     <span class="n">res</span> <span class="o">=</span> <span class="n">Response</span><span class="o">.</span><span class="n">from_raw</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">res</span>
 </code></pre></div><br>
-<h4 id="2-multiple-tabs-example"><a class="anchor" href="#2-multiple-tabs-example">#&nbsp;&nbsp;</a>2. Multiple tabs example</h4>
-<p>You can have multiple open tabs at the same time. Just suffix your function names:</p>
+<h4 id="3-multiple-tabs-example"><a class="anchor" href="#3-multiple-tabs-example">#&nbsp;&nbsp;</a>3. Multiple tabs example</h4>
+<p>You can have multiple tabs open at the same time. Just <strong>suffix</strong> your function names:</p>
 <p><em>E.g: Same script as above but for two parameters: &ldquo;filename&rdquo; and &ldquo;directory&rdquo;.</em></p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pyscalpel</span> <span class="kn">import</span> <span class="n">Request</span>
 <span class="kn">from</span> <span class="nn">pyscalpel.utils</span> <span class="kn">import</span> <span class="n">urldecode</span><span class="p">,</span> <span class="n">urlencode_all</span>
@@ -562,6 +565,9 @@ the user can apply the <code><a href="#editor">editor</a></code> decorator to th
 <figure><img src="../screenshots/bin-response.png"/>
 </figure>
 </p>
+<br>
+<h2 id="further-reading"><a class="anchor" href="#further-reading">#&nbsp;&nbsp;</a>Further reading</h2>
+<p>Learn more about the available hooks in the technical documentation&rsquo;s <a href="../api/events.html">Event Hooks &amp; API</a> section.</p>
 
 
     </div>

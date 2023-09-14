@@ -96,7 +96,7 @@
     
         <li>
             <a class=""
-               href="../addons-java/">Accessing the Burp API</a>
+               href="../addons-java/">Using the Burp API</a>
             
         </li>
     
@@ -148,6 +148,7 @@
 		<li>
 			<a class="" href="../javadoc/">Java extension</a>
 		</li>
+		<br>
 		<li>
 			<a class="" href="https://github.com/Prong4107/scalpel">
 				<img src='../github.svg' alt="github" style="height: 16px; vertical-align: middle; margin-right: 5px;" /> Github
@@ -173,36 +174,20 @@
 <p>Scalpel allows you to programmatically intercept and modify HTTP requests/responses going through Burp, as well as creating custom request/response editors with Python.</p>
 <p>To do so, Scalpel provides a <strong>Burp extension GUI</strong> for scripting and a set of <strong>predefined function names</strong> corresponding to specific actions:</p>
 <ul>
-<li>
-<p><a href="../api/events.html#match"><code>match</code></a>: Determine whether an event will be handled by a hook.</p>
-</li>
-<li>
-<p><a href="../api/events.html#request"><code>request</code></a>: Intercept and rewrite a request.</p>
-</li>
-<li>
-<p><a href="../api/events.html#response"><code>response</code></a>: Intercept and rewrite a response.</p>
-</li>
-<li>
-<p><a href="../api/events.html#req_edit_in"><code>req_edit_in</code></a>: Create or update a request editor&rsquo;s content from a request.</p>
-</li>
-<li>
-<p><a href="../api/events.html#req_edit_out"><code>req_edit_out</code></a>: Update a request from an editor&rsquo;s modified content.</p>
-</li>
-<li>
-<p><a href="../api/events.html#res_edit_in"><code>res_edit_in</code></a>: Create or update a request editor&rsquo;s content from a response.</p>
-</li>
-<li>
-<p><a href="../api/events.html#res_edit_out"><code>res_edit_out</code></a>: Update a response from an editor&rsquo;s modified content.</p>
-</li>
-<li>
+<li><a href="../api/events.html#match"><code>match</code></a>: Determine whether an event should be handled by a hook.</li>
+<li><a href="../api/events.html#request"><code>request</code></a>: Intercept and rewrite a request.</li>
+<li><a href="../api/events.html#response"><code>response</code></a>: Intercept and rewrite a response.</li>
+<li><a href="../api/events.html#req_edit_in"><code>req_edit_in</code></a>: Create or update a request editor&rsquo;s content from a request.</li>
+<li><a href="../api/events.html#req_edit_out"><code>req_edit_out</code></a>: Update a request from an editor&rsquo;s modified content.</li>
+<li><a href="../api/events.html#res_edit_in"><code>res_edit_in</code></a>: Create or update a response editor&rsquo;s content from a response.</li>
+<li><a href="../api/events.html#res_edit_out"><code>res_edit_out</code></a>: Update a response from an editor&rsquo;s modified content.</li>
+</ul>
 <p>Simply write a Python script implementing the ones you need and load the file with Scalpel Burp GUI: <figure><img src="../screenshots//choose_script.png"/>
 </figure>
 </p>
-</li>
-</ul>
 <!-- ^^ TODO: Better screenshot -->
 <h2 id="further-reading"><a class="anchor" href="#further-reading">#&nbsp;&nbsp;</a>Further reading</h2>
-<p>Learn more in the <a href="../feature-http/">Features</a> category.</p>
+<p>Learn more about the predefined function names and find examples in the <a href="../feature-http/">Features</a> category.</p>
 
 
     </div>
