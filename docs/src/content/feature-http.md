@@ -6,7 +6,6 @@ menu:
         weight: 1
 ---
 
-
 # Intercept and Rewrite HTTP Traffic
 
 #### Request / Response

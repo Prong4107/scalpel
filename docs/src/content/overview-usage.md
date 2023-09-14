@@ -20,9 +20,9 @@ To do so, Scalpel provides a **Burp extension GUI** for scripting and a set of *
 -   [`res_edit_in`]({{< relref "addons-api#res_edit_in" >}}): Create or update a request editor's content from a response.
 -   [`res_edit_out`]({{< relref "addons-api#res_edit_out" >}}): Update a response from an editor's modified content.
 
--   Simply write a Python script implementing the ones you need and load the file with Scalpel Burp GUI: {{< figure src="/screenshots//choose_script.png" >}}
+Simply write a Python script implementing the ones you need and load the file with Scalpel Burp GUI: {{< figure src="/screenshots//choose_script.png" >}}
 <!-- ^^ TODO: Better screenshot -->
 
 ## Further reading
 
-Learn more in the [Features]({{< relref "feature-http" >}}) category.
+Learn more about the predefined function names in the [Features]({{< relref "feature-http" >}}) category.
