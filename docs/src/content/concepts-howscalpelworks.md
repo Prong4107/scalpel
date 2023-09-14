@@ -7,34 +7,41 @@ menu:
 
 # How Scalpel works
 
+## Table of content
+
+- [Dependencies](#dependencies)
+- [Behavior](#behavior)
+- [Python scripting](#python-scripting)
+- [Diagram](#diagram)
+
 ## Dependencies
 
--   Scalpel embeds it's Python library in it's .jar file and unzips it when Burp loads the extension.
+-   Scalpel's Python library is embedded in a JAR file and is unzipped when Burp loads the extension.
 -   Scalpel requires external dependencies and will install them using `pip` when needed.
--   Scalpel will always use a venv for every action, hence it will never modify your global Python installation.
--   Scalpel uses a project calls Jep to communicate with Python, which requires to have a JDK installed on your machine.
--   User Scripts are executed in a venv the user can select in the "Scalpel" tab.
--   Scalpel provides a terminal with a shell running in the selected venv to allow you to easily install packages.
--   You can add existing venvs or create new ones using the dedicated GUI.
+-   Scalpel will always use a virtual environment for every action. Hence, it will never modify the user's global Python installation.
+-   Scalpel relies on [Jep](https://github.com/ninia/jep/) to communicate with Python. It requires to have a JDK installed on your machine.
+-   User scripts are executed in a virtual environment selected from the `Scalpel` tab.
+-   Scalpel provides a terminal with a shell running in the selected virtual environment to easily install packages.
+-   Creating new virtual environments or adding existing ones can be done via the dedicated GUI.
 -   All data is stored in the `~/.scalpel` directory.
 
-## Behaviour
+## Behavior
 
 -   Scalpel uses the Java [Burp Montoya API](https://portswigger.net/burp/documentation/desktop/extensions) to interact with Burp.
--   Scalpel uses Java to handle the dependencies install, HTTP and GUI for Burp and communication with Python.
+-   Scalpel uses Java to handle the dependencies installation, HTTP and GUI for Burp, and communication with Python.
 -   Scalpel uses [Jep](https://github.com/ninia/jep/) to execute Python from Java.
 -   Python execution is handled through a task queue in a dedicated thread that will execute one Python task at a time in a thread-safe way.
 -   All Python hooks are executed through a `_framework.py` file that will activate the selected venv, load the user script file, look for callable objects matching the hooks names (`match, request, response, req_edit_in, res_edit_in, req_edit_out, res_edit_out, req_edit_in_<tab_name>, res_edit_in_<tab_name>, req_edit_out_<tab_name>, res_edit_out_<tab_name>`).
--   The `_framework.py` declares callbacks that receives Java objects, convert it to a custom easy to use Python object, passes the Python object to the corresponding user hook, gets back the modified Python objects and converts them back to a Java object.
--   Java code receives the hook result and interact with Burp to apply the effects.
--   At each task, Scalpel will check if the user script file has changed and if so, will reload and restart the interpreter.
+-   The `_framework.py` declares callbacks that receive Java objects, convert them to custom easy-to-use Python objects, pass the Python objects to the corresponding user hook, get back the modified Python objects and convert them back to Java objects.
+-   Java code receives the hook's result and interact with Burp to apply its effects.
+-   At each task, Scalpel checks whether the user script file changed. If so, it reloads and restarts the interpreter.
 
 ## Python scripting
 
--   Scalpel uses a single shared interpreter, so if any global variables are changed in a hook, it's value will remain changed on next hook calls.
--   For easy scripting in Python, scalpel provides many utilities described in the Event Hooks & API section.
+-   Scalpel uses a single shared interpreter. Then, if any global variables are changed in a hook, their values remain changed in the next hook calls.
+-   For easy Python scripting, Scalpel provides many utilities described in the [Event Hooks & API]({{< relref "addons-api" >}}) section.
 
----
+## Diagram
 
 Here is a diagram illustating the points above:
 {{< figure src="/schematics/scalpel-diagram.svg" >}}

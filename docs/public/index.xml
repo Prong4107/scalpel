@@ -7,27 +7,26 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Accessing the Burp API</title>
-      <link>/addons-java/</link>
+      <title>Custom Burp editors</title>
+      <link>/feature-editors/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>/addons-java/</guid>
-      <description>Accessing the Burp API Scalpel communicates with Burp through it&amp;rsquo;s Java API and provides the user with an execution context where they should only have to use Python objects.
-However, Scalpel&amp;rsquo;s Python library focuses on handling HTTP objects and does not provide utilities for all the Burp API features.
-For example, Scalpel library itself does not provide the ability to generate Collaborator payloads.
-For cases like these, the user can directly access the MontoyaApi Java object</description>
+      <guid>/feature-editors/</guid>
+      <description>Custom Burp Editors Scalpel&amp;rsquo;s main killer feature is the ability to program your own editors using Python.
+Table of content  Event hooks  Edit a request Edit a response Multiple tabs example   Binary editors  Event hooks 1. Edit a request E.g: A simple script to edit a fully URL encoded query string parameter in a request:
+from pyscalpel import Request from pyscalpel.utils import urldecode, urlencode_all # Hook to initialize the editor&amp;#39;s content def req_edit_in(req: Request) -&amp;gt; bytes | None: param = req.</description>
     </item>
     
     <item>
-      <title>Decrypting custom encryption.</title>
+      <title>Decrypting custom encryption</title>
       <link>/tute-aes/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/tute-aes/</guid>
-      <description>Decrypting custom encryption. Problem An IOT appliance adds an obfuscation layer to its HTTP communications by encrypting the body of its requests and responses with a key.
-On every HTTP request, the program sends two POST parameters, secret (the encryption key) and encrypted (the ciphertext).
-We will use scalpel to provide an additional tab in the repeater which displays the plaintext for each request and response.
-Additionally, we&amp;rsquo;ll be able to edit the plaintext, and scalpel will automatically encrypt it when we hit &amp;ldquo;Send&amp;rdquo;.</description>
+      <description>Decrypting custom encryption Context An IOT appliance adds an obfuscation layer to its HTTP communications by encrypting the body of its requests and responses with a key.
+On every HTTP request, the program sends two POST parameters:
+ secret (the encryption key) encrypted (the ciphertext).  Let&amp;rsquo;s solve this problem by using Scalpel!
+It will provide an additional tab in the Repeater which displays the plaintext for every request and response.</description>
     </item>
     
     <item>
@@ -36,7 +35,8 @@ Additionally, we&amp;rsquo;ll be able to edit the plaintext, and scalpel will au
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/api/events.html</guid>
-      <description>Event Hooks Scalpel scripts hook into Burps&amp;rsquo;s internal mechanisms through event hooks. These are implemented as methods with a set of well-known names. Events receive Request, Response, Flow and bytes objects as arguments - by modifying these objects, scripts can change traffic on the fly and program custom request/response editors. For instance, here is an script that adds a response header with a count of the number of responses seen:</description>
+      <description>Available Hooks The following list all available event hooks.
+/*! theme.css */:root{--pdoc-background:#fff;}.pdoc{--text:#212529;--muted:#6c757d;--link:#3660a5;--link-hover:#1659c5;--code:#f8f8f8;--active:#fff598;--accent:#eee;--accent2:#c1c1c1;--nav-hover:rgba(255, 255, 255, 0.5);--name:#0066BB;--def:#008800;--annotation:#007020;} /*! content.css */.pdoc{color:var(--text);box-sizing:border-box;line-height:1.5;background:none;}.pdoc .pdoc-button{cursor:pointer;display:inline-block;border:solid black 1px;border-radius:2px;font-size:.75rem;padding:calc(0.5em - 1px) 1em;transition:100ms all;}.pdoc .pdoc-alert{padding:1rem 1rem 1rem calc(1.5rem + 24px);border:1px solid transparent;border-radius:.25rem;background-repeat:no-repeat;background-position:1rem center;margin-bottom:1rem;}.pdoc .pdoc-alert  *:last-child{margin-bottom:0;}.pdoc .pdoc-alert-note {color:#084298;background-color:#cfe2ff;border-color:#b6d4fe;background-image:url(&#34;data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20fill%3D%22%23084298%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M8%2016A8%208%200%201%200%208%200a8%208%200%200%200%200%2016zm.93-9.412-1%204.705c-.07.34.029.533.304.533.194%200%20.487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703%200-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381%202.29-.287zM8%205.5a1%201%200%201%201%200-2%201%201%200%200%201%200%202z%22/%3E%3C/svg%3E&#34;);}.pdoc .pdoc-alert-warning{color:#664d03;background-color:#fff3cd;border-color:#ffecb5;background-image:url(&#34;data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20fill%3D%22%23664d03%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M8.982%201.566a1.13%201.13%200%200%200-1.96%200L.165%2013.233c-.457.778.091%201.767.98%201.767h13.713c.889%200%201.438-.99.98-1.767L8.982%201.566zM8%205c.535%200%20.954.462.9.995l-.35%203.507a.552.552%200%200%201-1.1%200L7.1%205.995A.905.905%200%200%201%208%205zm.002%206a1%201%200%201%201%200%202%201%201%200%200%201%200-2z%22/%3E%3C/svg%3E&#34;);}.pdoc .pdoc-alert-danger{color:#842029;background-color:#f8d7da;border-color:#f5c2c7;background-image:url(&#34;data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2224%22%20height%3D%2224%22%20fill%3D%22%23842029%22%20viewBox%3D%220%200%2016%2016%22%3E%3Cpath%20d%3D%22M5.52.359A.5.5%200%200%201%206%200h4a.5.5%200%200%201%20.474.658L8.694%206H12.5a.5.5%200%200%201%20.395.807l-7%209a.5.5%200%200%201-.873-.454L6.823%209.5H3.5a.5.5%200%200%201-.48-.641l2.5-8.5z%22/%3E%3C/svg%3E&#34;);}.pdoc .visually-hidden{position:absolute !important;width:1px !important;height:1px !important;padding:0 !important;margin:-1px !important;overflow:hidden !important;clip:rect(0, 0, 0, 0) !important;white-space:nowrap !important;border:0 !important;}.pdoc h1, .pdoc h2, .pdoc h3{font-weight:300;margin:.3em 0;padding:.2em 0;}.pdoc  section:not(.module-info) h1{font-size:1.5rem;font-weight:500;}.pdoc  section:not(.module-info) h2{font-size:1.4rem;font-weight:500;}.pdoc  section:not(.module-info) h3{font-size:1.3rem;font-weight:500;}.pdoc  section:not(.</description>
     </item>
     
     <item>
@@ -45,10 +45,10 @@ Additionally, we&amp;rsquo;ll be able to edit the plaintext, and scalpel will au
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/addons-examples/</guid>
-      <description>Script examples Here are example scripts to familiarize yourself with Scalpel&amp;rsquo;s Python library a bit more. They were designed for real use-cases.
-GZIP-ed API For this case, we&amp;rsquo;ve encountered an API using a custom protocol that gzips multiple form-data fields.
-A quick-and-dirty Scalpel script allowed us to directly edit the unzipped data and find hidden secrets:
-from pyscalpel.http import Request, Response from pyscalpel.burp_utils import logger import gzip def unzip_bytes(data): try: # Create a GzipFile object with the input data with gzip.</description>
+      <description>Script examples This page provides example scripts to get familiar with Scalpel&amp;rsquo;s Python library. They are designed for real use cases.
+Table of content  GZIP-ed API Cryptography using a session as a secret  GZIP-ed API Let&amp;rsquo;s assume you encountered an API using a custom protocol that gzips multiple form-data fields.
+Quick-and-dirty Scalpel script to directly edit the unzipped data and find hidden secrets:
+from pyscalpel import Request, Response, logger import gzip def unzip_bytes(data): try: # Create a GzipFile object with the input data with gzip.</description>
     </item>
     
     <item>
@@ -57,7 +57,7 @@ from pyscalpel.http import Request, Response from pyscalpel.burp_utils import lo
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/overview-faq/</guid>
-      <description>FAQ Why does Scalpel depend on JDK whereas Burp comes with its own JRE?  Scalpel uses a project called jep to call Python from Java. jep needs a JDK to function. If you are curious or need more technichal information on Scalpel&amp;rsquo;s implementation, look at How scalpel works.  Once the .jar is loaded, no additional request shows up in the editor!  On the first install, Scalpel&amp;rsquo;s dependencies installation may take a while.</description>
+      <description>FAQ Table of Contents  Why does Scalpel depend on JDK whereas Burp comes with its own JRE? Why using Java with Jep to execute Python whereas Burp already supports Python extensions with Jython? Once the .jar is loaded, no additional request shows up in the editor My distribution/OS comes with an outdated python. Why does Scalpel installs mitmproxy? I installed Python using the Microsoft Store and Scalpel doesn&amp;rsquo;t work.   Why does Scalpel depend on JDK whereas Burp comes with its own JRE?</description>
     </item>
     
     <item>
@@ -66,7 +66,7 @@ from pyscalpel.http import Request, Response from pyscalpel.burp_utils import lo
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/concepts-howscalpelworks/</guid>
-      <description>How Scalpel works Dependencies  Scalpel embeds it&amp;rsquo;s Python library in it&amp;rsquo;s .jar file and unzips it when Burp loads the extension. Scalpel requires external dependencies and will install them using pip when needed. Scalpel will always use a venv for every action, hence it will never modify your global Python installation. Scalpel uses a project calls Jep to communicate with Python, which requires to have a JDK installed on your machine.</description>
+      <description>How Scalpel works Table of content  Dependencies Behavior Python scripting Diagram  Dependencies  Scalpel&amp;rsquo;s Python library is embedded in a JAR file and is unzipped when Burp loads the extension. Scalpel requires external dependencies and will install them using pip when needed. Scalpel will always use a virtual environment for every action. Hence, it will never modify the user&amp;rsquo;s global Python installation. Scalpel relies on Jep to communicate with Python.</description>
     </item>
     
     <item>
@@ -75,17 +75,19 @@ from pyscalpel.http import Request, Response from pyscalpel.burp_utils import lo
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/overview-installation/</guid>
-      <description>Install   Install openjdk &amp;gt;= 17, python &amp;gt;= 3.10, pip and venv
-  Download the release .jar    Import the .jar in Burp    Wait for the dependencies to install    It should look like this when Scalpel is properly initialized    If Scalpel is properly installed, you should now have a &amp;ldquo;Scalpel&amp;rdquo; tab in the Request/Response editor    You should also have a Scalpel config tab where you have a terminal you can use to install new packages    Scalpel is now properly installed and initialized !</description>
+      <description>Installation Requirements  OpenJDK &amp;gt;= 17 Python &amp;gt;= 3.10 pip venv  Step-by-step instructions   Download the latest JAR release.    Import the .jar to Burp.    Wait for the dependencies to install.    Once Scalpel is properly initialized, you should get the following.    If the installation was successful, a Scalpel tab should show in the Request/Response editor as follows:    And also a Scalpel tab for configuration to install additional packages via terminal.</description>
     </item>
     
     <item>
-      <title>pdoc</title>
-      <link>/pdoc/</link>
+      <title>Intercept and rewrite HTTP traffic</title>
+      <link>/feature-http/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>/pdoc/</guid>
-      <description></description>
+      <guid>/feature-http/</guid>
+      <description>Event Hooks Scalpel scripts hook into Burps&amp;rsquo;s internal mechanisms through event hooks.
+These are implemented as methods with a set of well-known names. Events receive Request, Response, Flow and bytes objects as arguments. By modifying these objects, scripts can change traffic on the fly and program custom request/response editors.
+For instance, here is an script that adds a response header with the number of seen responses:
+from pyscalpel import Response count = 0 def response(res: Response) -&amp;gt; Response: global count count += 1 res.</description>
     </item>
     
     <item>
@@ -170,22 +172,25 @@ from pyscalpel.http import Request, Response from pyscalpel.burp_utils import lo
     </item>
     
     <item>
-      <title>Scalpel Javadoc</title>
-      <link>/javadoc/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>/javadoc/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>Usage</title>
       <link>/overview-usage/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/overview-usage/</guid>
-      <description>Usage   Scalpel allows you to programatically intercept and modify HTTP requests and response that goes through Burp as well as creating custom request/response editors with Python.
-  To do that you simply have to write a Python script containing your code in functions that follows defined names and load the file with Scalpel Burp GUI:      You can intercept requests/response by creating a request() and response() functions in your script:</description>
+      <description>Usage Scalpel allows you to programmatically intercept and modify HTTP requests/responses going through Burp, as well as creating custom request/response editors with Python.
+To do so, Scalpel provides a Burp extension GUI for scripting and a set of predefined function names corresponding to specific actions:
+ match: Determine whether an event should be handled by a hook. request: Intercept and rewrite a request. response: Intercept and rewrite a response. req_edit_in: Create or update a request editor&amp;rsquo;s content from a request.</description>
+    </item>
+    
+    <item>
+      <title>Using the Burp API</title>
+      <link>/addons-java/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/addons-java/</guid>
+      <description>Using the Burp API Scalpel communicates with Burp through its Java API. Then, it provides the user with an execution context in which they should only use Python objects.
+However, since Scalpel focuses on HTTP objects, it does not provide utilities for all the Burp API features (like the ability to generate Collaborator payloads).
+If the user must deal with unhandled cases, they can directly access the MontoyaApi Java object to search for appropriate objects.</description>
     </item>
     
   </channel>
