@@ -64,7 +64,7 @@ def res_edit_out(_: Response, text: bytes) -> Response | None:
 
 ## Documentation
 
-User documentation is available at [[INSERT DOCUMENTATION LINK]](http://userdoc.scalpel.com).
+User documentation is available [**here**](https://prong4107.github.io/scalpel/public).
 
 ## Examples
 
@@ -98,7 +98,7 @@ https://visualstudio.microsoft.com/visual-cpp-build-tools/
 
 Download the latest JAR release of Scalpel from [GitHub](https://github.com).
 
-The release file has to be added to Burp Suite as an extension. Learn more in the [documentation](https://).
+The release file has to be added to Burp Suite as an extension. Learn more in the [documentation](https://prong4107.github.io/scalpel/public/overview-installation/).
 
 <br>
 
