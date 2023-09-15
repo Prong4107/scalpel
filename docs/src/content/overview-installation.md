@@ -17,7 +17,7 @@ menu:
 
 ## Step-by-step instructions
 
-1.  Download the latest [JAR release](https://REMOVED/scalpel/-/releases).
+1.  Download the latest [JAR release](https://github.com/Prong4107/scalpel/releases).
     {{< figure src="/screenshots/release.png" >}}
 
 2.  Import the `.jar` to Burp.
