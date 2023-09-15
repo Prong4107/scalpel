@@ -23,6 +23,7 @@ To do so, Scalpel provides a **Burp extension GUI** for scripting and a set of *
 Simply write a Python script implementing the ones you need and load the file with Scalpel Burp GUI: {{< figure src="/screenshots//choose_script.png" >}}
 <!-- ^^ TODO: Better screenshot -->
 
+### **To get started with Scalpel, see [First steps]({{< relref "tute-first-steps" >}})**
 ## Further reading
 
 Learn more about the predefined function names and find examples in the [Features]({{< relref "feature-http" >}}) category.
