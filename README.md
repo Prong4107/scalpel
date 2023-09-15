@@ -96,7 +96,7 @@ https://visualstudio.microsoft.com/visual-cpp-build-tools/
 
 ## Installation
 
-Download the latest JAR release of Scalpel from [GitHub](https://github.com).
+Download the latest JAR release of Scalpel from [GitHub](https://github.com/Prong4107/scalpel/releases).
 
 The release file has to be added to Burp Suite as an extension. Learn more in the [documentation](https://prong4107.github.io/scalpel/public/overview-installation/).
 
