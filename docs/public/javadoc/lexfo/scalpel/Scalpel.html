@@ -136,17 +136,26 @@ implements <a href="https://portswigger.github.io/burp-extensions-montoya-api/ja
 <div class="table-header col-first">Modifier and Type</div>
 <div class="table-header col-second">Method</div>
 <div class="table-header col-last">Description</div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>private static void</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#checkPythonVersion()" class="member-name-link">checkPythonVersion</a>()</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>private static <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#executePythonCommand(java.lang.String)" class="member-name-link">executePythonCommand</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;command)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code>void</code></div>
 <div class="col-second even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4"><code><a href="#initialize(burp.api.montoya.MontoyaApi)" class="member-name-link">initialize</a><wbr>(<a href="https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/MontoyaApi.html" title="class or interface in burp.api.montoya" class="external-link">MontoyaApi</a>&nbsp;API)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab2 method-summary-table-tab4">
 <div class="block">Initializes the extension.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>private static void</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#logConfig(lexfo.scalpel.Config)" class="member-name-link">logConfig</a><wbr>(<a href="Config.html" title="class in lexfo.scalpel">Config</a>&nbsp;config)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#loadLibPython3()" class="member-name-link">loadLibPython3</a>()</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>private static void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#setupJepFromConfig(lexfo.scalpel.Config)" class="member-name-link">setupJepFromConfig</a><wbr>(<a href="Config.html" title="class in lexfo.scalpel">Config</a>&nbsp;config)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#logConfig(lexfo.scalpel.Config)" class="member-name-link">logConfig</a><wbr>(<a href="Config.html" title="class in lexfo.scalpel">Config</a>&nbsp;config)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>private static void</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#setupJepFromConfig(lexfo.scalpel.Config)" class="member-name-link">setupJepFromConfig</a><wbr>(<a href="Config.html" title="class in lexfo.scalpel">Config</a>&nbsp;config)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 </div>
 </div>
 </div>
@@ -210,6 +219,24 @@ implements <a href="https://portswigger.github.io/burp-extensions-montoya-api/ja
 <section class="detail" id="logConfig(lexfo.scalpel.Config)">
 <h3>logConfig</h3>
 <div class="member-signature"><span class="modifiers">private static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">logConfig</span><wbr><span class="parameters">(<a href="Config.html" title="class in lexfo.scalpel">Config</a>&nbsp;config)</span></div>
+</section>
+</li>
+<li>
+<section class="detail" id="loadLibPython3()">
+<h3>loadLibPython3</h3>
+<div class="member-signature"><span class="modifiers">private static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">loadLibPython3</span>()</div>
+</section>
+</li>
+<li>
+<section class="detail" id="checkPythonVersion()">
+<h3>checkPythonVersion</h3>
+<div class="member-signature"><span class="modifiers">private static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">checkPythonVersion</span>()</div>
+</section>
+</li>
+<li>
+<section class="detail" id="executePythonCommand(java.lang.String)">
+<h3>executePythonCommand</h3>
+<div class="member-signature"><span class="modifiers">private static</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">executePythonCommand</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;command)</span></div>
 </section>
 </li>
 <li>
