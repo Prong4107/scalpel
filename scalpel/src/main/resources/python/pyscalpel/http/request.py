@@ -836,7 +836,7 @@ class Request:
         Returns:
             str | None: The host header value
         """
-        return self.headers["Host"]
+        return self.headers.get("Host")
 
     @host_header.setter
     def host_header(self, value: str | None):
