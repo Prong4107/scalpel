@@ -485,7 +485,7 @@ public class ScalpelExecutor {
 					// Ensure a task was polled or poll again.
 					if (task == null) {
 						// Release the lock and wait for new tasks.
-						tasks.wait();
+						tasks.wait(1000);
 						continue;
 					}
 
@@ -529,7 +529,7 @@ public class ScalpelExecutor {
 					}
 
 					// Sleep the thread while there isn't any new tasks
-					tasks.wait();
+					tasks.wait(1000);
 				}
 			}
 		} catch (Exception e) {
