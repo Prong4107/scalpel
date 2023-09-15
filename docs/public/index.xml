@@ -61,6 +61,16 @@ from pyscalpel import Request, Response, logger import gzip def unzip_bytes(data
     </item>
     
     <item>
+      <title>First steps</title>
+      <link>/tute-first-steps/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/tute-first-steps/</guid>
+      <description>-- First Steps with Scalpel Introduction Welcome to your first steps with Scalpel! This beginner-friendly tutorial will walk you through basic steps to automatically and interactively modify HTTP headers using Scalpel. By the end of this tutorial, you’ll be able to edit the content of the User-Agent header using Scalpel’s custom editors.
+Table of content  Setting up Scalpel Inspecting a GET request Create a new script Manipulating headers Creating custom editors Conclusion  1.</description>
+    </item>
+    
+    <item>
       <title>How scalpel works</title>
       <link>/concepts-howscalpelworks/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
