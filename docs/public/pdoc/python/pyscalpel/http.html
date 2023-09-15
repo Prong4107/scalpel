@@ -1064,7 +1064,7 @@
 </span><span id="Request-837"><a href="#Request-837"><span class="linenos">837</span></a><span class="sd">        Returns:</span>
 </span><span id="Request-838"><a href="#Request-838"><span class="linenos">838</span></a><span class="sd">            str | None: The host header value</span>
 </span><span id="Request-839"><a href="#Request-839"><span class="linenos">839</span></a><span class="sd">        &quot;&quot;&quot;</span>
-</span><span id="Request-840"><a href="#Request-840"><span class="linenos">840</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&quot;Host&quot;</span><span class="p">]</span>
+</span><span id="Request-840"><a href="#Request-840"><span class="linenos">840</span></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Host&quot;</span><span class="p">)</span>
 </span><span id="Request-841"><a href="#Request-841"><span class="linenos">841</span></a>
 </span><span id="Request-842"><a href="#Request-842"><span class="linenos">842</span></a>    <span class="nd">@host_header</span><span class="o">.</span><span class="n">setter</span>
 </span><span id="Request-843"><a href="#Request-843"><span class="linenos">843</span></a>    <span class="k">def</span> <span class="nf">host_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">):</span>
