@@ -16,6 +16,7 @@ It provides an interactive way to edit encoded/encrypted data as plaintext and o
 
 -   [Installation]({{< relref "overview-installation" >}})
 -   [Usage]({{< relref "overview-usage" >}})
+-   [First steps]({{< relref "tute-first-steps" >}})
 -   [FAQ]({{< relref "overview-faq" >}})
 -   [Technical documentation for script development]({{< relref "addons-api" >}})
 -   [Example use-case]({{< relref "tute-aes" >}})
