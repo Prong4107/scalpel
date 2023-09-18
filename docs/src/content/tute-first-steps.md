@@ -21,7 +21,7 @@ Welcome to your first steps with Scalpel! This beginner-friendly tutorial will w
 3. [Create a new script](#3-creating-a-new-script)
 4. [Manipulating headers](#4-manipulating-headers)
 5. [Creating custom editors](#5-creating-custom-editors)
-5. [Conclusion](#conclusion)
+6. [Conclusion](#conclusion)
 
 ## 1. Setting up Scalpel
 
@@ -132,4 +132,6 @@ Remember, Scalpel is a powerful tool with a lot more capabilities. As you become
 
 Find **example use-cases [here]({{< relref "addons-examples" >}})**.
 
-Read the [**technical documentation**]({{ relURL "pdoc/python/pyscalpel.html" }}).
+Read the [**technical documentation**](/pdoc/python/pyscalpel.html)
+
+See an **advanced tutorial** for a real use case in [**Decrypting custom encryption**]({{< relref "tute-aes" >}})
