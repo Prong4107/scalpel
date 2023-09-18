@@ -480,6 +480,10 @@ public class ConfigTab extends JFrame {
 
 					// Display the venv in the list.
 					venvListComponent.setListData(config.getVenvPaths());
+
+					venvListComponent.setSelectedIndex(
+						config.getVenvPaths().length - 1
+					);
 				} catch (RuntimeException e) {
 					final String msg =
 						"Failed to create venv: \n" + e.getMessage();
@@ -539,10 +543,17 @@ public class ConfigTab extends JFrame {
 
 	private void handleVenvListSelectionEvent(ListSelectionEvent e) {
 		// Ignore intermediate events.
-		if (e.getValueIsAdjusting()) return;
+		if (e.getValueIsAdjusting()) {
+			return;
+		}
 
 		// Get the selected venv path.
 		final String selectedVenvPath = venvListComponent.getSelectedValue();
+
+		if (selectedVenvPath == null) {
+			return;
+		}
+
 		config.setSelectedVenvPath(Path.of(selectedVenvPath));
 
 		Async.run(scalpelExecutor::notifyEventLoop);
