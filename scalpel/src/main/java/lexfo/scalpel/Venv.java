@@ -81,7 +81,7 @@ public class Venv {
 			pkgsToInstall = scriptDeps;
 		}
 
-		return install(venv, env, pkgsToInstall);
+		return install_background(venv, env, pkgsToInstall);
 	}
 
 	public static Process installDefaults(Path path)
