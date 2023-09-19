@@ -69,3 +69,22 @@ menu:
 ### I installed Python using the Microsoft Store and Scalpel doesn't work.
 
 -   The Microsoft Store Python is a sandboxed version designed for educational purposes. Many of its behaviors are incompatible with Scalpel. To use Scalpel on Windows, it is required to install Python from the [official source](https://www.python.org/downloads/windows/).
+
+### error: `command '/usr/bin/x86_64-linux-gnu-gcc' failed with exit code 1`
+
+-   Some users encouter this error when the python developpement libraries are missing:
+
+```
+x86_64-linux-gnu-gcc -pthread -Wno-unused-result -Wsign-compare -DNDEBUG -g -fwrapv -O2 -Wall -g -fstack-protector-strong -Wformat -Werror=format-security -g -fwrapv -O2 -fPIC -DPACKAGE=jep -DUSE_DEALLOC=1 -DJEP_NUMPY_ENABLED=0 -DVERSION=\"4.1.1\" -DPYTHON_LDLIBRARY=\"libpython3.10.so\" -I/usr/lib/jvm/java-11-openjdk-amd64/include -I/usr/lib/jvm/java-11-openjdk-amd64/include/linux -Isrc/main/c/Include -Ibuild/include -I/home/<user>/.scalpel/venvs/default/.venv/include -I/usr/include/python3.10 -c src/main/c/Jep/convert_j2p.c -o build/temp.linux-x86_64-cpython-310/src/main/c/Jep/convert_j2p.o
+      In file included from src/main/c/Include/Jep.h:35,
+                       from src/main/c/Jep/convert_j2p.c:28:
+      src/main/c/Include/jep_platform.h:35:10: fatal error: Python.h: Aucun fichier ou dossier de ce type
+         35 | #include <Python.h>
+            |          ^~~~~~~~~~
+      compilation terminated.
+      error: command '/usr/bin/x86_64-linux-gnu-gcc' failed with exit code 1
+      [end of output]
+```
+
+-   Make sure you installed the python3-dev libraries for your python version
+    https://stackoverflow.com/a/57698471
