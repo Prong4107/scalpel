@@ -82,6 +82,9 @@ public class Constants {
 		"requests==2.31.0",
 		"requests-toolbelt==1.0.0",
 		"mitmproxy==9.0.0",
+		// On some environnements (e.g. Ubuntu 20.04 with python3.10 as an apt alternative)
+		// This package is required by mitmproxy.http but not installed automatically
+		"six==1.16.0",
 	};
 
 	/**
