@@ -477,7 +477,11 @@ public class ConfigTab extends JFrame {
 
 				// Create the venv and installed required packages. (i.e. mitmproxy)
 				try {
-					Workspace.createAndInitWorkspace(path, Optional.empty());
+					Workspace.createAndInitWorkspace(
+						path,
+						Optional.empty(),
+						Optional.of(terminalForVenvConfig.getTerminal())
+					);
 
 					// Add the venv to the config.
 					config.addVenvPath(path);

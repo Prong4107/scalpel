@@ -1,5 +1,6 @@
 package lexfo.scalpel;
 
+import com.jediterm.terminal.Terminal;
 import com.jediterm.terminal.ui.UIUtil;
 import java.io.File;
 import java.io.IOException;
@@ -98,11 +99,32 @@ public class Workspace {
 		FileUtils.copyDirectory(source, dest, true);
 	}
 
+	private static void println(Terminal terminal, String line) {
+		terminal.writeUnwrappedString(line);
+		terminal.carriageReturn();
+		terminal.newLine();
+	}
+
 	public static void createAndInitWorkspace(
 		Path workspace,
-		Optional<Path> javaHome
+		Optional<Path> javaHome,
+		Optional<Terminal> terminal
 	) {
 		// Run python -m venv <path>
+		// Command to display in logs, actual command is formated in Venv.create
+		final String cmd =
+			Constants.PYTHON_BIN +
+			" -m venv " +
+			lexfo.scalpel.Terminal.escapeshellarg(
+				getVenvDir(workspace).toString()
+			);
+
+		// Display the command in the terminal to avoid confusing the user
+		terminal.ifPresent(t -> {
+			t.reset();
+			println(t, "$ " + cmd);
+		});
+
 		try {
 			final var venvDir = getVenvDir(workspace);
 			final var proc = Venv.create(venvDir);
@@ -110,7 +132,7 @@ public class Workspace {
 				throw createExceptionFromProcess(
 					proc,
 					"Ensure that pip3, python3.*-venv, python >= 3.10 and openjdk >= 17 are installed and in PATH.",
-					Constants.PYTHON_BIN + " -m venv " + workspace
+					cmd
 				);
 			}
 			copyWorkspaceFiles(workspace);
@@ -150,7 +172,12 @@ public class Workspace {
 			while (proc.isAlive()) {
 				Optional
 					.ofNullable(stdout.readLine())
-					.ifPresent(ScalpelLogger::all);
+					.ifPresent(l -> {
+						ScalpelLogger.all(l);
+
+						// Display progess in embedded terminal
+						terminal.ifPresent(t -> println(t, l));
+					});
 			}
 
 			if (proc.exitValue() != 0) {
@@ -214,7 +241,8 @@ public class Workspace {
 
 		createAndInitWorkspace(
 			workspace.toAbsolutePath(),
-			Optional.of(javaHome)
+			Optional.of(javaHome),
+			Optional.empty()
 		);
 
 		return workspace;
