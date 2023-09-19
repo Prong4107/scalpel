@@ -94,26 +94,28 @@ public class ScalpelEditorProvider
 		}
 	}
 
-	public CompletableFuture<Void> resetEditorsAsync() {
-		return Async.run(() -> {
-			ScalpelLogger.debug("Resetting editors...");
-			// Destroy all unused editors to avoid useless expensive callbacks.
-			// TODO: Improve this by using ReferenceQueue
-			// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/ref/ReferenceQueue.html
-			// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/ref/Reference.html#isEnqueued()
-			forceGarbageCollection();
+	public synchronized void resetEditors() {
+		ScalpelLogger.debug("Resetting editors...");
+		// Destroy all unused editors to avoid useless expensive callbacks.
+		// TODO: Improve this by using ReferenceQueue
+		// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/ref/ReferenceQueue.html
+		// https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/ref/Reference.html#isEnqueued()
+		forceGarbageCollection();
 
-			// Clean the list
-			this.editorsRefs =
-				this.editorsRefs.parallelStream()
-					.filter(weakRef -> weakRef.get() != null)
-					.collect(Collectors.toCollection(LinkedList::new));
-
+		// Clean the list
+		this.editorsRefs =
 			this.editorsRefs.parallelStream()
-				.map(WeakReference::get)
-				.forEach(ScalpelEditorTabbedPane::recreateEditorsAsync);
+				.filter(weakRef -> weakRef.get() != null)
+				.collect(Collectors.toCollection(LinkedList::new));
 
-			ScalpelLogger.debug("Editors reset.");
-		});
+		this.editorsRefs.parallelStream()
+			.map(WeakReference::get)
+			.forEach(ScalpelEditorTabbedPane::recreateEditorsAsync);
+
+		ScalpelLogger.debug("Editors reset.");
+	}
+
+	public CompletableFuture<Void> resetEditorsAsync() {
+		return Async.run(this::resetEditors);
 	}
 }

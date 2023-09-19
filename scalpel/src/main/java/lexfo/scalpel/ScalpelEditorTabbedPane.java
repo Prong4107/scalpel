@@ -157,7 +157,6 @@ public class ScalpelEditorTabbedPane
 			// Throw the error again.
 			throw new RuntimeException(e);
 		}
-		ScalpelLogger.log("???");
 	}
 
 	private int getTabNameOffsetInHookName(String hookName) {
