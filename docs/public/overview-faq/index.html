@@ -192,6 +192,7 @@
 <li><a href="#why-using-java-with-jep-to-execute-python-whereas-burp-already-supports-python-extensions-with-jython">Why using Java with Jep to execute Python whereas Burp already supports Python extensions with Jython?</a></li>
 <li><a href="#once-the-jar-is-loaded-no-additional-request-shows-up-in-the-editor">Once the .jar is loaded, no additional request shows up in the editor</a></li>
 <li><a href="#scalpel-requires-python-310-but-my-distribution-is-outdated-and-i-cant-install-such-recent-python-versions-using-the-package-manager">My distribution/OS comes with an outdated python.</a></li>
+<li><a href="#how-can-i-configure-my-editor-to-recognize-the-python-library">Configuring my editor for Python</a></li>
 <li><a href="#why-does-scalpel-installs-mitmproxy">Why does Scalpel installs mitmproxy?</a></li>
 <li><a href="#i-installed-python-using-the-microsoft-store-and-scalpel-doesnt-work">I installed Python using the Microsoft Store and Scalpel doesn&rsquo;t work.</a></li>
 </ol>
@@ -220,6 +221,29 @@
 <blockquote>
 <p>💡 Tip: Use <a href="https://github.com/pyenv/pyenv"><code>pyenv</code></a> to easily install different Python versions and switch between them.</p>
 </blockquote>
+</li>
+</ul>
+<h3 id="how-can-i-configure-my-editor-to-recognize-the-python-library"><a class="anchor" href="#how-can-i-configure-my-editor-to-recognize-the-python-library">#&nbsp;&nbsp;</a>How can I configure my editor to recognize the Python library</h3>
+<ul>
+<li>
+<p>Python modules are extracted in <code>~/.scalpel/.extracted/python</code>, adding this to your PYTHONPATH should do it.</p>
+</li>
+<li>
+<p>For <strong>VSCode users</strong>, Scalpel extracts a .vscode containing the correct settings in the scripts directory, so you can simply open the folder and it should work out of the box.</p>
+<ul>
+<li>
+<p>Alternatively, you can use the following <code>settings.json</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-JSON" data-lang="JSON"><span class="p">{</span>
+    <span class="nt">&#34;terminal.integrated.env.linux&#34;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="nt">&#34;PYTHONPATH&#34;</span><span class="p">:</span> <span class="s2">&#34;${env:HOME}/.scalpel/extracted/python:${env:PYTHONPATH}&#34;</span><span class="p">,</span>
+        <span class="nt">&#34;PATH&#34;</span><span class="p">:</span> <span class="s2">&#34;${env:HOME}/.scalpel/extracted/python:${env:PATH}&#34;</span>
+    <span class="p">},</span>
+
+    <span class="c1">// &#39;~&#39; or ${env:HOME} is not supported by this setting, it must be replaced manually.
+</span><span class="c1"></span>    <span class="nt">&#34;python.analysis.extraPaths&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;&lt;REPLACE_WITH_ABSOLUTE_HOME_PATH&gt;/.extracted/python&#34;</span><span class="p">]</span>
+<span class="p">}</span>
+</code></pre></div></li>
+</ul>
 </li>
 </ul>
 <h3 id="why-does-scalpel-installs-mitmproxy"><a class="anchor" href="#why-does-scalpel-installs-mitmproxy">#&nbsp;&nbsp;</a>Why does Scalpel installs mitmproxy?</h3>
