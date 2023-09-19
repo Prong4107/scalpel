@@ -471,6 +471,10 @@ public class ConfigTab extends JFrame {
 		WorkingPopup.showBlockingWaitDialog(
 			"Creating venv and installing required packages...",
 			label -> {
+				// Clear the text field.
+				addVentText.setEditable(false);
+				addVentText.setText("Please wait ...");
+
 				// Create the venv and installed required packages. (i.e. mitmproxy)
 				try {
 					Workspace.createAndInitWorkspace(path, Optional.empty());
@@ -498,8 +502,8 @@ public class ConfigTab extends JFrame {
 						"Failed to create venv",
 						JOptionPane.ERROR_MESSAGE
 					);
-					return;
 				}
+				addVentText.setEditable(true);
 			}
 		);
 	}
