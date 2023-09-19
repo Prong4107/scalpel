@@ -61,6 +61,7 @@ public class ConfigTab extends JFrame {
 	private final Config config;
 	private final Theme theme;
 	private final MontoyaApi API;
+	private final Frame burpFrame;
 
 	public ConfigTab(
 		MontoyaApi API,
@@ -72,6 +73,7 @@ public class ConfigTab extends JFrame {
 		this.scalpelExecutor = executor;
 		this.theme = theme;
 		this.API = API;
+		this.burpFrame = API.userInterface().swingUtils().suiteFrame();
 
 		$$$setupUI$$$();
 
@@ -267,13 +269,14 @@ public class ConfigTab extends JFrame {
 
 		// Prompt the user for a name
 		String fileName = JOptionPane.showInputDialog(
+			burpFrame,
 			"Enter the name for the new script"
 		);
 
 		if (fileName == null || fileName.trim().isEmpty()) {
 			// The user didn't enter a name
 			JOptionPane.showMessageDialog(
-				null,
+				burpFrame,
 				"You must provide a name for the file."
 			);
 			return;
@@ -304,7 +307,7 @@ public class ConfigTab extends JFrame {
 				StandardCopyOption.REPLACE_EXISTING
 			);
 			JOptionPane.showMessageDialog(
-				null,
+				burpFrame,
 				"File was successfully created!"
 			);
 
@@ -314,7 +317,7 @@ public class ConfigTab extends JFrame {
 			updateScriptList();
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(
-				null,
+				burpFrame,
 				"Error copying file: " + e.getMessage()
 			);
 		}
@@ -457,7 +460,7 @@ public class ConfigTab extends JFrame {
 			}
 		} catch (IllegalArgumentException e) {
 			JOptionPane.showMessageDialog(
-				this,
+				burpFrame,
 				e.getMessage(),
 				"Invalid venv name or absolute path",
 				JOptionPane.ERROR_MESSAGE
@@ -490,7 +493,7 @@ public class ConfigTab extends JFrame {
 					ScalpelLogger.error(msg);
 					ScalpelLogger.logStackTrace(e);
 					JOptionPane.showMessageDialog(
-						this,
+						burpFrame,
 						msg,
 						"Failed to create venv",
 						JOptionPane.ERROR_MESSAGE
@@ -601,7 +604,7 @@ public class ConfigTab extends JFrame {
 					);
 			} catch (IOException e) {
 				JOptionPane.showMessageDialog(
-					this,
+					burpFrame,
 					"Failed to get installed packages: \n" + e.getMessage(),
 					"Failed to get installed packages",
 					JOptionPane.ERROR_MESSAGE
@@ -651,7 +654,7 @@ public class ConfigTab extends JFrame {
 		} catch (RuntimeException e) {
 			// Error popup
 			JOptionPane.showMessageDialog(
-				this,
+				burpFrame,
 				e.getMessage(),
 				"Could not copy script to venv.",
 				JOptionPane.ERROR_MESSAGE
