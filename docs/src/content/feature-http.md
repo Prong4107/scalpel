@@ -65,6 +65,7 @@ _E.g: A match intercepting requests to `localhost` and `127.0.0.1` only:_
 ```python
 from pyscalpel.http import Flow
 
+# If match() returns true, request(), response(), req_edit_in(), [...] callbacks will be used.
 def match(flow: Flow) -> bool:
     # True if host is localhost or 127.0.0.1
     return flow.host_is("localhost", "127.0.0.1")
@@ -72,5 +73,5 @@ def match(flow: Flow) -> bool:
 
 ## Further reading
 
-- Learn more about the available hooks in the technical documentation's [Event Hooks & API]({{< relref "addons-api" >}}) section.
-- Or check out the [Custom Burp Editors]({{< relref "feature-editors" >}}).
+-   Learn more about the available hooks in the technical documentation's [Event Hooks & API]({{< relref "addons-api" >}}) section.
+-   Or check out the [Custom Burp Editors]({{< relref "feature-editors" >}}).

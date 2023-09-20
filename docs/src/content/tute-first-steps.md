@@ -5,14 +5,13 @@ menu:
         weight: 1
 ---
 
-
 <!-- {{< figure src="/screenshots/traversal.png" >}} -->
 
 # First Steps with Scalpel
 
 ## Introduction
 
-Welcome to your first steps with Scalpel! This beginner-friendly tutorial will walk you through basic steps to automatically and interactively modify HTTP headers using Scalpel. By the end of this tutorial, you’ll be able to edit the content of the `User-Agent` header using Scalpel’s custom editors.
+Welcome to your first steps with Scalpel! This beginner-friendly tutorial will walk you through basic steps to automatically and interactively modify HTTP headers using Scalpel. By the end of this tutorial, you’ll be able to edit the content of the `User-Agent` and `Accept-Language` headers using Scalpel’s hooks and custom editors.
 
 ## Table of content
 
@@ -32,7 +31,7 @@ Before diving in, ensure Scalpel is [installed]({{< relref "overview-installatio
 
 Let’s start by inspecting a basic GET request. Open [https://httpbin.org/get](https://httpbin.org/get) in your Burp suite’s browser. This site simply returns details of the requests it receives, making it perfect for this example case.
 
-Then, get back to Burp Suite. The GET request should show in your HTTP history. 
+Then, get back to Burp Suite. The GET request should show in your HTTP history.
 {{< figure src="/screenshots/first-steps-1.png" >}}
 
 Send it to Repeater using CTRL-R or right-click → `Send to Repeater`
@@ -40,19 +39,21 @@ Send it to Repeater using CTRL-R or right-click → `Send to Repeater`
 ## 3. Creating a new script
 
 1. Select the `Scalpel` tab in the Burp GUI:
-{{< figure src="/screenshots/first-steps-2.png" >}}
+   {{< figure src="/screenshots/first-steps-2.png" >}}
 
-1. Create a new script using the dedicated button:
-{{< figure src="/screenshots/first-steps-3.png" >}}
+2. Create a new script using the dedicated button:
+   {{< figure src="/screenshots/first-steps-3.png" >}}
 
-1. Name it appropriately:
-{{< figure src="/screenshots/first-steps-4.png" >}}
+3. Name it appropriately:
+   {{< figure src="/screenshots/first-steps-4.png" >}}
 
-1. Open the new script in a text editor:
-{{< figure src="/screenshots/first-steps-5.png" >}}
-{{< figure src="/screenshots/first-steps-6.png" >}}
-
-1. You are now ready to write your first Scalpel script.
+4. Open the new script in a text editor:
+   {{< figure src="/screenshots/first-steps-5.png" >}}
+   {{< figure src="/screenshots/first-steps-6.png" >}}
+    > 💡 When selecting a script, Scalpel will display it in the embedded terminal using the executable defined in the `$EDITOR` environnement variable.
+	>
+	> When clicking on the `Open selected script` button, it will open it in the default editor for `.py` files <br> (e.g.: VSCode)
+5. You are now ready to write your first Scalpel script.
 
 ## 4. Manipulating headers
 
@@ -65,12 +66,15 @@ from pyscalpel import Request
 
 def request(req: Request) -> Request:
 	user_agent = req.headers.get("User-Agent")
-	
+
 	if user_agent:
 	    req.headers["User-Agent"] = "My Custom User-Agent"
-	
+
 	return req
 ```
+> 💡 The `request()` function modifies every requests going out of Burp.
+>
+> This includes the requests from the proxy (browser) and the repeater.
 
 With the above code, every time you make a GET request, Scalpel will automatically change the `User-Agent` header to “My Custom User-Agent”.
 
@@ -79,7 +83,7 @@ To apply this effect:
 1. Replace your script content with the snippet above.
 2. Send the request to [https://httpbin.org/get](https://httpbin.org/get) using Repeater.
 3. You should see in the response that your User-Agent header was indeed replaced by `My Custom User-Agent`.
-	{{< figure src="/screenshots/first-steps-7.png" >}}
+   {{< figure src="/screenshots/first-steps-7.png" >}}
 
 4. The process for modifying a response is the same. Add this to your script:
 
@@ -96,7 +100,7 @@ def response(res: Response) -> Response:
 ```
 
 5. The snippet above changed the `Date` header in response to `My Custom Date`. Send the request again and see the reflected changes:
-{{< figure src="/screenshots/first-steps-8.png" >}}
+   {{< figure src="/screenshots/first-steps-8.png" >}}
 
 You now know how to programmatically edit HTTP requests and responses.
 
@@ -128,10 +132,11 @@ Congratulations! In this tutorial, you’ve taken your first steps with Scalpel.
 Remember, Scalpel is a powerful tool with a lot more capabilities. As you become more familiar with its features, you’ll discover its potential to significantly enhance your web security testing workflow.
 
 ---
+
 # Further reading
 
 Find **example use-cases [here]({{< relref "addons-examples" >}})**.
 
-Read the [**technical documentation**](/pdoc/python/pyscalpel.html)
+Read the [**technical documentation**](/pdoc/python/pyscalpel.html).
 
-See an **advanced tutorial** for a real use case in [**Decrypting custom encryption**]({{< relref "tute-aes" >}})
+See an **advanced tutorial** for a real use case in [**Decrypting custom encryption**]({{< relref "tute-aes" >}}).
