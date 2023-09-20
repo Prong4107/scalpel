@@ -1,5 +1,6 @@
 package lexfo.scalpel;
 
+import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.logging.Logging;
 import java.util.Arrays;
 import java.util.function.Consumer;
@@ -39,15 +40,15 @@ public class ScalpelLogger {
 	 * Set the Burp logger instance to use.
 	 * @param logger
 	 */
-	public static void setLogger(Logging logger) {
-		ScalpelLogger.logger = logger;
+	public static void setLogger(Logging logging) {
+		ScalpelLogger.logger = logging;
 	}
 
 	/**
 	 * Configured log level
 	 * TODO: Add to configuration.
 	 */
-	private static Level loggerLevel = Level.DEBUG;
+	private static Level loggerLevel = Level.TRACE;
 
 	/**
 	 * Logs the specified message to the Burp Suite output and standard output at the TRACE level.
@@ -107,23 +108,22 @@ public class ScalpelLogger {
 	 * @param msg    The message to log.
 	 */
 	public static void log(Level level, String msg) {
-		if (loggerLevel.value() <= level.value()) {
-			final Boolean error =
-				level.value > Level.ERROR.value && level != Level.ALL;
+		if (logger == null || loggerLevel.value() > level.value()) {
+			return;
+		}
 
-			final Consumer<String> stdLog = error
-				? System.err::println
-				: System.out::println;
-
-			stdLog.accept(msg);
-
-			if (logger != null) {
-				final Consumer<String> burpLog = error
-					? logger::logToError
-					: logger::logToOutput;
-
-				burpLog.accept(msg);
-			}
+		switch (level) {
+			case ERROR:
+				error(msg);
+				break;
+			case FATAL:
+				System.err.println(msg);
+				logger.logToError(msg);
+				logger.raiseCriticalEvent(msg);
+				break;
+			default:
+				System.out.println(msg);
+				logger.logToOutput(msg);
 		}
 	}
 
@@ -147,7 +147,15 @@ public class ScalpelLogger {
 		System.err.println(msg);
 		if (logger != null) {
 			logger.logToError(msg);
+			logger.raiseErrorEvent(msg);
 		}
+	}
+
+	private static String stackTraceToString(StackTraceElement[] elems) {
+		return Arrays
+			.stream(elems)
+			.map(StackTraceElement::toString)
+			.reduce("", (first, second) -> first + "\n" + second);
 	}
 
 	/**
@@ -157,12 +165,32 @@ public class ScalpelLogger {
 	 * @param throwed The throwable to log.
 	 */
 	public static void logStackTrace(Throwable throwed) {
-		error("ERROR:");
-		error(throwed.getMessage());
-		error(throwed.toString());
-		Arrays
-			.stream(throwed.getStackTrace())
-			.forEach(el -> error(el.toString()));
+		final String msg =
+			"ERROR:\n" +
+			throwed.getMessage() +
+			throwed.toString() +
+			stackTraceToString(throwed.getStackTrace());
+
+		error(msg);
+	}
+
+	/**
+	 * Logs the specified throwable stack trace to the Burp Suite error output and standard error.
+	 *
+	 * @param title	  title to display before the stacktrace
+	 * @param logger  The Logging object to use.
+	 * @param throwed The throwable to log.
+	 */
+	public static void logStackTrace(String title, Throwable throwed) {
+		final String msg =
+			"ERROR:\n" +
+			title +
+			"\n" +
+			throwed.getMessage() +
+			throwed.toString() +
+			stackTraceToString(throwed.getStackTrace());
+
+		error(msg);
 	}
 
 	/**
@@ -171,9 +199,7 @@ public class ScalpelLogger {
 	 * @param logger The Logging object to use.
 	 */
 	public static void logStackTrace() {
-		Arrays
-			.stream(Thread.currentThread().getStackTrace())
-			.forEach(el -> error(el.toString()));
+		error(stackTraceToString((Thread.currentThread().getStackTrace())));
 	}
 
 	/**
@@ -183,13 +209,15 @@ public class ScalpelLogger {
 	 * @param error  Whether to log to the error output or not.
 	 */
 	public static void logStackTrace(Boolean error) {
-		Arrays
-			.stream(Thread.currentThread().getStackTrace())
-			.forEach(el -> {
-				if (error) error(el.toString()); else logger.logToOutput(
-					el.toString()
-				);
-			});
+		final String msg = stackTraceToString(
+			Thread.currentThread().getStackTrace()
+		);
+
+		if (error) {
+			error(msg);
+		} else {
+			logger.logToOutput(msg);
+		}
 	}
 
 	public static void all(String msg) {

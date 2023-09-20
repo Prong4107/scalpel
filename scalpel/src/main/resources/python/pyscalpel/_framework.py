@@ -388,7 +388,5 @@ try:
 
 except Exception as global_ex:  # pylint: disable=broad-except
     # Global generic exception handler to ensure the error is logged and visible to the user.
-    logger.fatal("Couldn't load script:")
-    logger.fatal(str(global_ex))
-    logger.fatal(traceback.format_exc())
+    logger.fatal(f"Couldn't load script:\n{global_ex}\n{traceback.format_exc()}")
     logger.all("Python: Failed loading _framework.py")

@@ -162,7 +162,7 @@ public class Scalpel implements BurpExtension {
 		this.API = API;
 
 		// Set displayed extension name.
-		API.extension().setName("Lexfo Scalpel extension");
+		API.extension().setName("Scalpel");
 
 		// Create a logger that will display messages in Burp extension logs.
 		ScalpelLogger.setLogger(API.logging());
