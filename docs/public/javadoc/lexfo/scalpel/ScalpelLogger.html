@@ -189,15 +189,24 @@ loadScripts(document, 'script');</script>
 <div class="block">Logs the current thread stack trace to either the Burp Suite output and standard output or the Burp Suite error output and standard error.</div>
 </div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static void</code></div>
-<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#logStackTrace(java.lang.Throwable)" class="member-name-link">logStackTrace</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&nbsp;throwed)</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#logStackTrace(java.lang.String,java.lang.Throwable)" class="member-name-link">logStackTrace</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;title,
+ <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&nbsp;throwed)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
 <div class="block">Logs the specified throwable stack trace to the Burp Suite error output and standard error.</div>
 </div>
 <div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static void</code></div>
-<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#setLogger(burp.api.montoya.logging.Logging)" class="member-name-link">setLogger</a><wbr>(<a href="https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/logging/Logging.html" title="class or interface in burp.api.montoya.logging" class="external-link">Logging</a>&nbsp;logger)</code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#logStackTrace(java.lang.Throwable)" class="member-name-link">logStackTrace</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&nbsp;throwed)</code></div>
 <div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
+<div class="block">Logs the specified throwable stack trace to the Burp Suite error output and standard error.</div>
+</div>
+<div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static void</code></div>
+<div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#setLogger(burp.api.montoya.logging.Logging)" class="member-name-link">setLogger</a><wbr>(<a href="https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/logging/Logging.html" title="class or interface in burp.api.montoya.logging" class="external-link">Logging</a>&nbsp;logging)</code></div>
+<div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
 <div class="block">Set the Burp logger instance to use.</div>
 </div>
+<div class="col-first even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>private static <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></code></div>
+<div class="col-second even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#stackTraceToString(java.lang.StackTraceElement%5B%5D)" class="member-name-link">stackTraceToString</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/StackTraceElement.html" title="class or interface in java.lang" class="external-link">StackTraceElement</a>[]&nbsp;elems)</code></div>
+<div class="col-last even-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">&nbsp;</div>
 <div class="col-first odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code>static void</code></div>
 <div class="col-second odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4"><code><a href="#trace(java.lang.String)" class="member-name-link">trace</a><wbr>(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;msg)</code></div>
 <div class="col-last odd-row-color method-summary-table method-summary-table-tab1 method-summary-table-tab4">
@@ -264,7 +273,7 @@ loadScripts(document, 'script');</script>
 <li>
 <section class="detail" id="setLogger(burp.api.montoya.logging.Logging)">
 <h3>setLogger</h3>
-<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">setLogger</span><wbr><span class="parameters">(<a href="https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/logging/Logging.html" title="class or interface in burp.api.montoya.logging" class="external-link">Logging</a>&nbsp;logger)</span></div>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">setLogger</span><wbr><span class="parameters">(<a href="https://portswigger.github.io/burp-extensions-montoya-api/javadoc/burp/api/montoya/logging/Logging.html" title="class or interface in burp.api.montoya.logging" class="external-link">Logging</a>&nbsp;logging)</span></div>
 <div class="block">Set the Burp logger instance to use.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
@@ -371,12 +380,32 @@ loadScripts(document, 'script');</script>
 </section>
 </li>
 <li>
+<section class="detail" id="stackTraceToString(java.lang.StackTraceElement[])">
+<h3>stackTraceToString</h3>
+<div class="member-signature"><span class="modifiers">private static</span>&nbsp;<span class="return-type"><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a></span>&nbsp;<span class="element-name">stackTraceToString</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/StackTraceElement.html" title="class or interface in java.lang" class="external-link">StackTraceElement</a>[]&nbsp;elems)</span></div>
+</section>
+</li>
+<li>
 <section class="detail" id="logStackTrace(java.lang.Throwable)">
 <h3>logStackTrace</h3>
 <div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">logStackTrace</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&nbsp;throwed)</span></div>
 <div class="block">Logs the specified throwable stack trace to the Burp Suite error output and standard error.</div>
 <dl class="notes">
 <dt>Parameters:</dt>
+<dd><code>logger</code> - The Logging object to use.</dd>
+<dd><code>throwed</code> - The throwable to log.</dd>
+</dl>
+</section>
+</li>
+<li>
+<section class="detail" id="logStackTrace(java.lang.String,java.lang.Throwable)">
+<h3>logStackTrace</h3>
+<div class="member-signature"><span class="modifiers">public static</span>&nbsp;<span class="return-type">void</span>&nbsp;<span class="element-name">logStackTrace</span><wbr><span class="parameters">(<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html" title="class or interface in java.lang" class="external-link">String</a>&nbsp;title,
+ <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/Throwable.html" title="class or interface in java.lang" class="external-link">Throwable</a>&nbsp;throwed)</span></div>
+<div class="block">Logs the specified throwable stack trace to the Burp Suite error output and standard error.</div>
+<dl class="notes">
+<dt>Parameters:</dt>
+<dd><code>title</code> - title to display before the stacktrace</dd>
 <dd><code>logger</code> - The Logging object to use.</dd>
 <dd><code>throwed</code> - The throwable to log.</dd>
 </dl>
