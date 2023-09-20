@@ -196,7 +196,7 @@
  -->
 <h1 id="first-steps-with-scalpel"><a class="anchor" href="#first-steps-with-scalpel">#&nbsp;&nbsp;</a>First Steps with Scalpel</h1>
 <h2 id="introduction"><a class="anchor" href="#introduction">#&nbsp;&nbsp;</a>Introduction</h2>
-<p>Welcome to your first steps with Scalpel! This beginner-friendly tutorial will walk you through basic steps to automatically and interactively modify HTTP headers using Scalpel. By the end of this tutorial, you’ll be able to edit the content of the <code>User-Agent</code> header using Scalpel’s custom editors.</p>
+<p>Welcome to your first steps with Scalpel! This beginner-friendly tutorial will walk you through basic steps to automatically and interactively modify HTTP headers using Scalpel. By the end of this tutorial, you’ll be able to edit the content of the <code>User-Agent</code> and <code>Accept-Language</code> headers using Scalpel’s hooks and custom editors.</p>
 <h2 id="table-of-content"><a class="anchor" href="#table-of-content">#&nbsp;&nbsp;</a>Table of content</h2>
 <ol>
 <li><a href="#1-setting-up-scalpel">Setting up Scalpel</a></li>
@@ -246,6 +246,10 @@
 <figure><img src="../screenshots/first-steps-6.png"/>
 </figure>
 </p>
+<blockquote>
+<p>💡 When selecting a script, Scalpel will display it in the embedded terminal using the executable defined in the <code>$EDITOR</code> environnement variable.</p>
+<p>When clicking on the <code>Open selected script</code> button, it will open it in the default editor for <code>.py</code> files <br> (e.g.: VSCode)</p>
+</blockquote>
 </li>
 <li>
 <p>You are now ready to write your first Scalpel script.</p>
@@ -258,12 +262,16 @@
 
 <span class="k">def</span> <span class="nf">request</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Request</span><span class="p">:</span>
 	<span class="n">user_agent</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&#34;User-Agent&#34;</span><span class="p">)</span>
-	
+
 	<span class="k">if</span> <span class="n">user_agent</span><span class="p">:</span>
 	    <span class="n">req</span><span class="o">.</span><span class="n">headers</span><span class="p">[</span><span class="s2">&#34;User-Agent&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&#34;My Custom User-Agent&#34;</span>
-	
+
 	<span class="k">return</span> <span class="n">req</span>
-</code></pre></div><p>With the above code, every time you make a GET request, Scalpel will automatically change the <code>User-Agent</code> header to “My Custom User-Agent”.</p>
+</code></pre></div><blockquote>
+<p>💡 The <code>request()</code> function modifies every requests going out of Burp.</p>
+<p>This includes the requests from the proxy (browser) and the repeater.</p>
+</blockquote>
+<p>With the above code, every time you make a GET request, Scalpel will automatically change the <code>User-Agent</code> header to “My Custom User-Agent”.</p>
 <p>To apply this effect:</p>
 <ol>
 <li>
@@ -321,8 +329,8 @@
 <hr>
 <h1 id="further-reading"><a class="anchor" href="#further-reading">#&nbsp;&nbsp;</a>Further reading</h1>
 <p>Find <strong>example use-cases <a href="../addons-examples/">here</a></strong>.</p>
-<p>Read the <a href="../pdoc/python/pyscalpel.html"><strong>technical documentation</strong></a></p>
-<p>See an <strong>advanced tutorial</strong> for a real use case in <a href="../tute-aes/"><strong>Decrypting custom encryption</strong></a></p>
+<p>Read the <a href="../pdoc/python/pyscalpel.html"><strong>technical documentation</strong></a>.</p>
+<p>See an <strong>advanced tutorial</strong> for a real use case in <a href="../tute-aes/"><strong>Decrypting custom encryption</strong></a>.</p>
 
 
     </div>
