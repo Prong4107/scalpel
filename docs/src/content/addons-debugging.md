@@ -14,7 +14,7 @@ Here are a few advices for debugging Scalpel errors.
 
 ## Finding stacktraces
 
-Errors that occur in scripts can be found at different places in Burp:
+Errors that occur in scripts can be found in different places:
 
 ### 1. The dashboard event log
 
