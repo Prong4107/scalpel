@@ -4,17 +4,17 @@ Thank you for your interest in contributing to Scalpel! This document outlines t
 
 ## Table of Content
 
-- [Setting Up Your Development Environment](#setting-up-your-development-environment)
-- [Building the Project](#building-the-project)
-  - [Building Scalpel](#building-scalpel)
-  - [Building the documentation](#building-the-documentation)
-- [Testing](#testing)
-- [Commit and Branch Format](#commit-and-branch-format)
-  - [Commit Messages](#commit-messages)
-  - [Branch Naming](#branch-naming)
-- [Submitting Changes](#submitting-changes)
-- [Feedback and Reviews](#feedback-and-reviews)
-- [Conclusion](#conclusion)
+-   [Setting Up Your Development Environment](#setting-up-your-development-environment)
+-   [Building the Project](#building-the-project)
+    -   [Building Scalpel](#building-scalpel)
+    -   [Building the documentation](#building-the-documentation)
+-   [Testing](#testing)
+-   [Commit and Branch Format](#commit-and-branch-format)
+    -   [Commit Messages](#commit-messages)
+    -   [Branch Naming](#branch-naming)
+-   [Submitting Changes](#submitting-changes)
+-   [Feedback and Reviews](#feedback-and-reviews)
+-   [Conclusion](#conclusion)
 
 ## Setting Up Your Development Environment
 
@@ -40,7 +40,7 @@ Thank you for your interest in contributing to Scalpel! This document outlines t
     ```sh
     ./gradlew build
     ```
-3. Upon successful build, the generated JAR file can be found in `./scalpel/build/libs/scalpel-0.0.1.jar`.
+3. Upon successful build, the generated JAR file can be found in `./scalpel/build/libs/scalpel-*.jar`.
 
 ### Building the documentation
 
