@@ -163,6 +163,8 @@ loadScripts(document, 'script');</script>
 </dd>
 <dt><a href="lexfo/scalpel/ConfigTab.html#browsePanel" class="member-name-link">browsePanel</a> - Variable in class lexfo.scalpel.<a href="lexfo/scalpel/ConfigTab.html" title="class in lexfo.scalpel">ConfigTab</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="lexfo/scalpel/ConfigTab.html#burpFrame" class="member-name-link">burpFrame</a> - Variable in class lexfo.scalpel.<a href="lexfo/scalpel/ConfigTab.html" title="class in lexfo.scalpel">ConfigTab</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="lexfo/scalpel/editors/ScalpelGenericBinaryEditor.html#byteArrayToBinaryData(burp.api.montoya.core.ByteArray)" class="member-name-link">byteArrayToBinaryData(ByteArray)</a> - Method in class lexfo.scalpel.editors.<a href="lexfo/scalpel/editors/ScalpelGenericBinaryEditor.html" title="class in lexfo.scalpel.editors">ScalpelGenericBinaryEditor</a></dt>
 <dd>
 <div class="block">Convert from Burp format to BinEd format</div>
@@ -279,7 +281,7 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Create a virtual environment.</div>
 </dd>
-<dt><a href="lexfo/scalpel/Workspace.html#createAndInitWorkspace(java.nio.file.Path,java.util.Optional)" class="member-name-link">createAndInitWorkspace(Path, Optional&lt;Path&gt;)</a> - Static method in class lexfo.scalpel.<a href="lexfo/scalpel/Workspace.html" title="class in lexfo.scalpel">Workspace</a></dt>
+<dt><a href="lexfo/scalpel/Workspace.html#createAndInitWorkspace(java.nio.file.Path,java.util.Optional,java.util.Optional)" class="member-name-link">createAndInitWorkspace(Path, Optional&lt;Path&gt;, Optional&lt;Terminal&gt;)</a> - Static method in class lexfo.scalpel.<a href="lexfo/scalpel/Workspace.html" title="class in lexfo.scalpel">Workspace</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="lexfo/scalpel/Venv.html#createAndInstallDefaults(java.nio.file.Path)" class="member-name-link">createAndInstallDefaults(Path)</a> - Static method in class lexfo.scalpel.<a href="lexfo/scalpel/Venv.html" title="class in lexfo.scalpel">Venv</a></dt>
 <dd>
@@ -982,6 +984,10 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Logs the current thread stack trace to either the Burp Suite output and standard output or the Burp Suite error output and standard error.</div>
 </dd>
+<dt><a href="lexfo/scalpel/ScalpelLogger.html#logStackTrace(java.lang.String,java.lang.Throwable)" class="member-name-link">logStackTrace(String, Throwable)</a> - Static method in class lexfo.scalpel.<a href="lexfo/scalpel/ScalpelLogger.html" title="class in lexfo.scalpel">ScalpelLogger</a></dt>
+<dd>
+<div class="block">Logs the specified throwable stack trace to the Burp Suite error output and standard error.</div>
+</dd>
 <dt><a href="lexfo/scalpel/ScalpelLogger.html#logStackTrace(java.lang.Throwable)" class="member-name-link">logStackTrace(Throwable)</a> - Static method in class lexfo.scalpel.<a href="lexfo/scalpel/ScalpelLogger.html" title="class in lexfo.scalpel">ScalpelLogger</a></dt>
 <dd>
 <div class="block">Logs the specified throwable stack trace to the Burp Suite error output and standard error.</div>
@@ -1124,6 +1130,8 @@ loadScripts(document, 'script');</script>
 </dd>
 <dt><a href="lexfo/scalpel/Constants.html#PIP_BIN" class="member-name-link">PIP_BIN</a> - Static variable in class lexfo.scalpel.<a href="lexfo/scalpel/Constants.html" title="class in lexfo.scalpel">Constants</a></dt>
 <dd>&nbsp;</dd>
+<dt><a href="lexfo/scalpel/Workspace.html#println(com.jediterm.terminal.Terminal,java.lang.String)" class="member-name-link">println(Terminal, String)</a> - Static method in class lexfo.scalpel.<a href="lexfo/scalpel/Workspace.html" title="class in lexfo.scalpel">Workspace</a></dt>
+<dd>&nbsp;</dd>
 <dt><a href="lexfo/scalpel/editors/AbstractEditor.html#processOutboundMessage()" class="member-name-link">processOutboundMessage()</a> - Method in class lexfo.scalpel.editors.<a href="lexfo/scalpel/editors/AbstractEditor.html" title="class in lexfo.scalpel.editors">AbstractEditor</a></dt>
 <dd>
 <div class="block">Creates a new HTTP message by passing the editor's contents through a Python callback.</div>
@@ -1208,6 +1216,8 @@ loadScripts(document, 'script');</script>
 <dt><a href="lexfo/scalpel/Constants.html#RES_EDIT_PREFIX" class="member-name-link">RES_EDIT_PREFIX</a> - Static variable in class lexfo.scalpel.<a href="lexfo/scalpel/Constants.html" title="class in lexfo.scalpel">Constants</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="lexfo/scalpel/ScalpelExecutor.html#resetChangeIndicators()" class="member-name-link">resetChangeIndicators()</a> - Method in class lexfo.scalpel.<a href="lexfo/scalpel/ScalpelExecutor.html" title="class in lexfo.scalpel">ScalpelExecutor</a></dt>
+<dd>&nbsp;</dd>
+<dt><a href="lexfo/scalpel/ScalpelEditorProvider.html#resetEditors()" class="member-name-link">resetEditors()</a> - Method in class lexfo.scalpel.<a href="lexfo/scalpel/ScalpelEditorProvider.html" title="class in lexfo.scalpel">ScalpelEditorProvider</a></dt>
 <dd>&nbsp;</dd>
 <dt><a href="lexfo/scalpel/ScalpelEditorProvider.html#resetEditorsAsync()" class="member-name-link">resetEditorsAsync()</a> - Method in class lexfo.scalpel.<a href="lexfo/scalpel/ScalpelEditorProvider.html" title="class in lexfo.scalpel">ScalpelEditorProvider</a></dt>
 <dd>&nbsp;</dd>
@@ -1458,6 +1468,8 @@ loadScripts(document, 'script');</script>
 <dd>
 <div class="block">Shows a blocking wait dialog.</div>
 </dd>
+<dt><a href="lexfo/scalpel/ScalpelLogger.html#stackTraceToString(java.lang.StackTraceElement%5B%5D)" class="member-name-link">stackTraceToString(StackTraceElement[])</a> - Static method in class lexfo.scalpel.<a href="lexfo/scalpel/ScalpelLogger.html" title="class in lexfo.scalpel">ScalpelLogger</a></dt>
+<dd>&nbsp;</dd>
 </dl>
 <h2 class="title" id="I:T">T</h2>
 <dl class="index">

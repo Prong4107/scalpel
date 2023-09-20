@@ -7,6 +7,19 @@
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Debugging</title>
+      <link>/addons-debugging/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/addons-debugging/</guid>
+      <description>Debugging Scalpel scripts can be hard to debug, as you cannot run them outside of Burp.
+Also it is difficult to know if a bug is related to Scalpel/Burp context or to the user&amp;rsquo;s implementation.
+Here are a few advices for debugging Scalpel errors.
+Finding stacktraces Errors that occur in scripts can be found at different places in Burp:
+1. The dashboard event log  The user may click on the events to get the full error message:  2.</description>
+    </item>
+    
+    <item>
       <title>Custom Burp editors</title>
       <link>/feature-editors/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
