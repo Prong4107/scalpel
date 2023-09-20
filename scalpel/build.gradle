@@ -11,7 +11,7 @@ java {
 }
 
 group 'lexfo'
-version '0.0.1'
+version '1.0.0'
 
 repositories {
     mavenLocal()
