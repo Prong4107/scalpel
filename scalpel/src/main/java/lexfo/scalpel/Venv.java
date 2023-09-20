@@ -37,6 +37,9 @@ public class Venv {
 			"venv",
 			path.toString()
 		);
+
+		processBuilder.redirectErrorStream(true);
+
 		final Process process = processBuilder.start();
 
 		// Wait for the virtual environment creation to complete
@@ -44,6 +47,7 @@ public class Venv {
 
 		return process;
 	}
+
 	// https://github.com/ninia/jep/issues/495
 	private static void clearPipCache(Path venv)
 		throws IOException, InterruptedException {
@@ -67,8 +71,8 @@ public class Venv {
 	) throws IOException, InterruptedException {
 		// Install the default packages
 
-		// Dependencies required for Java to initiate a Python interpreter (jep)
 		final var javaDeps = Constants.DEFAULT_VENV_DEPENDENCIES;
+		// Dependencies required for Java to initiate a Python interpreter (jep)
 
 		// Dependencies required by the Scalpel Python library.
 		final var scriptDeps = Constants.PYTHON_DEPENDENCIES;
@@ -81,7 +85,7 @@ public class Venv {
 			pkgsToInstall = scriptDeps;
 		}
 
-		return install(venv, env, pkgsToInstall);
+		return install_background(venv, env, pkgsToInstall);
 	}
 
 	public static Process installDefaults(Path path)
@@ -169,6 +173,7 @@ public class Venv {
 		final ProcessBuilder processBuilder = new ProcessBuilder(command);
 		processBuilder.directory(path.toFile());
 		processBuilder.environment().putAll(env);
+		processBuilder.redirectErrorStream(true);
 
 		final Process process = processBuilder.start();
 

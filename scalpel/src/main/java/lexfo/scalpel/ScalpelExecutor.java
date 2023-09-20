@@ -562,7 +562,7 @@ public class ScalpelExecutor {
 
 		// Force editor tabs recreation
 		// WARN: .resetEditors() depends on the runner loop, do not call it inside of it
-		this.editorProvider.ifPresent(ScalpelEditorProvider::resetEditorsAsync);
+		this.editorProvider.ifPresent(ScalpelEditorProvider::resetEditors);
 
 		// Return the running thread.
 		return thread;
