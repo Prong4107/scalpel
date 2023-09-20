@@ -194,4 +194,22 @@ class Response(MITMProxyResponse):
         return res
 
     def host_is(self, *patterns: str) -> bool:
+        """Matches the host against the provided patterns
+
+        Returns:
+            bool: Whether at least one pattern matched
+        """
         return host_is(self.host, *patterns)
+
+    @property
+    def body(self) -> bytes | None:
+        """Alias for content()
+
+        Returns:
+            bytes | None: The request body / content
+        """
+        return self.content
+
+    @body.setter
+    def body(self, val: bytes | None):
+        self.content = val
