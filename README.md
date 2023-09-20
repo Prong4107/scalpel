@@ -112,4 +112,4 @@ Scalpel is licensed under [Apache License 2.0](LICENCE.MD).
 
 ## Contact
 
-For any questions or feedback, please open an issue or contact the [maintainer](n.maccary@lexfo.fr).
+For any questions or feedback, please open an issue or contact the [maintainer](mailto:n.maccary@lexfo.fr).
