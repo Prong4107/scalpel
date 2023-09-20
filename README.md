@@ -74,7 +74,7 @@ Example scripts are available in the [`examples/`](examples/) directory of the p
 
 ## Requirements
 
-Scalpel is compatible with Windows and Linux.
+Scalpel is compatible with Windows, Linux and MacOS.
 
 -   OpenJDK >= `17`
 -   Python >= `3.10`
@@ -112,4 +112,4 @@ Scalpel is licensed under [Apache License 2.0](LICENCE.MD).
 
 ## Contact
 
-For any questions or feedback, please open an issue or contact [INSERT CONTACT INFORMATION HERE].
+For any questions or feedback, please open an issue or contact the (maintainer)[n.maccary@lexfo.fr].
