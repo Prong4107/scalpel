@@ -79,6 +79,7 @@ public class Constants {
 	 * Required python packages
 	 */
 	public static final String[] PYTHON_DEPENDENCIES = new String[] {
+		"cryptography==38.0",
 		"requests==2.31.0",
 		"requests-toolbelt==1.0.0",
 		"mitmproxy==9.0.0",
