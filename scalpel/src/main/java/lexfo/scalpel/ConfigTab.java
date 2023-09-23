@@ -479,7 +479,7 @@ public class ConfigTab extends JFrame {
 				try {
 					Workspace.createAndInitWorkspace(
 						path,
-						Optional.empty(),
+						Optional.of(config.getJdkPath()),
 						Optional.of(terminalForVenvConfig.getTerminal())
 					);
 
