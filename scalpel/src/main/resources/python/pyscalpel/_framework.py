@@ -5,6 +5,8 @@ from typing import Callable, TypeVar, cast, Any, TypedDict
 import sys
 from functools import wraps
 from os.path import dirname
+import os
+import glob
 
 
 # Define a debug logger to be able to debug cases where the logger is not initialized
@@ -42,10 +44,71 @@ class DebugLogger:
 
 logger = DebugLogger()
 
+
+# Copies of functions from pyscalpel.venv
+# We duplicate them here because importing pyscalpel.venv triggers pyscalpel/__init__.py which imports mitmproxy
+# Hence, mitmproxy is imported **BEFORE** the venv is activated.
+# In some distributions (kali), this results in a crash because the system's mitmproxy version is buggy. (PyO3 errors)
+_old_prefix = sys.prefix
+_old_exec_prefix = sys.exec_prefix
+
+
+def deactivate() -> None:
+    """Deactivates the current virtual environment."""
+    if "_OLD_VIRTUAL_PATH" in os.environ:
+        os.environ["PATH"] = os.environ["_OLD_VIRTUAL_PATH"]
+        del os.environ["_OLD_VIRTUAL_PATH"]
+    if "_OLD_VIRTUAL_PYTHONHOME" in os.environ:
+        os.environ["PYTHONHOME"] = os.environ["_OLD_VIRTUAL_PYTHONHOME"]
+        del os.environ["_OLD_VIRTUAL_PYTHONHOME"]
+    if "VIRTUAL_ENV" in os.environ:
+        del os.environ["VIRTUAL_ENV"]
+
+    sys.prefix = _old_prefix
+    sys.exec_prefix = _old_exec_prefix
+
+
+def activate(pkg_path: str | None) -> None:
+    """Activates the virtual environment at the given path."""
+    deactivate()
+
+    if pkg_path is None:
+        return
+
+    virtual_env = os.path.abspath(pkg_path)
+    os.environ["_OLD_VIRTUAL_PATH"] = os.environ.get("PATH", "")
+    os.environ["VIRTUAL_ENV"] = virtual_env
+
+    old_pythonhome = os.environ.pop("PYTHONHOME", None)
+    if old_pythonhome:
+        os.environ["_OLD_VIRTUAL_PYTHONHOME"] = old_pythonhome
+
+    if os.name == "nt":
+        site_packages_paths = os.path.join(virtual_env, "Lib", "site-packages")
+    else:
+        site_packages_paths = glob.glob(
+            os.path.join(virtual_env, "lib", "python*", "site-packages")
+        )
+
+    if not site_packages_paths:
+        raise RuntimeError(
+            f"No 'site-packages' directory found in virtual environment at {virtual_env}"
+        )
+
+    site_packages = site_packages_paths[0]
+    sys.path.insert(0, site_packages)
+    sys.prefix = virtual_env
+    sys.exec_prefix = virtual_env
+
+
 VENV = None
 
+
 try:
-    from pyscalpel.venv import activate
+    VENV = __scalpel__["venv"]  # type: ignore pylint: disable=undefined-variable
+
+    activate(VENV)
+
     from pyscalpel.java.scalpel_types import Context
     from pyscalpel.logger import logger as _logger
 
@@ -55,9 +118,11 @@ try:
 
     logger.all("Python: Loading _framework.py ...")
 
-    VENV = ctx["venv"]
+    import pyscalpel.venv
 
-    activate(VENV)
+    # Update forwarded values
+    pyscalpel.venv._old_exec_prefix = _old_exec_prefix
+    pyscalpel.venv._old_prefix = _old_prefix
 
     # import debugpy
 
