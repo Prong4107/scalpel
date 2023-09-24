@@ -75,17 +75,55 @@ public class Constants {
 		"jep",
 	};
 
+	// TODO: use a requirements.txt
 	/**
 	 * Required python packages
+	 * 
+	 * Note: 99% of this dependencies come from mitmproxy.
 	 */
 	public static final String[] PYTHON_DEPENDENCIES = new String[] {
-		"cryptography==38.0",
+		"asgiref==3.5.2",
+		"Brotli==1.0.9",
+		"certifi==2023.7.22",
+		"cffi==1.15.1",
+		"charset-normalizer==3.2.0",
+		"click==8.1.7",
+		"cryptography==38.0.4",
+		"Flask==2.2.5",
+		"h11==0.14.0",
+		"h2==4.1.0",
+		"hpack==4.0.0",
+		"hyperframe==6.0.1",
+		"idna==3.4",
+		"itsdangerous==2.1.2",
+		"jep==4.1.1",
+		"Jinja2==3.1.2",
+		"kaitaistruct==0.10",
+		"ldap3==2.9.1",
+		"MarkupSafe==2.1.3",
+		"mitmproxy==9.0.0",
+		"mitmproxy_wireguard==0.1.23",
+		"msgpack==1.0.6",
+		"passlib==1.7.4",
+		"protobuf==4.24.3",
+		"publicsuffix2==2.20191221",
+		"pyasn1==0.5.0",
+		"pycparser==2.21",
+		"pyOpenSSL==22.1.0",
+		"pyparsing==3.0.9",
+		"pyperclip==1.8.2",
 		"requests==2.31.0",
 		"requests-toolbelt==1.0.0",
-		"mitmproxy==9.0.0",
-		// On some environnements (e.g. Ubuntu 20.04 with python3.10 as an apt alternative)
-		// This package is required by mitmproxy.http but not installed automatically
+		"ruamel.yaml==0.17.32",
+		"ruamel.yaml.clib==0.2.7",
 		"six==1.16.0",
+		"sortedcontainers==2.4.0",
+		"tornado==6.3.3",
+		"urllib3==2.0.5",
+		"urwid==2.1.2",
+		"Werkzeug==2.3.7",
+		"wsproto==1.2.0",
+		"zstandard==0.18.0",
 	};
 
 	/**
