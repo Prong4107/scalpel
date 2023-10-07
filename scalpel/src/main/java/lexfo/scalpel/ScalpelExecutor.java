@@ -195,6 +195,16 @@ public class ScalpelExecutor {
 		public synchronized void then(Consumer<Object> callback) {
 			Async.run(() -> this.await().ifPresent(callback));
 		}
+
+		public synchronized void resolve(Object result) {
+			this.result = Optional.of(result);
+			this.finished = true;
+		}
+
+		public synchronized void reject() {
+			this.result = Optional.empty();
+			this.finished = true;
+		}
 	}
 
 	/**
@@ -325,8 +335,7 @@ public class ScalpelExecutor {
 				tasks.notifyAll();
 			} else if (rejectOnReload) {
 				// The runner is dead, reject this task to avoid blocking Burp when awaiting.
-				task.result = Optional.empty();
-				task.finished = true;
+				task.reject();
 			}
 		}
 
