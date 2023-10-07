@@ -215,10 +215,11 @@ public class ScalpelEditorTabbedPane
 		try {
 			return executor.getCallables();
 		} catch (RuntimeException e) {
-			ScalpelLogger.debug(
+			// This will fail if the script is invalid or empty.
+			ScalpelLogger.trace(
 				"recreateEditors(): Could not call get_callables"
 			);
-			ScalpelLogger.debug(e.toString());
+			ScalpelLogger.trace(e.toString());
 			return null;
 		}
 	}
