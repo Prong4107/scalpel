@@ -161,7 +161,7 @@ public class ScalpelExecutor {
 			synchronized (this) {
 				// Ensure we return only when result has been set
 				// (apparently wait() might return even if notify hasn't been called for some weird software and hardware issues)
-				while (!isFinished()) {
+				while (isEnabled && !isFinished()) {
 					// Wrap the wait in try/catch to handle InterruptedException.
 					try {
 						// Wait for the object to be notified.
@@ -245,6 +245,8 @@ public class ScalpelExecutor {
 
 	private Optional<ScalpelEditorProvider> editorProvider = Optional.empty();
 
+	private Boolean isEnabled = true;
+
 	/**
 	 * Constructs a new ScalpelExecutor object.
 	 *
@@ -283,6 +285,18 @@ public class ScalpelExecutor {
 		this.script.ifPresent(s -> this.runner = this.launchTaskRunner());
 	}
 
+	public boolean isEnabled() {
+		return this.isEnabled;
+	}
+
+	public void enable() {
+		this.isEnabled = true;
+	}
+
+	public void disable() {
+		this.isEnabled = false;
+	}
+
 	/**
 	 * Adds a new task to the queue of tasks to be executed by the script.
 	 *
@@ -303,7 +317,7 @@ public class ScalpelExecutor {
 
 		synchronized (tasks) {
 			// Ensure the runner is alive.
-			if (isRunnerAlive || isRunnerStarting) {
+			if (isEnabled && (isRunnerAlive || isRunnerStarting)) {
 				// Queue the task.
 				tasks.add(task);
 
@@ -483,7 +497,7 @@ public class ScalpelExecutor {
 					final Task task = tasks.poll();
 
 					// Ensure a task was polled or poll again.
-					if (task == null) {
+					if (!isEnabled || task == null) {
 						// Release the lock and wait for new tasks.
 						tasks.wait(1000);
 						continue;
