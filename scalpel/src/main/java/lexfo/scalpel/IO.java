@@ -6,6 +6,7 @@ import com.google.common.base.Supplier;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 public class IO {
 
@@ -14,26 +15,37 @@ public class IO {
 	private static final ObjectWriter writer = mapper.writerWithDefaultPrettyPrinter();
 
 	@FunctionalInterface
-	public static interface IOCallable<T> {
-		T call() throws IOException, InterruptedException;
+	public static interface IOSupplier<T> {
+		T call() throws IOException, InterruptedException, ExecutionException;
+	}
+
+	@FunctionalInterface
+	public static interface IORunnable {
+		void run() throws IOException, InterruptedException, ExecutionException;
 	}
 
 	// Wrapper to catch IOExceptions and rethrow them as RuntimeExceptions
-	public static final <T> T ioWrap(IOCallable<T> supplier) {
+	public static final <T> T ioWrap(IOSupplier<T> supplier) {
 		try {
 			return supplier.call();
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException | InterruptedException | ExecutionException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
+	public static final void run(IORunnable supplier) {
+		try {
+			supplier.run();
+		} catch (IOException | InterruptedException | ExecutionException e) {}
+	}
+
 	public static final <T> T ioWrap(
-		IOCallable<T> supplier,
+		IOSupplier<T> supplier,
 		Supplier<T> defaultSupplier
 	) {
 		try {
 			return supplier.call();
-		} catch (IOException | InterruptedException e) {
+		} catch (IOException | InterruptedException | ExecutionException e) {
 			return defaultSupplier.get();
 		}
 	}

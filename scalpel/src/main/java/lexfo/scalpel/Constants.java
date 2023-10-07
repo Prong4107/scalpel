@@ -1,5 +1,6 @@
 package lexfo.scalpel;
 
+import com.google.common.collect.ImmutableSet;
 import com.jediterm.terminal.ui.UIUtil;
 
 /**
@@ -42,6 +43,13 @@ public class Constants {
 
 	public static final String RES_CB_NAME = "response";
 
+	public static final ImmutableSet<String> VALID_HOOK_PREFIXES = ImmutableSet.of(
+		REQ_EDIT_PREFIX,
+		RES_EDIT_PREFIX,
+		REQ_CB_NAME,
+		RES_CB_NAME
+	);
+
 	/**
     	Callback prefix for response intercepters.
 	*/
@@ -78,7 +86,7 @@ public class Constants {
 	// TODO: use a requirements.txt
 	/**
 	 * Required python packages
-	 * 
+	 *
 	 * Note: 99% of this dependencies come from mitmproxy.
 	 */
 	public static final String[] PYTHON_DEPENDENCIES = new String[] {

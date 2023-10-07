@@ -161,7 +161,11 @@ public class ScalpelExecutor {
 			synchronized (this) {
 				// Ensure we return only when result has been set
 				// (apparently wait() might return even if notify hasn't been called for some weird software and hardware issues)
-				while (isEnabled && !isFinished()) {
+				while (
+					isEnabled &&
+					(isRunnerAlive || isRunnerStarting) &&
+					!isFinished()
+				) {
 					// Wrap the wait in try/catch to handle InterruptedException.
 					try {
 						// Wait for the object to be notified.
@@ -194,6 +198,16 @@ public class ScalpelExecutor {
 
 		public synchronized void then(Consumer<Object> callback) {
 			Async.run(() -> this.await().ifPresent(callback));
+		}
+
+		public synchronized void resolve(Object result) {
+			this.result = Optional.of(result);
+			this.finished = true;
+		}
+
+		public synchronized void reject() {
+			this.result = Optional.empty();
+			this.finished = true;
 		}
 	}
 
@@ -325,8 +339,7 @@ public class ScalpelExecutor {
 				tasks.notifyAll();
 			} else if (rejectOnReload) {
 				// The runner is dead, reject this task to avoid blocking Burp when awaiting.
-				task.result = Optional.empty();
-				task.finished = true;
+				task.reject();
 			}
 		}
 
@@ -470,91 +483,138 @@ public class ScalpelExecutor {
 		}
 	}
 
+	private synchronized void rejectAllTasks() {
+		synchronized (tasks) {
+			while (true) {
+				// Use polling and not foreach + clear to avoid race conditions (tasks being cleared but not rejected)
+				final Task task = tasks.poll();
+				if (task == null) {
+					break;
+				}
+				task.reject();
+			}
+		}
+	}
+
+	private void processTask(final SubInterpreter interp, final Task task) {
+		ScalpelLogger.trace("Processing task: " + task.name);
+		try {
+			// Invoke Python function and get the returned value.
+			final Object pythonResult = interp.invoke(
+				task.name,
+				task.args,
+				task.kwargs
+			);
+
+			ScalpelLogger.trace("Executed task: " + task.name);
+
+			if (pythonResult != null) {
+				task.resolve(pythonResult);
+			}
+		} catch (Exception e) {
+			task.reject();
+
+			if (!e.getMessage().contains("Unable to find object")) {
+				ScalpelLogger.error("Error in task loop:");
+				ScalpelLogger.logStackTrace(e);
+			}
+		}
+
+		ScalpelLogger.trace("Processed task");
+
+		// Log the result value.
+		ScalpelLogger.trace(String.valueOf(task.result.orElse("<empty>")));
+	}
+
+	private void _innerTaskLoop(final SubInterpreter interp)
+		throws InterruptedException {
+		while (true) {
+			// Relaunch interpreter when files have changed (hot reload).
+			if (mustReload()) {
+				ScalpelLogger.info(
+					"Config or Python files have changed, reloading interpreter..."
+				);
+				break;
+			}
+
+			synchronized (tasks) {
+				ScalpelLogger.trace("Runner waiting for notifications.");
+
+				if (!isEnabled) {
+					tasks.wait(1000);
+					continue;
+				}
+
+				// Extract the oldest pending task from the queue.
+				final Task task = tasks.poll();
+
+				// Ensure a task was polled or poll again.
+				if (task == null) {
+					// Release the lock and wait for new tasks.
+					tasks.wait(1000);
+					continue;
+				}
+
+				if (task.isFinished()) {
+					// if for some reason a task is already finished, just remove it from the list.
+					continue;
+				}
+
+				processTask(interp, task);
+
+				synchronized (task) {
+					// Wake threads awaiting the task.
+					task.notifyAll();
+					ScalpelLogger.trace("Notified " + task.name);
+				}
+
+				// Sleep the thread while there isn't any new tasks
+				tasks.wait(1000);
+			}
+		}
+	}
+
 	// WARN: Declaring this method as synchronized cause deadlocks.
 	private void taskLoop() {
 		ScalpelLogger.info("Starting task loop.");
 
 		isRunnerStarting = true;
+
+		SubInterpreter interp;
 		try {
-			// Instantiate the interpreter.
-			final SubInterpreter interp = initInterpreter();
+			interp = initInterpreter();
+		} catch (Exception e) {
+			interp = null;
+			ScalpelLogger.logStackTrace("Failed to init interpreter", e);
+		}
+
+		if (interp != null) {
 			isRunnerAlive = true;
 			isRunnerStarting = false;
 
-			while (true) {
-				// Relaunch interpreter when files have changed (hot reload).
-				if (mustReload()) {
-					ScalpelLogger.info(
-						"Config or Python files have changed, reloading interpreter..."
-					);
-					break;
-				}
-
-				synchronized (tasks) {
-					ScalpelLogger.trace("Runner waiting for notifications.");
-
-					// Extract the oldest pending task from the queue.
-					final Task task = tasks.poll();
-
-					// Ensure a task was polled or poll again.
-					if (!isEnabled || task == null) {
-						// Release the lock and wait for new tasks.
-						tasks.wait(1000);
-						continue;
-					}
-
-					ScalpelLogger.trace("Processing task: " + task.name);
-					try {
-						// Invoke Python function and get the returned value.
-						final Object pythonResult = interp.invoke(
-							task.name,
-							task.args,
-							task.kwargs
-						);
-
-						ScalpelLogger.trace("Executed task: " + task.name);
-
-						if (pythonResult != null) {
-							task.result = Optional.of(pythonResult);
-						}
-					} catch (Exception e) {
-						task.result = Optional.empty();
-
-						if (!e.getMessage().contains("Unable to find object")) {
-							ScalpelLogger.error("Error in task loop:");
-							ScalpelLogger.logStackTrace(e);
-						}
-					}
-
-					ScalpelLogger.trace("Processed task");
-
-					// Log the result value.
-					ScalpelLogger.trace(
-						String.valueOf(task.result.orElse("<empty>"))
-					);
-
-					task.finished = true;
-
-					synchronized (task) {
-						// Wake threads awaiting the task.
-						task.notifyAll();
-
-						ScalpelLogger.trace("Notified " + task.name);
-					}
-
-					// Sleep the thread while there isn't any new tasks
-					tasks.wait(1000);
+			try {
+				_innerTaskLoop(interp);
+			} catch (Exception e) {
+				// The task loop has crashed, log the stack trace.
+				ScalpelLogger.logStackTrace(e);
+			}
+			// Log the error.
+			ScalpelLogger.log("Task loop has crashed");
+		} else {
+			isRunnerAlive = false;
+			isRunnerStarting = false;
+			// The script couldn't be loaded, wait for it to change
+			this.resetChangeIndicators();
+			while (!mustReload()) {
+				rejectAllTasks();
+				synchronized (this) {
+					IO.run(() -> wait(1000));
 				}
 			}
-		} catch (Exception e) {
-			// The task loop has crashed, log the stack trace.
-			ScalpelLogger.logStackTrace(e);
 		}
-		// Log the error.
-		ScalpelLogger.log("Task loop has crashed");
 
 		isRunnerAlive = false;
-		isRunnerStarting = false;
+		isRunnerStarting = true;
 
 		this.resetChangeIndicators();
 
@@ -608,6 +668,7 @@ public class ScalpelExecutor {
 	 *
 	 * @return the initialized interpreter.
 	 */
+	@SuppressWarnings({ "unchecked" })
 	private SubInterpreter initInterpreter() {
 		try {
 			return framework
@@ -655,6 +716,31 @@ public class ScalpelExecutor {
 
 					// Run the framework (wraps the user script)
 					interp.runScript(framework.getAbsolutePath());
+
+					// Check if get_callables can be called
+					final List<HashMap<String, Object>> res = (List<HashMap<String, Object>>) interp.invoke(
+						Constants.GET_CB_NAME
+					);
+
+					if (res == null) {
+						throw new RuntimeException(
+							"Failed to call get_callables"
+						);
+					}
+
+					// Don't run the event loop when no hooks are implemented
+					final Boolean hasValidHooks = res
+						.stream()
+						.map(m -> (String) m.get("name"))
+						.anyMatch(c ->
+							Constants.VALID_HOOK_PREFIXES
+								.stream()
+								.anyMatch(p -> c.startsWith(p))
+						);
+
+					if (!hasValidHooks) {
+						throw new RuntimeException("No hooks were found.");
+					}
 
 					// Return the initialized interpreter.
 					return interp;
