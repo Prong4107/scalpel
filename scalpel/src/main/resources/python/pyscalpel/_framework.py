@@ -287,7 +287,7 @@ try:
         py_req = Request.from_burp(req, service)
 
         flow = Flow(py_req.scheme, py_req.host, py_req.port, py_req)
-        if not call_match_callback(flow, "response"):
+        if not call_match_callback(flow, "request"):
             return None
 
         # Call the user callback
@@ -335,7 +335,7 @@ try:
         logger.trace(f"Python: _req_edit_in -> {callback_suffix}")
         callback = callable_objs.get("req_edit_in" + callback_suffix)
         if callback is None:
-            return
+            return None
 
         py_req = Request.from_burp(req, service)
 
@@ -368,7 +368,7 @@ try:
         logger.trace(f"Python: _req_edit_out -> {callback_suffix}")
         callback = callable_objs.get("req_edit_out" + callback_suffix)
         if callback is None:
-            return
+            return None
 
         py_req = Request.from_burp(req, service)
 
@@ -400,7 +400,7 @@ try:
         logger.trace(f"Python: _res_edit_in -> {callback_suffix}")
         callback = callable_objs.get("res_edit_in" + callback_suffix)
         if callback is None:
-            return
+            return None
 
         py_res = Response.from_burp(res, service=service, request=request)
 
@@ -434,7 +434,7 @@ try:
         logger.trace(f"Python: _res_edit_out -> {callback_suffix}")
         callback = callable_objs.get("res_edit_out" + callback_suffix)
         if callback is None:
-            return
+            return None
 
         py_res = Response.from_burp(res, service=service, request=req)
 
