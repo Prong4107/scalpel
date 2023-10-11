@@ -128,11 +128,13 @@ try:
 
     # debugpy.listen(("localhost", 5678))
 
-    # Import the globals module to set the logger
+    # Import the globals module to set the ctx
     import pyscalpel._globals
+    import pyscalpel
 
     # Set the logger in the globals module
     pyscalpel._globals.ctx = ctx  # pylint: disable=protected-access
+    pyscalpel.ctx = ctx
 
     # Get the user script path from the JEP initialized variable
     user_script: str = ctx["user_script"]
