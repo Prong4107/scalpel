@@ -1,0 +1,72 @@
+stages:
+    - prepare
+    - build
+    - test
+    - update_docs
+
+variables:
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+prepare_python_env:
+    stage: prepare
+    image: python:3.10
+    script:
+        - python3 -m venv .venv
+        - source .venv/bin/activate
+        - pip install -r docs/requirements.txt
+    artifacts:
+        paths:
+            - .venv/
+
+build_scalpel:
+    stage: build
+    image: gradle:7.2-jdk17
+    script:
+        - gradle build
+    artifacts:
+        paths:
+            - build/libs/*.jar
+
+build_javadoc:
+    stage: build
+    image: gradle:7.2-jdk17
+    script:
+        - gradle javadoc
+    artifacts:
+        paths:
+            - build/docs/javadoc/
+
+build_docs:
+    stage: build
+    dependencies:
+        - prepare_python_env
+    image: python:3.10
+    script:
+        - apt-get update -y
+        - apt-get install -y hugo
+        - source .venv/bin/activate
+        - cd docs && ./build.py --no-javadoc # javadoc required jdk so it is built with another image
+    artifacts:
+        paths:
+            - docs/public/
+
+run_tests:
+    stage: test
+    dependencies:
+        - prepare_python_env
+    image: python:3.10
+    script:
+        - source .venv/bin/activate
+        - sh run_tests.sh
+
+update_docs:
+    stage: update_docs
+    only:
+        - main # only update docs for changes on the main branch
+    script:
+        - git config --global user.email "ci@fakedomain.com"
+        - git config --global user.name "GitLab CI"
+        - git remote set-url origin "${CI_REPOSITORY_URL}" # Set this in gitlab CI/CD config
+        - git add docs/public/
+        - git commit -m docs":Update generated docs [skip ci]" || echo "No changes to commit"
+        - git push origin main

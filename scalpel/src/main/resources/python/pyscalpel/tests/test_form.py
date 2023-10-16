@@ -216,9 +216,9 @@ class URLEncodedFormSerializerTestCase(unittest.TestCase):
             ("key3", "value3"),
         )
         expected_fields = [
-            ("key1", "value1"),
-            ("key2", "value2"),
-            ("key3", "value3"),
+            (b"key1", b"value1"),
+            (b"key2", b"value2"),
+            (b"key3", b"value3"),
         ]
         serializer = URLEncodedFormSerializer()
         imported_form = serializer.import_form(exported_form)  # type: ignore
@@ -241,6 +241,22 @@ class URLEncodedFormSerializerTestCase(unittest.TestCase):
         serialized = serializer.serialize(form)
         expected = b"secret=MySecretKey&encrypted=%2BZSV6BfZwcr7c6m3fZTHyg%3D%3D"
         self.assertEqual(expected, serialized)
+
+    def test_setitem_with_string_key(self):
+        form = URLEncodedForm([(b"key1", b"value1")])
+        form["key2"] = "value2"
+        self.assertEqual(form[b"key2"], b"value2")
+
+    def test_getitem_with_string_key(self):
+        form = URLEncodedForm([(b"key1", b"value1"), (b"key2", b"value2")])
+        result = form["key1"]
+        self.assertEqual(result, b"value1")
+
+    def test_set_and_get_with_string_key(self):
+        form = URLEncodedForm([])
+        form["key1"] = "value1"
+        result = form["key1"]
+        self.assertEqual(result, b"value1")
 
 
 class JSONFormSerializerTestCase(unittest.TestCase):
@@ -850,10 +866,11 @@ nested\r
         form["file"].filename = expected
         self.assertEqual(expected, form["file"].filename)
 
-        with open("./README.md", encoding="utf-8") as file:
+        current_file_path = __file__  # Get the path of the currently running script
+        with open(current_file_path, encoding="utf-8") as file:
             form["file2"] = file
 
-        expected = "README.md"
+        expected = os.path.basename(current_file_path)  # Extract the file name
         self.assertEqual(expected, form["file2"].filename)
 
 
