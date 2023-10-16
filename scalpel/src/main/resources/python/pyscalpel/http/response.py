@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import time
 from typing import Literal, cast
-from functools import lru_cache
 from mitmproxy.http import (
     Response as MITMProxyResponse,
 )
@@ -123,7 +122,6 @@ class Response(MITMProxyResponse):
 
         return scalpel_response
 
-    @lru_cache
     def __bytes__(self) -> bytes:
         """Convert the response to raw bytes."""
         # Reserialize the response to bytes.
@@ -148,7 +146,6 @@ class Response(MITMProxyResponse):
         # Build the whole response and return it.
         return first_line + headers_lines + b"\r\n" + body
 
-    @lru_cache
     def to_burp(self) -> IHttpResponse:
         """Convert the response to a Burp suite :class:`IHttpResponse`."""
         response_byte_array: IByteArray = PythonUtils.toByteArray(bytes(self))

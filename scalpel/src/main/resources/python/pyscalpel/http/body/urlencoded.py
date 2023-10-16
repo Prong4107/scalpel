@@ -1,6 +1,6 @@
 from __future__ import annotations
 from urllib.parse import quote_from_bytes as quote, parse_qsl
-from typing import Sequence, Any
+from typing import Sequence, Any, Iterable
 
 import sys
 import qs
@@ -23,11 +23,23 @@ class URLEncodedFormView(multidict.MultiDictView[str, str]):
 
 
 class URLEncodedForm(multidict.MultiDict[bytes, bytes]):
-    def __init__(self, fields: Sequence[tuple[str | bytes, str | bytes]]) -> None:
-        super().__init__(fields)
+    def __init__(self, fields: Iterable[tuple[str | bytes, str | bytes]]) -> None:
+        fields_converted_to_bytes: Iterable[tuple[bytes, bytes]] = (
+            (
+                (
+                    always_bytes(key),
+                    always_bytes(val),
+                )
+            )
+            for (key, val) in fields
+        )
+        super().__init__(fields_converted_to_bytes)
 
     def __setitem__(self, key: int | str | bytes, value: int | str | bytes) -> None:
         super().__setitem__(always_bytes(key), always_bytes(value))
+
+    def __getitem__(self, key: int | bytes | str) -> bytes:
+        return super().__getitem__(always_bytes(key))
 
 
 def convert_for_urlencode(val: str | float | bool | bytes | int) -> str | bytes:
@@ -60,7 +72,7 @@ class URLEncodedFormSerializer(FormSerializer):
             # (I may be wrong)
             decoded = body.decode("latin-1")
             parsed = parse_qsl(decoded, keep_blank_values=True)
-            fields = tuple(
+            fields = (
                 (
                     key.encode("latin-1"),
                     val.encode("latin-1"),

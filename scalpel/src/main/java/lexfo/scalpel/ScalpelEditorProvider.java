@@ -10,6 +10,7 @@ import java.lang.ref.WeakReference;
 import java.util.LinkedList;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import javax.swing.SwingUtilities;
 
 /**
   Provides a new ScalpelProvidedEditor object for editing HTTP requests or responses.
@@ -108,11 +109,14 @@ public class ScalpelEditorProvider
 				.filter(weakRef -> weakRef.get() != null)
 				.collect(Collectors.toCollection(LinkedList::new));
 
-		this.editorsRefs.parallelStream()
-			.map(WeakReference::get)
-			.forEach(ScalpelEditorTabbedPane::recreateEditorsAsync);
+		SwingUtilities.invokeLater(() -> {
+			this.editorsRefs.parallelStream()
+				.map(WeakReference::get)
+				.map(ScalpelEditorTabbedPane::recreateEditorsAsync)
+				.forEach(f -> f.join());
 
-		ScalpelLogger.debug("Editors reset.");
+			ScalpelLogger.debug("Editors reset.");
+		});
 	}
 
 	public CompletableFuture<Void> resetEditorsAsync() {

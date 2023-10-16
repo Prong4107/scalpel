@@ -510,6 +510,8 @@ public class ScalpelExecutor {
 
 			if (pythonResult != null) {
 				task.resolve(pythonResult);
+			} else {
+				task.reject();
 			}
 		} catch (Exception e) {
 			task.reject();
