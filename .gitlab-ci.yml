@@ -1,0 +1,33 @@
+stages:
+    - build
+    - test
+
+variables:
+    GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+build_scalpel:
+    stage: build
+    image: gradle:7.2-jdk17
+    script:
+        - gradle build
+    artifacts:
+        paths:
+            - build/libs/*.jar
+
+build_docs:
+    stage: build
+    image: python:3.10
+    script:
+        - python3 -m venv .venv
+        - source .venv/bin/activate
+        - pip install -r docs/requirements.txt
+        - cd docs && ./build.py
+    artifacts:
+        paths:
+            - docs/public/
+
+run_tests:
+    stage: test
+    image: python:3.10
+    script:
+        - sh run_tests.sh # Directly run the bash script using sh
