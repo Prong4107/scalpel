@@ -61,10 +61,10 @@ run_tests:
 
 update_docs:
     stage: update_docs
-    image: alpine/git
     only:
         - main # only update docs for changes on the main branch
     script:
+        - apt install git -yqq
         - git config --global user.email "ci@fakegitlab.com"
         - echo git config --global user.email "ci@fakegitlab.com"
         - git config --global user.name "GitLab CI"
