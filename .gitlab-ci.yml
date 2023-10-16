@@ -44,7 +44,7 @@ build_docs:
         - apt-get update -y
         - apt-get install -y hugo
         - source .venv/bin/activate
-        - cd docs && ./build.py --no-javadoc && hugo # Disable Javadoc here
+        - cd docs && ./build.py --no-javadoc # javadoc required jdk so it is built with another image
     artifacts:
         paths:
             - docs/public/
