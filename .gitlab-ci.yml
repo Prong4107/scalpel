@@ -62,19 +62,15 @@ run_tests:
 update_docs:
     stage: update_docs
     only:
-        - main # only update docs for changes on the main branch
+        - main
     image: debian
     script:
         - apt-get update && apt-get install git -yqq
         - git config --global user.email "ci@fakegitlab.com"
-        - echo git config --global user.email "ci@fakegitlab.com"
         - git config --global user.name "GitLab CI"
-        - echo git config --global user.name "GitLab CI"
         - git remote set-url origin "${CI_REPOSITORY_URL}"
-        - echo git remote set-url origin "${CI_REPOSITORY_URL}"
+        - git fetch origin main:main # Fetch main branch
+        - git checkout main # Switch to main branch
         - git add docs/public/
-        - echo git add docs/public/
-        - git commit -m docs":Update generated docs [skip ci]" || echo "No changes to commit"
-        - echo git commit -m docs":Update generated docs [skip ci]" || echo "No changes to commit"
+        - git commit -m "docs: Update generated docs [skip ci]" || echo "No changes to commit"
         - git push origin main
-        - echo git push origin main
