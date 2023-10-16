@@ -72,5 +72,5 @@ update_docs:
         - git fetch origin main:main # Fetch main branch
         - git checkout main # Switch to main branch
         - git add docs/public/
-        - git commit -m "docs: Update generated docs [skip ci]" || echo "No changes to commit"
+        - git commit -m docs:" Update generated docs [skip ci]" || echo "No changes to commit"
         - git push origin main
