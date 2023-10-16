@@ -1,9 +1,23 @@
 stages:
+    - prepare
     - build
     - test
 
 variables:
     GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip"
+
+cache:
+    paths:
+        - .pip/
+
+prepare_python_env:
+    stage: prepare
+    image: python:3.10
+    script:
+        - python3 -m venv .venv
+        - source .venv/bin/activate
+        - pip install -r requirements.txt # Assuming the requirements are in the root
 
 build_scalpel:
     stage: build
@@ -18,10 +32,10 @@ build_docs:
     stage: build
     image: python:3.10
     script:
-        - python3 -m venv .venv
+        - apt-get update -y
+        - apt-get install -y hugo
         - source .venv/bin/activate
-        - pip install -r docs/requirements.txt
-        - cd docs && ./build.py
+        - cd docs && ./build.py && hugo
     artifacts:
         paths:
             - docs/public/
@@ -30,4 +44,5 @@ run_tests:
     stage: test
     image: python:3.10
     script:
-        - sh run_tests.sh # Directly run the bash script using sh
+        - source .venv/bin/activate
+        - sh run_tests.sh
