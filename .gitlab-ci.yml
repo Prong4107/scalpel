@@ -2,6 +2,7 @@ stages:
     - prepare
     - build
     - test
+    - update_docs
 
 variables:
     GRADLE_OPTS: "-Dorg.gradle.daemon=false"
