@@ -12,7 +12,7 @@ prepare_python_env:
     script:
         - python3 -m venv .venv
         - source .venv/bin/activate
-        - pip install -r docs/requirements.txt # Install from docs/
+        - pip install -r docs/requirements.txt
     artifacts:
         paths:
             - .venv/
@@ -26,6 +26,15 @@ build_scalpel:
         paths:
             - build/libs/*.jar
 
+build_javadoc:
+    stage: build
+    image: gradle:7.2-jdk17
+    script:
+        - gradle javadoc
+    artifacts:
+        paths:
+            - build/docs/javadoc/
+
 build_docs:
     stage: build
     dependencies:
@@ -35,7 +44,7 @@ build_docs:
         - apt-get update -y
         - apt-get install -y hugo
         - source .venv/bin/activate
-        - cd docs && ./build.py && hugo
+        - cd docs && ./build.py --no-javadoc && hugo # Disable Javadoc here
     artifacts:
         paths:
             - docs/public/
