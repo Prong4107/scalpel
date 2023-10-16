@@ -63,8 +63,9 @@ update_docs:
     stage: update_docs
     only:
         - main # only update docs for changes on the main branch
+    image: debian
     script:
-        - apt install git -yqq
+        - apt-get install git -yqq
         - git config --global user.email "ci@fakegitlab.com"
         - echo git config --global user.email "ci@fakegitlab.com"
         - git config --global user.name "GitLab CI"
