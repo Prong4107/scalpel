@@ -17,7 +17,7 @@ prepare_python_env:
     script:
         - python3 -m venv .venv
         - source .venv/bin/activate
-        - pip install -r requirements.txt # Assuming the requirements are in the root
+        - pip install -r docs/requirements.txt # Install from docs/
 
 build_scalpel:
     stage: build
