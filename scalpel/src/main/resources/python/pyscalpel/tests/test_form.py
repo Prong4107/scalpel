@@ -866,10 +866,11 @@ nested\r
         form["file"].filename = expected
         self.assertEqual(expected, form["file"].filename)
 
-        with open("./README.md", encoding="utf-8") as file:
+        current_file_path = __file__  # Get the path of the currently running script
+        with open(current_file_path, encoding="utf-8") as file:
             form["file2"] = file
 
-        expected = "README.md"
+        expected = os.path.basename(current_file_path)  # Extract the file name
         self.assertEqual(expected, form["file2"].filename)
 
 
