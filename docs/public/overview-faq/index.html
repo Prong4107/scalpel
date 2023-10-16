@@ -15,7 +15,7 @@
 
     
 
-    <meta name="generator" content="Hugo 0.92.2" />
+    <meta name="generator" content="Hugo 0.111.3">
 </head>
 <body>
 
@@ -239,16 +239,16 @@
 <ul>
 <li>
 <p>Alternatively, you can use the following <code>settings.json</code>:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-JSON" data-lang="JSON"><span class="p">{</span>
-    <span class="nt">&#34;terminal.integrated.env.linux&#34;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="nt">&#34;PYTHONPATH&#34;</span><span class="p">:</span> <span class="s2">&#34;${env:HOME}/.scalpel/extracted/python:${env:PYTHONPATH}&#34;</span><span class="p">,</span>
-        <span class="nt">&#34;PATH&#34;</span><span class="p">:</span> <span class="s2">&#34;${env:HOME}/.scalpel/extracted/python:${env:PATH}&#34;</span>
-    <span class="p">},</span>
-
-    <span class="c1">// &#39;~&#39; or ${env:HOME} is not supported by this setting, it must be replaced manually.
-</span><span class="c1"></span>    <span class="nt">&#34;python.analysis.extraPaths&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;&lt;REPLACE_WITH_ABSOLUTE_HOME_PATH&gt;/.extracted/python&#34;</span><span class="p">]</span>
-<span class="p">}</span>
-</code></pre></div></li>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-JSON" data-lang="JSON"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nt">&#34;terminal.integrated.env.linux&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&#34;PYTHONPATH&#34;</span><span class="p">:</span> <span class="s2">&#34;${env:HOME}/.scalpel/extracted/python:${env:PYTHONPATH}&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&#34;PATH&#34;</span><span class="p">:</span> <span class="s2">&#34;${env:HOME}/.scalpel/extracted/python:${env:PATH}&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">},</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// &#39;~&#39; or ${env:HOME} is not supported by this setting, it must be replaced manually.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nt">&#34;python.analysis.extraPaths&#34;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&#34;&lt;REPLACE_WITH_ABSOLUTE_HOME_PATH&gt;/.extracted/python&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div></li>
 </ul>
 </li>
 </ul>
@@ -264,14 +264,14 @@
 <ul>
 <li>Some users encouter this error when the python developpement libraries are missing:</li>
 </ul>
-<pre tabindex="0"><code>x86_64-linux-gnu-gcc -pthread -Wno-unused-result -Wsign-compare -DNDEBUG -g -fwrapv -O2 -Wall -g -fstack-protector-strong -Wformat -Werror=format-security -g -fwrapv -O2 -fPIC -DPACKAGE=jep -DUSE_DEALLOC=1 -DJEP_NUMPY_ENABLED=0 -DVERSION=\&quot;4.1.1\&quot; -DPYTHON_LDLIBRARY=\&quot;libpython3.10.so\&quot; -I/usr/lib/jvm/java-11-openjdk-amd64/include -I/usr/lib/jvm/java-11-openjdk-amd64/include/linux -Isrc/main/c/Include -Ibuild/include -I/home/&lt;user&gt;/.scalpel/venvs/default/.venv/include -I/usr/include/python3.10 -c src/main/c/Jep/convert_j2p.c -o build/temp.linux-x86_64-cpython-310/src/main/c/Jep/convert_j2p.o
+<pre tabindex="0"><code>x86_64-linux-gnu-gcc -pthread -Wno-unused-result -Wsign-compare -DNDEBUG -g -fwrapv -O2 -Wall -g -fstack-protector-strong -Wformat -Werror=format-security -g -fwrapv -O2 -fPIC -DPACKAGE=jep -DUSE_DEALLOC=1 -DJEP_NUMPY_ENABLED=0 -DVERSION=\&#34;4.1.1\&#34; -DPYTHON_LDLIBRARY=\&#34;libpython3.10.so\&#34; -I/usr/lib/jvm/java-11-openjdk-amd64/include -I/usr/lib/jvm/java-11-openjdk-amd64/include/linux -Isrc/main/c/Include -Ibuild/include -I/home/&lt;user&gt;/.scalpel/venvs/default/.venv/include -I/usr/include/python3.10 -c src/main/c/Jep/convert_j2p.c -o build/temp.linux-x86_64-cpython-310/src/main/c/Jep/convert_j2p.o
       In file included from src/main/c/Include/Jep.h:35,
                        from src/main/c/Jep/convert_j2p.c:28:
       src/main/c/Include/jep_platform.h:35:10: fatal error: Python.h: Aucun fichier ou dossier de ce type
          35 | #include &lt;Python.h&gt;
             |          ^~~~~~~~~~
       compilation terminated.
-      error: command '/usr/bin/x86_64-linux-gnu-gcc' failed with exit code 1
+      error: command &#39;/usr/bin/x86_64-linux-gnu-gcc&#39; failed with exit code 1
       [end of output]
 </code></pre><ul>
 <li>Make sure you installed the python3-dev libraries for your python version

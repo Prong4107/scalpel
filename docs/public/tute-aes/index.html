@@ -15,7 +15,7 @@
 
     
 
-    <meta name="generator" content="Hugo 0.92.2" />
+    <meta name="generator" content="Hugo 0.111.3">
 </head>
 <body>
 
@@ -217,65 +217,65 @@
 </ol>
 <h2 id="1-take-a-look-at-the-target"><a class="anchor" href="#1-take-a-look-at-the-target">#&nbsp;&nbsp;</a>1. Take a look at the target</h2>
 <p>Take the time to get familiar with the API code:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ts" data-lang="ts"><span class="kr">const</span> <span class="p">{</span> <span class="nx">urlencoded</span> <span class="p">}</span> <span class="o">=</span> <span class="kr">require</span><span class="p">(</span><span class="s2">&#34;express&#34;</span><span class="p">);</span>
-
-<span class="kr">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="kr">require</span><span class="p">(</span><span class="s2">&#34;express&#34;</span><span class="p">)();</span>
-
-<span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">urlencoded</span><span class="p">({</span> <span class="nx">extended</span>: <span class="kt">true</span> <span class="p">}));</span>
-
-<span class="kr">const</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="kr">require</span><span class="p">(</span><span class="s2">&#34;crypto&#34;</span><span class="p">);</span>
-
-<span class="kr">const</span> <span class="nx">derive</span> <span class="o">=</span> <span class="p">(</span><span class="nx">secret</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-	<span class="kr">const</span> <span class="nx">hasher</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">createHash</span><span class="p">(</span><span class="s2">&#34;sha256&#34;</span><span class="p">);</span>
-	<span class="nx">hasher</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">secret</span><span class="p">);</span>
-	<span class="kr">const</span> <span class="nx">derived_aes_key</span> <span class="o">=</span> <span class="nx">hasher</span><span class="p">.</span><span class="nx">digest</span><span class="p">().</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">32</span><span class="p">);</span>
-	<span class="k">return</span> <span class="nx">derived_aes_key</span><span class="p">;</span>
-<span class="p">};</span>
-
-<span class="kr">const</span> <span class="nx">get_cipher_decrypt</span> <span class="o">=</span> <span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">iv</span> <span class="o">=</span> <span class="nx">Buffer</span><span class="p">.</span><span class="nx">alloc</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">=&gt;</span> <span class="p">{</span>
-	<span class="kr">const</span> <span class="nx">derived_aes_key</span> <span class="o">=</span> <span class="nx">derive</span><span class="p">(</span><span class="nx">secret</span><span class="p">);</span>
-	<span class="kr">const</span> <span class="nx">cipher</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">createDecipheriv</span><span class="p">(</span><span class="s2">&#34;aes-256-cbc&#34;</span><span class="p">,</span> <span class="nx">derived_aes_key</span><span class="p">,</span> <span class="nx">iv</span><span class="p">);</span>
-	<span class="k">return</span> <span class="nx">cipher</span><span class="p">;</span>
-<span class="p">};</span>
-
-<span class="kr">const</span> <span class="nx">get_cipher_encrypt</span> <span class="o">=</span> <span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">iv</span> <span class="o">=</span> <span class="nx">Buffer</span><span class="p">.</span><span class="nx">alloc</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">=&gt;</span> <span class="p">{</span>
-	<span class="kr">const</span> <span class="nx">derived_aes_key</span> <span class="o">=</span> <span class="nx">derive</span><span class="p">(</span><span class="nx">secret</span><span class="p">);</span>
-	<span class="kr">const</span> <span class="nx">cipher</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">createCipheriv</span><span class="p">(</span><span class="s2">&#34;aes-256-cbc&#34;</span><span class="p">,</span> <span class="nx">derived_aes_key</span><span class="p">,</span> <span class="nx">iv</span><span class="p">);</span>
-	<span class="k">return</span> <span class="nx">cipher</span><span class="p">;</span>
-<span class="p">};</span>
-
-<span class="kr">const</span> <span class="nx">decrypt</span> <span class="o">=</span> <span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-	<span class="kr">const</span> <span class="nx">decipher</span> <span class="o">=</span> <span class="nx">get_cipher_decrypt</span><span class="p">(</span><span class="nx">secret</span><span class="p">);</span>
-	<span class="kd">let</span> <span class="nx">decrypted</span> <span class="o">=</span> <span class="nx">decipher</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="s2">&#34;base64&#34;</span><span class="p">,</span> <span class="s2">&#34;utf8&#34;</span><span class="p">);</span>
-	<span class="nx">decrypted</span> <span class="o">+=</span> <span class="nx">decipher</span><span class="p">.</span><span class="nx">final</span><span class="p">(</span><span class="s2">&#34;utf8&#34;</span><span class="p">);</span>
-	<span class="k">return</span> <span class="nx">decrypted</span><span class="p">;</span>
-<span class="p">};</span>
-
-<span class="kr">const</span> <span class="nx">encrypt</span> <span class="o">=</span> <span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-	<span class="kr">const</span> <span class="nx">cipher</span> <span class="o">=</span> <span class="nx">get_cipher_encrypt</span><span class="p">(</span><span class="nx">secret</span><span class="p">);</span>
-	<span class="kd">let</span> <span class="nx">encrypted</span> <span class="o">=</span> <span class="nx">cipher</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="s2">&#34;utf8&#34;</span><span class="p">,</span> <span class="s2">&#34;base64&#34;</span><span class="p">);</span>
-	<span class="nx">encrypted</span> <span class="o">+=</span> <span class="nx">cipher</span><span class="p">.</span><span class="nx">final</span><span class="p">(</span><span class="s2">&#34;base64&#34;</span><span class="p">);</span>
-	<span class="k">return</span> <span class="nx">encrypted</span><span class="p">;</span>
-<span class="p">};</span>
-
-<span class="nx">app</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s2">&#34;/encrypt&#34;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
-	<span class="kr">const</span> <span class="nx">secret</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="s2">&#34;secret&#34;</span><span class="p">];</span>
-	<span class="kr">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="s2">&#34;encrypted&#34;</span><span class="p">];</span>
-
-	<span class="k">if</span> <span class="p">(</span><span class="nx">data</span> <span class="o">===</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
-		<span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&#34;No content&#34;</span><span class="p">);</span>
-		<span class="k">return</span><span class="p">;</span>
-	<span class="p">}</span>
-
-	<span class="kr">const</span> <span class="nx">decrypted</span> <span class="o">=</span> <span class="nx">decrypt</span><span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
-	<span class="kr">const</span> <span class="nx">resContent</span> <span class="o">=</span> <span class="sb">`You have sent &#34;</span><span class="si">${</span><span class="nx">decrypted</span><span class="si">}</span><span class="sb">&#34; using secret &#34;</span><span class="si">${</span><span class="nx">secret</span><span class="si">}</span><span class="sb">&#34;`</span><span class="p">;</span>
-	<span class="kr">const</span> <span class="nx">encrypted</span> <span class="o">=</span> <span class="nx">encrypt</span><span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">resContent</span><span class="p">);</span>
-
-	<span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">encrypted</span><span class="p">);</span>
-<span class="p">});</span>
-
-<span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="mi">3000</span><span class="p">,</span> <span class="p">[</span><span class="s2">&#34;localhost&#34;</span><span class="p">]);</span>
-</code></pre></div><p>As shown above, every request content is encrypted using AES, using a secret passed alongside the content, that also encrypt the response.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-ts" data-lang="ts"><span class="line"><span class="cl"><span class="kr">const</span> <span class="p">{</span> <span class="nx">urlencoded</span> <span class="p">}</span> <span class="o">=</span> <span class="kr">require</span><span class="p">(</span><span class="s2">&#34;express&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">app</span> <span class="o">=</span> <span class="kr">require</span><span class="p">(</span><span class="s2">&#34;express&#34;</span><span class="p">)();</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nx">app</span><span class="p">.</span><span class="nx">use</span><span class="p">(</span><span class="nx">urlencoded</span><span class="p">({</span> <span class="nx">extended</span>: <span class="kt">true</span> <span class="p">}));</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">crypto</span> <span class="o">=</span> <span class="kr">require</span><span class="p">(</span><span class="s2">&#34;crypto&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">derive</span> <span class="o">=</span> <span class="p">(</span><span class="nx">secret</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kr">const</span> <span class="nx">hasher</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">createHash</span><span class="p">(</span><span class="s2">&#34;sha256&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">hasher</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">secret</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="kr">const</span> <span class="nx">derived_aes_key</span> <span class="o">=</span> <span class="nx">hasher</span><span class="p">.</span><span class="nx">digest</span><span class="p">().</span><span class="nx">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">32</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">derived_aes_key</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">get_cipher_decrypt</span> <span class="o">=</span> <span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">iv</span> <span class="o">=</span> <span class="nx">Buffer</span><span class="p">.</span><span class="nx">alloc</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kr">const</span> <span class="nx">derived_aes_key</span> <span class="o">=</span> <span class="nx">derive</span><span class="p">(</span><span class="nx">secret</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="kr">const</span> <span class="nx">cipher</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">createDecipheriv</span><span class="p">(</span><span class="s2">&#34;aes-256-cbc&#34;</span><span class="p">,</span> <span class="nx">derived_aes_key</span><span class="p">,</span> <span class="nx">iv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">cipher</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">get_cipher_encrypt</span> <span class="o">=</span> <span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">iv</span> <span class="o">=</span> <span class="nx">Buffer</span><span class="p">.</span><span class="nx">alloc</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kr">const</span> <span class="nx">derived_aes_key</span> <span class="o">=</span> <span class="nx">derive</span><span class="p">(</span><span class="nx">secret</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="kr">const</span> <span class="nx">cipher</span> <span class="o">=</span> <span class="nx">crypto</span><span class="p">.</span><span class="nx">createCipheriv</span><span class="p">(</span><span class="s2">&#34;aes-256-cbc&#34;</span><span class="p">,</span> <span class="nx">derived_aes_key</span><span class="p">,</span> <span class="nx">iv</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">cipher</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">decrypt</span> <span class="o">=</span> <span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kr">const</span> <span class="nx">decipher</span> <span class="o">=</span> <span class="nx">get_cipher_decrypt</span><span class="p">(</span><span class="nx">secret</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="kd">let</span> <span class="nx">decrypted</span> <span class="o">=</span> <span class="nx">decipher</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="s2">&#34;base64&#34;</span><span class="p">,</span> <span class="s2">&#34;utf8&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">decrypted</span> <span class="o">+=</span> <span class="nx">decipher</span><span class="p">.</span><span class="nx">final</span><span class="p">(</span><span class="s2">&#34;utf8&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">decrypted</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kr">const</span> <span class="nx">encrypt</span> <span class="o">=</span> <span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">data</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kr">const</span> <span class="nx">cipher</span> <span class="o">=</span> <span class="nx">get_cipher_encrypt</span><span class="p">(</span><span class="nx">secret</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="kd">let</span> <span class="nx">encrypted</span> <span class="o">=</span> <span class="nx">cipher</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">data</span><span class="p">,</span> <span class="s2">&#34;utf8&#34;</span><span class="p">,</span> <span class="s2">&#34;base64&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">encrypted</span> <span class="o">+=</span> <span class="nx">cipher</span><span class="p">.</span><span class="nx">final</span><span class="p">(</span><span class="s2">&#34;base64&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">encrypted</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nx">app</span><span class="p">.</span><span class="nx">post</span><span class="p">(</span><span class="s2">&#34;/encrypt&#34;</span><span class="p">,</span> <span class="p">(</span><span class="nx">req</span><span class="p">,</span> <span class="nx">res</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kr">const</span> <span class="nx">secret</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="s2">&#34;secret&#34;</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">	<span class="kr">const</span> <span class="nx">data</span> <span class="o">=</span> <span class="nx">req</span><span class="p">.</span><span class="nx">body</span><span class="p">[</span><span class="s2">&#34;encrypted&#34;</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">(</span><span class="nx">data</span> <span class="o">===</span> <span class="kc">undefined</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="s2">&#34;No content&#34;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kr">const</span> <span class="nx">decrypted</span> <span class="o">=</span> <span class="nx">decrypt</span><span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">data</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="kr">const</span> <span class="nx">resContent</span> <span class="o">=</span> <span class="sb">`You have sent &#34;</span><span class="si">${</span><span class="nx">decrypted</span><span class="si">}</span><span class="sb">&#34; using secret &#34;</span><span class="si">${</span><span class="nx">secret</span><span class="si">}</span><span class="sb">&#34;`</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kr">const</span> <span class="nx">encrypted</span> <span class="o">=</span> <span class="nx">encrypt</span><span class="p">(</span><span class="nx">secret</span><span class="p">,</span> <span class="nx">resContent</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">res</span><span class="p">.</span><span class="nx">send</span><span class="p">(</span><span class="nx">encrypted</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">});</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nx">app</span><span class="p">.</span><span class="nx">listen</span><span class="p">(</span><span class="mi">3000</span><span class="p">,</span> <span class="p">[</span><span class="s2">&#34;localhost&#34;</span><span class="p">]);</span>
+</span></span></code></pre></div><p>As shown above, every request content is encrypted using AES, using a secret passed alongside the content, that also encrypt the response.</p>
 <p>In vanilla Burp, editing the request would be very tedious (using <code>copy to file</code>). When faced against a case like this, users will either work with custom scripts outside of Burp, use tools like <a href="https://docs.mitmproxy.org/stable/">mitmproxy</a>, write their own Burp Java extension, or give up.</p>
 <p>Scalpel&rsquo;s main objective is to make working around such cases trivial.</p>
 <h2 id="2-reimplement-the-encryption--decryption"><a class="anchor" href="#2-reimplement-the-encryption--decryption">#&nbsp;&nbsp;</a>2. Reimplement the encryption / decryption</h2>
@@ -349,37 +349,37 @@
 </ol>
 <h2 id="4-implement-the-encryption-algorithm"><a class="anchor" href="#4-implement-the-encryption-algorithm">#&nbsp;&nbsp;</a>4. Implement the encryption algorithm</h2>
 <p>With <code>pycryptodome</code>, the encryption can be written in Python like this:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">Crypto.Cipher</span> <span class="kn">import</span> <span class="n">AES</span>
-<span class="kn">from</span> <span class="nn">Crypto.Hash</span> <span class="kn">import</span> <span class="n">SHA256</span>
-<span class="kn">from</span> <span class="nn">Crypto.Util.Padding</span> <span class="kn">import</span> <span class="n">pad</span><span class="p">,</span> <span class="n">unpad</span>
-<span class="kn">from</span> <span class="nn">base64</span> <span class="kn">import</span> <span class="n">b64encode</span><span class="p">,</span> <span class="n">b64decode</span>
-
-<span class="k">def</span> <span class="nf">get_cipher</span><span class="p">(</span><span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">iv</span><span class="o">=</span><span class="nb">bytes</span><span class="p">(</span><span class="mi">16</span><span class="p">)):</span>
-    <span class="n">hasher</span> <span class="o">=</span> <span class="n">SHA256</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
-    <span class="n">hasher</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">secret</span><span class="p">)</span>
-    <span class="n">derived_aes_key</span> <span class="o">=</span> <span class="n">hasher</span><span class="o">.</span><span class="n">digest</span><span class="p">()[:</span><span class="mi">32</span><span class="p">]</span>
-    <span class="n">cipher</span> <span class="o">=</span> <span class="n">AES</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">derived_aes_key</span><span class="p">,</span> <span class="n">AES</span><span class="o">.</span><span class="n">MODE_CBC</span><span class="p">,</span> <span class="n">iv</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">cipher</span>
-
-
-<span class="k">def</span> <span class="nf">decrypt</span><span class="p">(</span><span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">b64decode</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-    <span class="n">cipher</span> <span class="o">=</span> <span class="n">get_cipher</span><span class="p">(</span><span class="n">secret</span><span class="p">)</span>
-    <span class="n">decrypted</span> <span class="o">=</span> <span class="n">cipher</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">unpad</span><span class="p">(</span><span class="n">decrypted</span><span class="p">,</span> <span class="n">AES</span><span class="o">.</span><span class="n">block_size</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">encrypt</span><span class="p">(</span><span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-    <span class="n">cipher</span> <span class="o">=</span> <span class="n">get_cipher</span><span class="p">(</span><span class="n">secret</span><span class="p">)</span>
-    <span class="n">padded_data</span> <span class="o">=</span> <span class="n">pad</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">AES</span><span class="o">.</span><span class="n">block_size</span><span class="p">)</span>
-    <span class="n">encrypted</span> <span class="o">=</span> <span class="n">cipher</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">padded_data</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">b64encode</span><span class="p">(</span><span class="n">encrypted</span><span class="p">)</span>
-</code></pre></div><h2 id="5-create-custom-editors"><a class="anchor" href="#5-create-custom-editors">#&nbsp;&nbsp;</a>5. Create custom editors</h2>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">Crypto.Cipher</span> <span class="kn">import</span> <span class="n">AES</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">Crypto.Hash</span> <span class="kn">import</span> <span class="n">SHA256</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">Crypto.Util.Padding</span> <span class="kn">import</span> <span class="n">pad</span><span class="p">,</span> <span class="n">unpad</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">base64</span> <span class="kn">import</span> <span class="n">b64encode</span><span class="p">,</span> <span class="n">b64decode</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">get_cipher</span><span class="p">(</span><span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">iv</span><span class="o">=</span><span class="nb">bytes</span><span class="p">(</span><span class="mi">16</span><span class="p">)):</span>
+</span></span><span class="line"><span class="cl">    <span class="n">hasher</span> <span class="o">=</span> <span class="n">SHA256</span><span class="o">.</span><span class="n">new</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">hasher</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">secret</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">derived_aes_key</span> <span class="o">=</span> <span class="n">hasher</span><span class="o">.</span><span class="n">digest</span><span class="p">()[:</span><span class="mi">32</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cipher</span> <span class="o">=</span> <span class="n">AES</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">derived_aes_key</span><span class="p">,</span> <span class="n">AES</span><span class="o">.</span><span class="n">MODE_CBC</span><span class="p">,</span> <span class="n">iv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">cipher</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">decrypt</span><span class="p">(</span><span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">data</span> <span class="o">=</span> <span class="n">b64decode</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cipher</span> <span class="o">=</span> <span class="n">get_cipher</span><span class="p">(</span><span class="n">secret</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">decrypted</span> <span class="o">=</span> <span class="n">cipher</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">unpad</span><span class="p">(</span><span class="n">decrypted</span><span class="p">,</span> <span class="n">AES</span><span class="o">.</span><span class="n">block_size</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">encrypt</span><span class="p">(</span><span class="n">secret</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cipher</span> <span class="o">=</span> <span class="n">get_cipher</span><span class="p">(</span><span class="n">secret</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">padded_data</span> <span class="o">=</span> <span class="n">pad</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">AES</span><span class="o">.</span><span class="n">block_size</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">encrypted</span> <span class="o">=</span> <span class="n">cipher</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">padded_data</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">b64encode</span><span class="p">(</span><span class="n">encrypted</span><span class="p">)</span>
+</span></span></code></pre></div><h2 id="5-create-custom-editors"><a class="anchor" href="#5-create-custom-editors">#&nbsp;&nbsp;</a>5. Create custom editors</h2>
 <p>The above code can now be used to automatically decrypt your content to plaintext and re-encrypt a modified plaintext.</p>
 <p>As explained in <a href="../feature-editors/#1-edit-a-request">Editors</a>, request editors are created by declaring the <code>req_edit_in</code> hook:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">req_edit_in_encrypted</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="o">...</span>
-</code></pre></div><p>Here, the <code>_encrypted</code> suffix was added to the hook name, creating a tab named &ldquo;encrypted&rdquo;.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">req_edit_in_encrypted</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="o">...</span>
+</span></span></code></pre></div><p>Here, the <code>_encrypted</code> suffix was added to the hook name, creating a tab named &ldquo;encrypted&rdquo;.</p>
 <ol>
 <li>
 <p>Create a request editor.</p>
@@ -390,21 +390,21 @@
 <li>Decrypt the content using the secret.</li>
 <li>Return the decrypted bytes.</li>
 </ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pyscalpel</span> <span class="kn">import</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">Flow</span>
-
-<span class="k">def</span> <span class="nf">req_edit_in_encrypted</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">secret</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="sa">b</span><span class="s2">&#34;secret&#34;</span><span class="p">]</span>
-    <span class="n">encrypted</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="sa">b</span><span class="s2">&#34;encrypted&#34;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">encrypted</span><span class="p">:</span>
-        <span class="k">return</span> <span class="sa">b</span><span class="s2">&#34;&#34;</span>
-
-    <span class="k">return</span> <span class="n">decrypt</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="n">encrypted</span><span class="p">)</span>
-</code></pre></div><p>Once this script is loaded with Scalpel, if you open an encrypted request in Burp, you will see a <code>Scalpel</code> tab along the <code>Pretty</code>, <code>Raw</code>, and <code>Hex</code> tabs:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pyscalpel</span> <span class="kn">import</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">Flow</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">req_edit_in_encrypted</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">secret</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="sa">b</span><span class="s2">&#34;secret&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">encrypted</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="sa">b</span><span class="s2">&#34;encrypted&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="ow">not</span> <span class="n">encrypted</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="sa">b</span><span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">decrypt</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="n">encrypted</span><span class="p">)</span>
+</span></span></code></pre></div><p>Once this script is loaded with Scalpel, if you open an encrypted request in Burp, you will see a <code>Scalpel</code> tab along the <code>Pretty</code>, <code>Raw</code>, and <code>Hex</code> tabs:</p>
 <p><figure><img src="../screenshots/encrypty-scalpel-tab.png"/>
-</figure>
+    </figure>
 
 <figure><img src="../screenshots/encrypt-tab-selected.png"/>
-</figure>
+    </figure>
 </p>
 <p>But there is an issue. Right now, the additional tab cannot be edited since it has no way to encrypt the content back.</p>
 </li>
@@ -419,11 +419,11 @@
 <li>Replace the old encrypted content in the request.</li>
 <li>Return the new request.</li>
 </ul>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">req_edit_out_encrypted</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Request</span><span class="p">:</span>
-    <span class="n">secret</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="sa">b</span><span class="s2">&#34;secret&#34;</span><span class="p">]</span>
-    <span class="n">req</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="sa">b</span><span class="s2">&#34;encrypted&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="n">encrypt</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">req</span>
-</code></pre></div><blockquote>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">req_edit_out_encrypted</span><span class="p">(</span><span class="n">req</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Request</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">secret</span> <span class="o">=</span> <span class="n">req</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="sa">b</span><span class="s2">&#34;secret&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">req</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="sa">b</span><span class="s2">&#34;encrypted&#34;</span><span class="p">]</span> <span class="o">=</span> <span class="n">encrypt</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">req</span>
+</span></span></code></pre></div><blockquote>
 <p>⚠️ When present, the <code>req_edit_out</code> suffix <strong>must match</strong> the <code>req_edit_in</code> suffix.<br>
 In this tutorial example, the suffix is: <code>_encrypted</code></p>
 </blockquote>
@@ -434,7 +434,7 @@ In this tutorial example, the suffix is: <code>_encrypted</code></p>
 <li>
 <p>Add the hook. You should now be able to edit the plaintext. It will automatically be encrypted using <code>req_edit_out_encrypted</code>.</p>
 <figure><img src="../screenshots/encrypt-edited.png"/>
-</figure>
+    </figure>
 
 </li>
 </ol>
@@ -443,22 +443,22 @@ In this tutorial example, the suffix is: <code>_encrypted</code></p>
 <li>
 <p>After that, it would be nice to decrypt the response to see if the changes were reflected.</p>
 <p>The process is basically the same:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">res_edit_in_encrypted</span><span class="p">(</span><span class="n">res</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="n">secret</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="sa">b</span><span class="s2">&#34;secret&#34;</span><span class="p">]</span>
-    <span class="n">encrypted</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">content</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">encrypted</span><span class="p">:</span>
-        <span class="k">return</span> <span class="sa">b</span><span class="s2">&#34;&#34;</span>
-
-    <span class="k">return</span> <span class="n">decrypt</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="n">encrypted</span><span class="p">)</span>
-
-<span class="c1"># This is used to edit the response received by the browser in the proxy, but is useless in Repeater/Logger.</span>
-<span class="k">def</span> <span class="nf">res_edit_out_encrypted</span><span class="p">(</span><span class="n">res</span><span class="p">:</span> <span class="n">Response</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
-    <span class="n">secret</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="sa">b</span><span class="s2">&#34;secret&#34;</span><span class="p">]</span>
-    <span class="n">res</span><span class="o">.</span><span class="n">content</span> <span class="o">=</span> <span class="n">encrypt</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">res</span>
-</code></pre></div><figure><img src="../screenshots/decrypted-response.png"/>
-</figure>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">res_edit_in_encrypted</span><span class="p">(</span><span class="n">res</span><span class="p">:</span> <span class="n">Response</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">secret</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="sa">b</span><span class="s2">&#34;secret&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">encrypted</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">content</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="ow">not</span> <span class="n">encrypted</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="sa">b</span><span class="s2">&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">decrypt</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="n">encrypted</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># This is used to edit the response received by the browser in the proxy, but is useless in Repeater/Logger.</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">res_edit_out_encrypted</span><span class="p">(</span><span class="n">res</span><span class="p">:</span> <span class="n">Response</span><span class="p">,</span> <span class="n">text</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">secret</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="sa">b</span><span class="s2">&#34;secret&#34;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">res</span><span class="o">.</span><span class="n">content</span> <span class="o">=</span> <span class="n">encrypt</span><span class="p">(</span><span class="n">secret</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">res</span>
+</span></span></code></pre></div><figure><img src="../screenshots/decrypted-response.png"/>
+    </figure>
 
 </li>
 </ol>
@@ -469,11 +469,11 @@ In this tutorial example, the suffix is: <code>_encrypted</code></p>
 <h2 id="6-filtering-requestsresponses-sent-to-hooks"><a class="anchor" href="#6-filtering-requestsresponses-sent-to-hooks">#&nbsp;&nbsp;</a>6. Filtering requests/responses sent to hooks</h2>
 <p>Scalpel provides a <a href="../api/events.html#match">match()</a> hook to filter unwanted requests from being treated by your hooks.</p>
 <p>In this case, the encrypted requests are only sent to the <code>/encrypt</code> path and contain a <code>secret</code>. Thus, better not try to decrypt traffic that don&rsquo;t match these conditions.</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">pyscalpel</span> <span class="kn">import</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">Flow</span>
-
-<span class="k">def</span> <span class="nf">match</span><span class="p">(</span><span class="n">flow</span><span class="p">:</span> <span class="n">Flow</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">flow</span><span class="o">.</span><span class="n">path_is</span><span class="p">(</span><span class="s2">&#34;/encrypt*&#34;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">flow</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;secret&#34;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</code></pre></div><p>The above <code>match</code> hook receives a <a href="../api/pyscalpel/http.html#Flow">Flow</a> object. It contains a request. When treating a response, it contains both the response and its initiating request.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">pyscalpel</span> <span class="kn">import</span> <span class="n">Request</span><span class="p">,</span> <span class="n">Response</span><span class="p">,</span> <span class="n">Flow</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">match</span><span class="p">(</span><span class="n">flow</span><span class="p">:</span> <span class="n">Flow</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">flow</span><span class="o">.</span><span class="n">path_is</span><span class="p">(</span><span class="s2">&#34;/encrypt*&#34;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">flow</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;secret&#34;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span></span></code></pre></div><p>The above <code>match</code> hook receives a <a href="../api/pyscalpel/http.html#Flow">Flow</a> object. It contains a request. When treating a response, it contains both the response and its initiating request.</p>
 <p>It ensures the initiating request contained a <code>secret</code> field and was sent to a path matching <code>/encrypt*</code></p>
 <h1 id="conclusion"><a class="anchor" href="#conclusion">#&nbsp;&nbsp;</a>Conclusion</h1>
 <p>In this tutorial, you saw how to decrypt a custom encryption in IoT appliance communications using Scalpel.
