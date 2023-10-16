@@ -64,6 +64,8 @@ update_docs:
     only:
         - main
     image: debian
+    variables:
+        GIT_SSL_CAINFO: "${SSL_CA_CERT}"
     script:
         - apt-get update && apt-get install git -yqq
         - git config --global user.email "ci@fakegitlab.com"
